@@ -85,6 +85,45 @@ export default function AlertsPage() {
   const [modal, setModal]           = useState<AlertItem | null>(null);
   const [mediaTab, setMediaTab]     = useState<'image' | 'video'>('image');
   const [slide, setSlide]           = useState(0);
+  const [payLoading, setPayLoading] = useState<'paypal' | 'card' | null>(null);
+
+  const priceValue = (price: string) => Number(price.replace(/[^\d.]/g, '')) || 0;
+
+  const payWithPaypal = async (item: AlertItem) => {
+    setPayLoading('paypal');
+    try {
+      const res = await fetch('/api/alerts/paypal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: item.name, amount: priceValue(item.price) }),
+      });
+      const data = await res.json();
+      if (data.approveUrl) window.location.href = data.approveUrl;
+      else alert('تعذر بدء عملية الدفع، حاول مرة أخرى');
+    } catch {
+      alert('تعذر بدء عملية الدفع، حاول مرة أخرى');
+    } finally {
+      setPayLoading(null);
+    }
+  };
+
+  const payWithCard = async (item: AlertItem) => {
+    setPayLoading('card');
+    try {
+      const res = await fetch('/api/alerts/stripe-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: item.name, amount: priceValue(item.price) }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert('تعذر بدء عملية الدفع، حاول مرة أخرى');
+    } catch {
+      alert('تعذر بدء عملية الدفع، حاول مرة أخرى');
+    } finally {
+      setPayLoading(null);
+    }
+  };
 
   const catData  = activeCat ? CATEGORIES.find(c => c.id === activeCat) : null;
   const alerts   = activeCat ? ALERTS[activeCat] ?? [] : [];
@@ -667,18 +706,22 @@ export default function AlertsPage() {
                     <div className="al-pay-section">
                       <p className="al-pay-label">اختر طريقة الدفع</p>
                       <div className="al-pay-btns">
-                        <button className="al-pay-btn al-pay-btn-paypal" onClick={() => alert('PayPal — قريباً')}>
-                          <i className="fab fa-paypal" /> PayPal
+                        <button
+                          className="al-pay-btn al-pay-btn-paypal"
+                          disabled={payLoading !== null}
+                          onClick={() => payWithPaypal(modal)}
+                        >
+                          <i className="fab fa-paypal" /> {payLoading === 'paypal' ? 'جارٍ التحويل...' : 'PayPal'}
                         </button>
-                        <button className="al-pay-btn al-pay-btn-card" onClick={() => alert('بطاقة — قريباً')}>
+                        <button
+                          className="al-pay-btn al-pay-btn-card"
+                          disabled={payLoading !== null}
+                          onClick={() => payWithCard(modal)}
+                        >
                           <div className="pay-card-icons">
                             <span className="visa-tag">VISA</span>
-                            <span className="mc-tag">MC</span>
                           </div>
-                          بطاقة
-                        </button>
-                        <button className="al-pay-btn al-pay-btn-stc" onClick={() => alert('STC Pay — قريباً')}>
-                          <i className="fas fa-mobile-alt" /> STC Pay
+                          {payLoading === 'card' ? 'جارٍ التحويل...' : 'بطاقة'}
                         </button>
                       </div>
                     </div>
