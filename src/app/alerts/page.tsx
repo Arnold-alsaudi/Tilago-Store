@@ -85,7 +85,7 @@ export default function AlertsPage() {
   const [modal, setModal]           = useState<AlertItem | null>(null);
   const [mediaTab, setMediaTab]     = useState<'image' | 'video'>('image');
   const [slide, setSlide]           = useState(0);
-  const [payLoading, setPayLoading] = useState<'paypal' | 'card' | null>(null);
+  const [payLoading, setPayLoading] = useState<'paypal' | 'meeza' | null>(null);
 
   const priceValue = (price: string) => Number(price.replace(/[^\d.]/g, '')) || 0;
 
@@ -107,13 +107,15 @@ export default function AlertsPage() {
     }
   };
 
-  const payWithCard = async (item: AlertItem) => {
-    setPayLoading('card');
+  const payWithMeeza = async (item: AlertItem) => {
+    const mobile = window.prompt('أدخل رقم جوالك (مطلوب من Fawry لإتمام الدفع بـ Meeza):');
+    if (!mobile) return;
+    setPayLoading('meeza');
     try {
-      const res = await fetch('/api/alerts/stripe-checkout', {
+      const res = await fetch('/api/alerts/fawry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: item.name, amount: priceValue(item.price) }),
+        body: JSON.stringify({ name: item.name, amount: priceValue(item.price), mobile }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -378,8 +380,7 @@ export default function AlertsPage() {
         .al-pay-btn-card .pay-card-icons span {
           font-size:.6rem; padding:2px 5px; border-radius:4px; font-weight:800; letter-spacing:.5px;
         }
-        .visa-tag { background:#1a1f71; color:#fff; }
-        .mc-tag   { background:linear-gradient(90deg,#eb001b,#f79e1b); color:#fff; }
+        .meeza-tag { background:linear-gradient(90deg,#6a1b9a,#8e24aa); color:#fff; }
         .al-pay-btn-stc {
           background:linear-gradient(135deg,#4b0f8c,#7F3AA1);
           color:#fff; border-color:rgba(127,58,161,0.35);
@@ -716,12 +717,12 @@ export default function AlertsPage() {
                         <button
                           className="al-pay-btn al-pay-btn-card"
                           disabled={payLoading !== null}
-                          onClick={() => payWithCard(modal)}
+                          onClick={() => payWithMeeza(modal)}
                         >
                           <div className="pay-card-icons">
-                            <span className="visa-tag">VISA</span>
+                            <span className="meeza-tag">Meeza</span>
                           </div>
-                          {payLoading === 'card' ? 'جارٍ التحويل...' : 'بطاقة'}
+                          {payLoading === 'meeza' ? 'جارٍ التحويل...' : 'ميزة'}
                         </button>
                       </div>
                     </div>
