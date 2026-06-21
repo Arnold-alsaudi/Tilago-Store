@@ -100,6 +100,18 @@ export default function AlertsPage() {
     if (purchased) {
       setModal(purchased);
       setDelivered(true);
+      // تسجيل الدفع تلقائياً
+      fetch('/api/admin/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productName: purchased.name,
+          amount: priceValue(purchased.price),
+          method: 'Fawry/Meeza',
+          userEmail: params.get('email') ?? 'unknown',
+          userName: params.get('name') ?? '',
+        }),
+      }).catch(() => {});
     }
   }, []);
 

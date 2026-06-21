@@ -51,7 +51,6 @@ export function Header() {
             </li>
             <li><Link href="/contact">Contact</Link></li>
             <li><Link href="/#about">About</Link></li>
-            <li><Link href="/#home">News</Link></li>
             <li><Link href="/3d">3D Model</Link></li>
           </ul>
         </nav>

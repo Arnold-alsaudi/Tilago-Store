@@ -129,3 +129,16 @@ model CartItem {
 
   @@unique([userId, productId])
 }
+
+model Payment {
+  id          String   @id @default(cuid())
+  orderId     String?
+  userEmail   String
+  userName    String?
+  productName String?
+  amount      Float
+  currency    String   @default("EGP")
+  method      String
+  status      String   @default("success")
+  createdAt   DateTime @default(now())
+}
