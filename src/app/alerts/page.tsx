@@ -72,6 +72,8 @@ const ALERTS: Record<string, AlertItem[]> = {
   ],
 };
 
+const ALL_ALERTS = Object.values(ALERTS).flat();
+
 const CONTACT_BTNS = [
   { icon: 'fab fa-whatsapp', label: 'طلب الآن',     href: 'https://wa.me/1234567890', color: '#25D366' },
   { icon: 'fab fa-telegram', label: 'تيليجرام',     href: 'https://t.me/yourchannel', color: '#0088cc' },
@@ -86,8 +88,20 @@ export default function AlertsPage() {
   const [mediaTab, setMediaTab]     = useState<'image' | 'video'>('image');
   const [slide, setSlide]           = useState(0);
   const [payLoading, setPayLoading] = useState<'paypal' | 'meeza' | null>(null);
+  const [delivered, setDelivered]   = useState(false);
 
   const priceValue = (price: string) => Number(price.replace(/[^\d.]/g, '')) || 0;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') !== 'success') return;
+    const alertId = params.get('alertId');
+    const purchased = ALL_ALERTS.find(a => a.id === alertId);
+    if (purchased) {
+      setModal(purchased);
+      setDelivered(true);
+    }
+  }, []);
 
   const payWithPaypal = async (item: AlertItem) => {
     setPayLoading('paypal');
@@ -108,14 +122,12 @@ export default function AlertsPage() {
   };
 
   const payWithMeeza = async (item: AlertItem) => {
-    const mobile = window.prompt('أدخل رقم جوالك (مطلوب من Fawry لإتمام الدفع بـ Meeza):');
-    if (!mobile) return;
     setPayLoading('meeza');
     try {
       const res = await fetch('/api/alerts/fawry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: item.name, amount: priceValue(item.price), mobile }),
+        body: JSON.stringify({ name: item.name, amount: priceValue(item.price), alertId: item.id }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -142,6 +154,12 @@ export default function AlertsPage() {
   const openModal = (alert: AlertItem) => {
     setModal(alert);
     setMediaTab('image');
+    setDelivered(false);
+  };
+
+  const closeModal = () => {
+    setModal(null);
+    setDelivered(false);
   };
 
   return (
@@ -670,10 +688,10 @@ export default function AlertsPage() {
 
         {/* ── Modal ── */}
         {modal && (
-          <div className="al-modal-backdrop" onClick={() => setModal(null)}>
+          <div className="al-modal-backdrop" onClick={closeModal}>
 
             <div className="al-modal-box" onClick={e => e.stopPropagation()}>
-              <button className="al-modal-close" onClick={() => setModal(null)}>×</button>
+              <button className="al-modal-close" onClick={closeModal}>×</button>
 
               <div className="al-modal-head">
                 <h2>{modal.name}</h2>
@@ -704,28 +722,49 @@ export default function AlertsPage() {
                     <p style={{ color: 'red', fontSize: '.85rem' }}>ممنوع إعادة بيع المنتج بعد الشراء.</p>
 
                     {/* Payment */}
-                    <div className="al-pay-section">
-                      <p className="al-pay-label">اختر طريقة الدفع</p>
-                      <div className="al-pay-btns">
-                        <button
-                          className="al-pay-btn al-pay-btn-paypal"
-                          disabled={payLoading !== null}
-                          onClick={() => payWithPaypal(modal)}
-                        >
-                          <i className="fab fa-paypal" /> {payLoading === 'paypal' ? 'جارٍ التحويل...' : 'PayPal'}
-                        </button>
-                        <button
-                          className="al-pay-btn al-pay-btn-card"
-                          disabled={payLoading !== null}
-                          onClick={() => payWithMeeza(modal)}
-                        >
-                          <div className="pay-card-icons">
-                            <span className="meeza-tag">Meeza</span>
-                          </div>
-                          {payLoading === 'meeza' ? 'جارٍ التحويل...' : 'ميزة'}
-                        </button>
+                    {delivered ? (
+                      <div className="al-pay-section">
+                        <p className="al-pay-label" style={{ color:'#4caf50' }}>تم الدفع بنجاح ✓</p>
+                        <p style={{ color:'#9090b0', fontSize:'.85rem', marginBottom:'1rem' }}>
+                          تم تسليم منتجك تلقائياً، يمكنك تحميله الآن:
+                        </p>
+                        <div className="al-pay-btns">
+                          {modal.imgs?.map((img, i) => (
+                            <a key={img} href={img} download className="al-pay-btn al-pay-btn-stc">
+                              <i className="fas fa-download" /> صورة {i + 1}
+                            </a>
+                          ))}
+                          {modal.video && (
+                            <a href={modal.video} download className="al-pay-btn al-pay-btn-stc">
+                              <i className="fas fa-download" /> الفيديو
+                            </a>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="al-pay-section">
+                        <p className="al-pay-label">اختر طريقة الدفع</p>
+                        <div className="al-pay-btns">
+                          <button
+                            className="al-pay-btn al-pay-btn-paypal"
+                            disabled={payLoading !== null}
+                            onClick={() => payWithPaypal(modal)}
+                          >
+                            <i className="fab fa-paypal" /> {payLoading === 'paypal' ? 'جارٍ التحويل...' : 'PayPal'}
+                          </button>
+                          <button
+                            className="al-pay-btn al-pay-btn-card"
+                            disabled={payLoading !== null}
+                            onClick={() => payWithMeeza(modal)}
+                          >
+                            <div className="pay-card-icons">
+                              <span className="meeza-tag">Meeza</span>
+                            </div>
+                            {payLoading === 'meeza' ? 'جارٍ التحويل...' : 'ميزة'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
-  const { name, amount, mobile } = await req.json();
-  if (!name || !amount || !mobile) {
+  const { name, amount, alertId } = await req.json();
+  if (!name || !amount || !alertId) {
     return NextResponse.json({ error: 'Missing data' }, { status: 400 });
   }
 
@@ -11,17 +11,17 @@ export async function POST(req: NextRequest) {
   const securityKey = process.env.FAWRY_SECURITY_KEY!;
   const baseUrl = process.env.FAWRY_BASE_URL || 'https://atfawry.fawrystaging.com';
 
-  const merchantRefNum = `tilago-${Date.now()}`;
-  const itemId = 'alert-item';
+  const merchantRefNum = `tilago-${alertId}-${Date.now()}`;
+  const itemId = alertId;
   const price = Number(amount).toFixed(2);
   const quantity = 1;
 
+  // Card-only hosted checkout: no customer mobile / reference code required.
   const signature = crypto
     .createHash('sha256')
     .update(
       merchantCode +
       merchantRefNum +
-      mobile +
       itemId +
       quantity +
       price +
@@ -36,14 +36,13 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         merchantCode,
         merchantRefNum,
-        customerMobile: mobile,
-        customerProfileId: mobile,
         paymentMethod: 'CARD',
+        paymentExpiry: '',
         amount: price,
         currencyCode: 'EGP',
         language: 'ar-eg',
         chargeItems: [{ itemId, description: `Tilago Alert — ${name}`, price, quantity }],
-        returnUrl: `${process.env.NEXTAUTH_URL}/alerts?payment=success`,
+        returnUrl: `${process.env.NEXTAUTH_URL}/alerts?payment=success&alertId=${encodeURIComponent(alertId)}`,
         signature,
       }),
     });
