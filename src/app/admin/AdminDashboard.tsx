@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { DollarSign, ShoppingBag, Users, Package, Download, FileSpreadsheet } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { DollarSign, ShoppingBag, Users, Package, Download, FileSpreadsheet, Power } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DashboardStats } from '@/types';
 import { formatPrice } from '@/lib/utils';
@@ -11,6 +12,38 @@ interface Props { stats: DashboardStats; }
 const COLORS = ['#5416B5', '#7F3AA1', '#F0830B', '#9B8FC0'];
 
 export function AdminDashboard({ stats }: Props) {
+  const [storePaused, setStorePaused] = useState(false);
+  const [pauseMessage, setPauseMessage] = useState('المتجر مغلق مؤقتاً، سيعود قريباً.');
+  const [toggling, setToggling] = useState(false);
+  const [showMsgInput, setShowMsgInput] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/settings').then(r => r.json()).then(d => {
+      if (d.storePaused === 'true') setStorePaused(true);
+      if (d.pauseMessage) setPauseMessage(d.pauseMessage);
+    }).catch(() => {});
+  }, []);
+
+  const toggleStore = async () => {
+    setToggling(true);
+    const newVal = !storePaused;
+    await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storePaused: newVal, pauseMessage }),
+    });
+    setStorePaused(newVal);
+    setToggling(false);
+  };
+
+  const saveMessage = async () => {
+    await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pauseMessage }),
+    });
+    setShowMsgInput(false);
+  };
   const statCards = [
     { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, color: '#F0830B' },
     { label: 'Total Orders', value: stats.totalOrders.toString(), icon: ShoppingBag, color: '#5416B5' },
@@ -64,7 +97,7 @@ export function AdminDashboard({ stats }: Props) {
             <h1 className="font-orbitron font-bold text-3xl gradient-text">Admin Dashboard</h1>
             <p className="text-text-muted text-sm mt-1">Tilago analytics & management</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap justify-end">
             <button onClick={exportExcel}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium glass-card hover:bg-accent-deep/20 transition-all">
               <FileSpreadsheet size={16} className="text-green-400" /> Excel
@@ -73,8 +106,39 @@ export function AdminDashboard({ stats }: Props) {
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium glass-card hover:bg-accent-deep/20 transition-all">
               <Download size={16} className="text-red-400" /> PDF
             </button>
+            <button onClick={toggleStore} disabled={toggling}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+              style={{ background: storePaused ? 'rgba(46,204,113,0.15)' : 'rgba(231,76,60,0.15)', border: `1px solid ${storePaused ? '#2ecc71' : '#e74c3c'}`, color: storePaused ? '#2ecc71' : '#e74c3c' }}>
+              <Power size={16} />
+              {toggling ? '...' : storePaused ? 'تشغيل المتجر' : 'إيقاف المتجر'}
+            </button>
+            <button onClick={() => setShowMsgInput(v => !v)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium glass-card hover:bg-accent-deep/20 transition-all text-text-muted">
+              رسالة الإيقاف
+            </button>
           </div>
         </div>
+
+        {/* Store pause message editor */}
+        {showMsgInput && (
+          <div className="mb-6 glass-card p-4 rounded-2xl flex gap-3 items-center">
+            <input
+              value={pauseMessage}
+              onChange={e => setPauseMessage(e.target.value)}
+              className="flex-1 bg-transparent border border-accent-deep/40 rounded-xl px-4 py-2 text-text-primary text-sm outline-none"
+              placeholder="رسالة الإيقاف للعملاء..."
+              dir="rtl"
+            />
+            <button onClick={saveMessage} className="px-4 py-2 rounded-xl text-sm font-bold bg-accent-deep text-white">حفظ</button>
+          </div>
+        )}
+
+        {/* Store paused banner */}
+        {storePaused && (
+          <div className="mb-6 p-4 rounded-2xl text-center font-bold text-sm" style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.4)', color: '#e74c3c' }} dir="rtl">
+            ⚠️ المتجر موقوف حالياً — العملاء يشوفون: "{pauseMessage}"
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -108,7 +172,7 @@ export function AdminDashboard({ stats }: Props) {
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="month" tick={{ fill: '#9B8FC0', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#9B8FC0', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+                  <YAxis tick={{ fill: '#9B8FC0', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v} ج.م`} />
                   <Tooltip contentStyle={{ background: '#0C0516', border: '1px solid #5416B5', borderRadius: 8 }} labelStyle={{ color: '#F0E6FF' }} />
                   <Area type="monotone" dataKey="revenue" stroke="#5416B5" strokeWidth={2} fill="url(#revGrad)" />
                 </AreaChart>
@@ -118,15 +182,15 @@ export function AdminDashboard({ stats }: Props) {
             )}
           </motion.div>
 
-          {/* Category pie */}
+          {/* Payment method pie */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
             className="glass-card p-6 rounded-2xl">
-            <h2 className="font-bold text-text-primary mb-4">Orders by Category</h2>
-            {stats.ordersByCategory.length > 0 ? (
+            <h2 className="font-bold text-text-primary mb-4">Payments by Method</h2>
+            {stats.paymentsByMethod.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={stats.ordersByCategory} dataKey="count" nameKey="category" cx="50%" cy="50%" outerRadius={80} label={({ category }) => category.replace('_', ' ')}>
-                    {stats.ordersByCategory.map((_, index) => (
+                  <Pie data={stats.paymentsByMethod} dataKey="count" nameKey="method" cx="50%" cy="50%" outerRadius={80} label={({ method }) => method}>
+                    {stats.paymentsByMethod.map((_, index) => (
                       <Cell key={index} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -140,12 +204,16 @@ export function AdminDashboard({ stats }: Props) {
         </div>
 
         {/* Quick links */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
-            { label: 'Manage Products', href: '/admin/products', color: '#5416B5' },
-            { label: 'View Orders', href: '/admin/orders', color: '#F0830B' },
-            { label: 'Manage Users', href: '/admin/users', color: '#7F3AA1' },
-            { label: 'Upload Media', href: '/admin/upload', color: '#9B8FC0' },
+            { label: 'تعديل الصفحة الرئيسية', href: '/admin/home',     color: '#9B59D0' },
+            { label: 'Manage Products', href: '/admin/products',       color: '#5416B5' },
+            { label: 'Manage Videos',   href: '/admin/videos',         color: '#9B59D0' },
+            { label: 'Manage Stream',   href: '/admin/stream',         color: '#3AA1A1' },
+            { label: 'View Orders',     href: '/admin/orders',         color: '#F0830B' },
+            { label: 'Manage Users',    href: '/admin/users',          color: '#7F3AA1' },
+            { label: 'PUBG Championship', href: '/admin/esports/pubg', color: '#FFD700' },
+            { label: 'TDM Esports',       href: '/admin/esports/tdm',  color: '#3AA1A1' },
           ].map(({ label, href, color }) => (
             <a key={label} href={href}
               className="glass-card p-4 rounded-xl text-center text-sm font-medium hover:scale-105 transition-transform"

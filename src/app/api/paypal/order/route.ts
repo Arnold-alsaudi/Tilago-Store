@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+// sandbox افتراضياً — للإنتاج ضع PAYPAL_API_BASE=https://api-m.paypal.com
+const PAYPAL_API_BASE = process.env.PAYPAL_API_BASE ?? 'https://api-m.sandbox.paypal.com';
+
 async function getPayPalToken() {
-  const res = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+  const res = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64')}`,
@@ -24,13 +27,13 @@ export async function POST(req: NextRequest) {
 
   const token = await getPayPalToken();
 
-  const res = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+  const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       intent: 'CAPTURE',
       purchase_units: [{
-        amount: { currency_code: 'USD', value: total.toFixed(2) },
+        amount: { currency_code: process.env.PAYPAL_CURRENCY ?? 'USD', value: total.toFixed(2) },
         description: 'Tilago Order',
       }],
       application_context: {

@@ -27,7 +27,7 @@ export default function OrderSuccessPage() {
         </p>
 
         <div className="flex flex-col gap-3">
-          <Link href="/account" className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white"
+          <Link href="/orders" className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white"
             style={{ background: 'linear-gradient(135deg, #5416B5, #7F3AA1)' }}>
             View My Orders <ArrowRight size={18} />
           </Link>

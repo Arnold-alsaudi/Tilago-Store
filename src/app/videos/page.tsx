@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 
@@ -8,17 +8,9 @@ type VideoProduct = {
   thumb: string; video: string;
 };
 
-const PRODUCTS: VideoProduct[] = [
-  { id:'v1', name:'Venom Intro',     desc:'إنترو فينوم احترافي يفتح بثك بدراما سينمائية مذهلة',         thumb:'/photo/venom-1.png',  video:'/video/tilago.mp4' },
-  { id:'v2', name:'Anime Stream',    desc:'تصميم أنيمي حصري مناسب لعشاق الأنمي والبث الياباني',         thumb:'/photo/anime.png',    video:'/video/tilago.mp4' },
-  { id:'v3', name:'Epic Overlay',    desc:'أوفرلاي ملحمي بتأثيرات بصرية تجعل بثك استثنائياً',          thumb:'/photo/venom-2.png',  video:'/video/tilago.mp4' },
-  { id:'v4', name:'Venom Scene',     desc:'مشهد فينوم كامل بجودة سينمائية عالية الدقة',                 thumb:'/photo/venom-5.png',  video:'/video/tilago.mp4' },
-  { id:'v5', name:'Alert Pack',      desc:'باكدج اليرتات متكامل بتصميم موحد ومميز لقناتك',             thumb:'/photo/alert-3d.png', video:'/video/tilago.mp4' },
-  { id:'v6', name:'Cyber Intro',     desc:'إنترو سيبراني من المستقبل بتقنيات بصرية متقدمة',             thumb:'/photo/venom-7.png',  video:'/video/tilago.mp4' },
-  { id:'v7', name:'Special Alert',   desc:'اليرت خاص مميز يجعل كل تنبيه حدثاً لا يُنسى',              thumb:'/photo/alert-special.png', video:'/video/tilago.mp4' },
-  { id:'v8', name:'Follow Burst',    desc:'تأثير متابعة احترافي يعطي جمهورك تجربة بصرية رائعة',        thumb:'/photo/venom-9.png',  video:'/video/tilago.mp4' },
-  { id:'v9', name:'Galaxy Stream',   desc:'تصميم كوني شامل يحوّل بثك إلى تجربة فضائية ساحرة',         thumb:'/photo/venom-10.png', video:'/video/tilago.mp4' },
-];
+function mapProduct(p: any): VideoProduct {
+  return { id: p.id, name: p.title, desc: p.description, thumb: p.imageUrl, video: p.videoUrl ?? '' };
+}
 
 const CONTACT_BTNS = [
   { icon:'fab fa-whatsapp', label:'واتساب',       href:'https://wa.me/1234567890',      color:'#25D366' },
@@ -36,18 +28,42 @@ const FEATURES = [
 
 /* ─── Component ─────────────────────────────────────────────── */
 export default function VideosPage() {
+  const [products, setProducts] = useState<VideoProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<VideoProduct | null>(null);
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const els = document.querySelectorAll<HTMLElement>('[data-reveal]');
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add('sr-in'); obs.unobserve(e.target); } });
-    }, { threshold: 0.1 });
-    els.forEach(el => obs.observe(el));
-    return () => obs.disconnect();
+    fetch('/api/products?category=VIDEO')
+      .then(r => r.json())
+      .then((data: any[]) => setProducts(data.map(mapProduct)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    // reveal animation
+    const els = document.querySelectorAll<HTMLElement>('[data-reveal]');
+    const revObs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add('sr-in'); revObs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    els.forEach(el => revObs.observe(el));
+
+    // play/pause videos based on viewport
+    const videos = document.querySelectorAll<HTMLVideoElement>('.vp-card video');
+    const vidObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        const v = e.target as HTMLVideoElement;
+        if (e.isIntersecting) v.play().catch(() => {});
+        else { v.pause(); v.currentTime = 0; }
+      });
+    }, { threshold: 0.3 });
+    videos.forEach(v => vidObs.observe(v));
+
+    return () => { revObs.disconnect(); vidObs.disconnect(); };
+  }, [loading]);
 
   useEffect(() => {
     if (!modal) { setPlaying(false); return; }
@@ -58,12 +74,12 @@ export default function VideosPage() {
 
   const openModal = (p: VideoProduct) => { setModal(p); setPlaying(false); };
 
+
   return (
     <div className="vp" dir="rtl">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Cairo:wght@400;600;700;900&display=swap');
-
-        .vp { background:linear-gradient(180deg,#0F083B,#0C0516); min-height:100vh; font-family:'Cairo',sans-serif; color:#fff; }
+        
+        .vp { background:linear-gradient(180deg,#0F083B,#0C0516); min-height:100vh; font-family:'29LtBukra','Montserrat',sans-serif; color:#fff; }
 
         /* ── HERO ── */
         .vp-hero { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; padding:4rem 5%; gap:2rem; }
@@ -72,18 +88,18 @@ export default function VideosPage() {
         .vp-hero-vid video { width:100%; display:block; }
         .vp-hero-content { flex:1; min-width:280px; max-width:520px; text-align:right; }
         .vp-hero-tag { display:inline-flex; align-items:center; gap:8px; background:rgba(84,22,181,0.15); border:1px solid rgba(84,22,181,0.35); border-radius:50px; padding:.45rem 1.2rem; font-size:.85rem; color:#9B59D0; margin-bottom:1.2rem; }
-        .vp-hero-content h1 { font-family:'Cairo',sans-serif; font-size:clamp(1.9rem,3.5vw,2.7rem); font-weight:900; line-height:1.25; margin-bottom:.8rem; }
+        .vp-hero-content h1 { font-family:'29LtBukra','Montserrat',sans-serif; font-size:clamp(1.9rem,3.5vw,2.7rem); font-weight:900; line-height:1.25; margin-bottom:.8rem; }
         .vp-hero-content h1 span { background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .vp-hero-divider { width:40px; height:2px; background:linear-gradient(90deg,#5416B5,rgba(84,22,181,0)); margin-bottom:1.2rem; }
         .vp-hero-content p { color:rgba(255,255,255,0.7); font-size:1rem; line-height:1.8; margin-bottom:1.6rem; }
-        .vp-hero-cta { display:inline-flex; align-items:center; gap:10px; padding:.9rem 2.2rem; border-radius:50px; background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff; font-family:'Cairo',sans-serif; font-size:1rem; font-weight:700; text-decoration:none; transition:transform .2s,box-shadow .2s; }
+        .vp-hero-cta { display:inline-flex; align-items:center; gap:10px; padding:.9rem 2.2rem; border-radius:50px; background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff; font-family:'29LtBukra','Montserrat',sans-serif; font-size:1rem; font-weight:700; text-decoration:none; transition:transform .2s,box-shadow .2s; }
         .vp-hero-cta:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(84,22,181,0.5); }
 
         /* ── STATS ── */
         .vp-stats { display:flex; justify-content:center; padding:1.4rem 5%; border-top:1px solid rgba(84,22,181,0.12); border-bottom:1px solid rgba(84,22,181,0.12); background:rgba(15,8,59,0.4); flex-wrap:wrap; }
         .vp-stat { flex:1; min-width:110px; text-align:center; padding:.8rem 1.5rem; border-left:1px solid rgba(84,22,181,0.2); }
         .vp-stat:last-child { border-left:none; }
-        .vp-stat-num { font-family:'Orbitron',sans-serif; font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .vp-stat-num { font-family:'Oxanium',sans-serif; font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .vp-stat-label { font-size:.8rem; color:rgba(255,255,255,0.55); margin-top:2px; }
 
         /* ── GRID ── */
@@ -92,34 +108,35 @@ export default function VideosPage() {
         /* ── CARD ── */
         .vp-card { background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.12); border-radius:16px; overflow:hidden; cursor:pointer; transition:transform .28s,border-color .28s,box-shadow .28s; position:relative; }
         .vp-card:hover { transform:translateY(-6px); border-color:rgba(84,22,181,0.5); box-shadow:0 12px 36px rgba(84,22,181,0.25); }
-        .vp-card-thumb { position:relative; width:100%; height:190px; overflow:hidden; }
-        .vp-card-thumb img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
-        .vp-card:hover .vp-card-thumb img { transform:scale(1.06); }
+        .vp-card-thumb { position:relative; width:100%; height:190px; overflow:hidden; background:#0a0420; }
+        .vp-card-thumb video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
+        .vp-card:hover .vp-card-thumb video { transform:scale(1.06); }
+        .vp-card-thumb .no-vid { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:rgba(155,89,208,0.3); font-size:2.5rem; }
         .vp-card-play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.35); opacity:0; transition:opacity .25s; }
         .vp-card:hover .vp-card-play { opacity:1; }
         .vp-card-play-icon { width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg,#5416B5,#7F3AA1); display:flex; align-items:center; justify-content:center; font-size:1.2rem; box-shadow:0 6px 24px rgba(84,22,181,0.5); }
         .vp-card-body { padding:1rem 1.1rem 1.2rem; }
-        .vp-card-name { font-family:'Cairo',sans-serif; font-size:1rem; font-weight:700; color:#fff; margin-bottom:.35rem; }
+        .vp-card-name { font-family:'29LtBukra','Montserrat',sans-serif; font-size:1rem; font-weight:700; color:#fff; margin-bottom:.35rem; }
         .vp-card-desc { font-size:.82rem; color:rgba(255,255,255,0.5); line-height:1.6; }
 
         /* ── FEATURES ── */
         .vp-features { padding:3rem 5%; border-top:1px solid rgba(84,22,181,0.15); border-bottom:1px solid rgba(84,22,181,0.15); background:linear-gradient(180deg,#0C0516,#0F083B); }
-        .vp-features-title { text-align:center; font-family:'Cairo',sans-serif; font-size:1.6rem; font-weight:900; margin-bottom:.5rem; }
+        .vp-features-title { text-align:center; font-family:'29LtBukra','Montserrat',sans-serif; font-size:1.6rem; font-weight:900; margin-bottom:.5rem; }
         .vp-features-title span { background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .vp-features-sub { text-align:center; color:rgba(255,255,255,0.5); font-size:.9rem; margin-bottom:2rem; }
         .vp-features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.2rem; }
         .vp-feat-card { background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.12); border-radius:12px; padding:1.4rem 1.2rem; text-align:center; transition:border-color .25s; }
         .vp-feat-card:hover { border-color:rgba(84,22,181,0.4); }
         .vp-feat-icon { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,rgba(84,22,181,0.25),rgba(127,58,161,0.15)); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; font-size:1.2rem; color:#9B59D0; }
-        .vp-feat-card h4 { font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:.5rem; }
+        .vp-feat-card h4 { font-family:'29LtBukra','Montserrat',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:.5rem; }
         .vp-feat-card p { font-size:.8rem; color:rgba(255,255,255,0.5); line-height:1.6; }
 
         /* ── CONTACTS ── */
         .vp-contacts { padding:2.5rem 5%; text-align:center; }
-        .vp-contacts h3 { font-family:'Cairo',sans-serif; font-size:1.3rem; font-weight:900; margin-bottom:.5rem; }
+        .vp-contacts h3 { font-family:'29LtBukra','Montserrat',sans-serif; font-size:1.3rem; font-weight:900; margin-bottom:.5rem; }
         .vp-contacts p { color:rgba(255,255,255,0.5); font-size:.9rem; margin-bottom:1.5rem; }
         .vp-contact-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.8rem; max-width:680px; margin:0 auto; }
-        .vp-contact-btn { display:flex; align-items:center; justify-content:center; gap:9px; padding:.85rem 1rem; border-radius:10px; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:600; text-decoration:none; transition:all .25s; }
+        .vp-contact-btn { display:flex; align-items:center; justify-content:center; gap:9px; padding:.85rem 1rem; border-radius:10px; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:#fff; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.9rem; font-weight:600; text-decoration:none; transition:all .25s; }
         .vp-contact-btn:hover { border-color:#5416B5; background:rgba(84,22,181,0.15); transform:translateY(-2px); }
 
         /* ── MODAL ── */
@@ -136,7 +153,7 @@ export default function VideosPage() {
           box-shadow:0 40px 100px rgba(0,0,0,0.85);
         }
         .vp-modal-header { display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.6rem; border-bottom:1px solid rgba(84,22,181,0.12); }
-        .vp-modal-header h2 { font-family:'Cairo',sans-serif; font-size:1.3rem; font-weight:900; background:linear-gradient(135deg,#fff,#9B59D0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .vp-modal-header h2 { font-family:'29LtBukra','Montserrat',sans-serif; font-size:1.3rem; font-weight:900; background:linear-gradient(135deg,#fff,#9B59D0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .vp-modal-close { background:rgba(84,22,181,0.2); border:1px solid rgba(84,22,181,0.3); color:#fff; width:36px; height:36px; border-radius:50%; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
         .vp-modal-close:hover { background:rgba(84,22,181,0.6); transform:rotate(90deg); }
 
@@ -152,7 +169,7 @@ export default function VideosPage() {
         .vp-modal-footer { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.6rem; border-top:1px solid rgba(84,22,181,0.1); flex-wrap:wrap; gap:.8rem; }
         .vp-modal-desc { color:rgba(255,255,255,0.6); font-size:.88rem; flex:1; }
         .vp-modal-actions { display:flex; gap:.6rem; flex-wrap:wrap; }
-        .vp-modal-actions a { display:flex; align-items:center; gap:7px; padding:.6rem 1.1rem; border-radius:9px; font-family:'Cairo',sans-serif; font-size:.85rem; font-weight:700; text-decoration:none; transition:all .2s; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:#fff; }
+        .vp-modal-actions a { display:flex; align-items:center; gap:7px; padding:.6rem 1.1rem; border-radius:9px; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.85rem; font-weight:700; text-decoration:none; transition:all .2s; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:#fff; }
         .vp-modal-actions a:first-child { background:linear-gradient(135deg,#5416B5,#7F3AA1); border:none; box-shadow:0 3px 14px rgba(84,22,181,0.35); }
         .vp-modal-actions a:hover { transform:translateY(-1px); border-color:#7F3AA1; }
 
@@ -163,6 +180,16 @@ export default function VideosPage() {
         [data-reveal="right"] { transform:translateX(55px); }
         [data-reveal="scale"] { transform:scale(.85) translateY(18px); }
         [data-reveal].sr-in  { opacity:1; transform:none; }
+
+        /* card fade-in */
+        @keyframes cardIn { from { opacity:0; transform:scale(.88) translateY(18px); } to { opacity:1; transform:none; } }
+        .vp-card { animation: cardIn .55s cubic-bezier(.25,.8,.25,1) both; }
+        .vp-card:nth-child(1){animation-delay:.04s}.vp-card:nth-child(2){animation-delay:.09s}
+        .vp-card:nth-child(3){animation-delay:.14s}.vp-card:nth-child(4){animation-delay:.19s}
+        .vp-card:nth-child(5){animation-delay:.24s}.vp-card:nth-child(6){animation-delay:.29s}
+        .vp-card:nth-child(7){animation-delay:.34s}.vp-card:nth-child(8){animation-delay:.39s}
+        .vp-card:nth-child(9){animation-delay:.44s}
+        @media (prefers-reduced-motion: reduce) { .vp-card { animation: none; opacity: 1; transform: none; } }
         [data-delay="1"]{transition-delay:.06s}[data-delay="2"]{transition-delay:.12s}[data-delay="3"]{transition-delay:.18s}
         [data-delay="4"]{transition-delay:.24s}[data-delay="5"]{transition-delay:.30s}[data-delay="6"]{transition-delay:.36s}
 
@@ -196,7 +223,7 @@ export default function VideosPage() {
       {/* ── STATS ── */}
       <div className="vp-stats" data-reveal="up">
         {[
-          { num:'9',    label:'فيديو جاهز' },
+          { num: loading ? '...' : String(products.length), label:'فيديو جاهز' },
           { num:'4K',   label:'جودة الفيديو' },
           { num:'24h',  label:'وقت التسليم' },
           { num:'100%', label:'جودة مضمونة' },
@@ -210,16 +237,15 @@ export default function VideosPage() {
 
       {/* ── GRID ── */}
       <div className="vp-grid" id="grid">
-        {PRODUCTS.map((p, i) => (
-          <div
-            key={p.id}
-            className="vp-card"
-            data-reveal="scale"
-            data-delay={String((i % 6) + 1) as any}
-            onClick={() => openModal(p)}
-          >
+        {loading && <div style={{ gridColumn:'1/-1', textAlign:'center', padding:'3rem', color:'rgba(255,255,255,0.4)' }}>جاري التحميل...</div>}
+        {!loading && products.length === 0 && <div style={{ gridColumn:'1/-1', textAlign:'center', padding:'3rem', color:'rgba(255,255,255,0.4)' }}>لا توجد فيديوهات حالياً</div>}
+        {products.map((p, i) => (
+          <div key={p.id} className="vp-card" onClick={() => openModal(p)}>
             <div className="vp-card-thumb">
-              <img src={p.thumb} alt={p.name} loading="lazy" />
+              {p.video
+                ? <video muted loop playsInline preload="none" src={p.video} />
+                : <div className="no-vid"><i className="fas fa-film" /></div>
+              }
               <div className="vp-card-play">
                 <div className="vp-card-play-icon"><i className="fas fa-play" /></div>
               </div>
@@ -272,17 +298,15 @@ export default function VideosPage() {
 
             {/* video / thumb */}
             <div className="vp-modal-video">
-              {playing ? (
-                <video ref={videoRef} controls autoPlay style={{ width:'100%', maxHeight:'65vh', objectFit:'contain', display:'block', background:'#000' }}>
+              {modal.video ? (
+                <video ref={videoRef} controls autoPlay muted loop playsInline
+                  style={{ width:'100%', maxHeight:'65vh', objectFit:'contain', display:'block', background:'#000' }}>
                   <source src={modal.video} type="video/mp4" />
                 </video>
               ) : (
-                <>
-                  <img className="vp-modal-thumb" src={modal.thumb} alt={modal.name} />
-                  <div className="vp-modal-play-overlay" onClick={() => setPlaying(true)}>
-                    <div className="vp-modal-play-btn"><i className="fas fa-play" /></div>
-                  </div>
-                </>
+                <div style={{ minHeight:'200px', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(15,8,59,0.6)', color:'rgba(155,89,208,0.4)', fontSize:'3rem' }}>
+                  <i className="fas fa-film" />
+                </div>
               )}
             </div>
 

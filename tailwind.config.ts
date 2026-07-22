@@ -17,8 +17,11 @@ const config: Config = {
         'text-muted': '#9B8FC0',
       },
       fontFamily: {
-        orbitron: ['Orbitron', 'sans-serif'],
-        inter: ['Inter', 'sans-serif'],
+        orbitron: ['Oxanium', 'sans-serif'],
+        bukra:    ["'29LtBukra'", 'Cairo', 'sans-serif'],
+        inter:    ['Montserrat', 'sans-serif'],
+        cairo:    ['Cairo', "'29LtBukra'", 'sans-serif'],
+        num:      ['Oxanium', 'Montserrat', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-brand': 'linear-gradient(135deg, #5416B5, #7F3AA1, #F0830B)',

@@ -15,19 +15,32 @@ export default function CartPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [checkingOut, setCheckingOut] = useState(false);
+  const [phone, setPhone] = useState('');
 
-  const handleStripeCheckout = async () => {
+  const validPhone = () => {
+    if (phone.replace(/\D/g, '').length < 8) {
+      alert('من فضلك اكتب رقم موبايلك الصحيح للتواصل معك وتسليم المنتج');
+      return false;
+    }
+    return true;
+  };
+
+  const handleMeezaCheckout = async () => {
     if (!session) { router.push('/auth/signin'); return; }
+    if (!validPhone()) return;
     setCheckingOut(true);
     try {
-      const res = await fetch('/api/stripe/checkout', {
+      const names = items.map((i: { product: { title: string }; quantity: number }) =>
+        `${i.product.title} ×${i.quantity}`).join('، ');
+      const res = await fetch('/api/alerts/paymob', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ name: names, amount: total, alertId: 'cart', phone: phone.trim() }),
       });
-      const { url } = await res.json();
+      const { url, error } = await res.json();
       if (url) window.location.href = url;
-    } catch { alert('Checkout failed. Please try again.'); }
+      else alert(typeof error === 'string' ? error : 'تعذر بدء عملية الدفع، حاول مرة أخرى');
+    } catch { alert('تعذر بدء عملية الدفع، حاول مرة أخرى'); }
     finally { setCheckingOut(false); }
   };
 
@@ -113,13 +126,29 @@ export default function CartPage() {
               </div>
             </div>
 
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2" style={{ color: '#c0a0ff' }}>
+                📱 رقم موبايلك للتواصل والتسليم
+              </label>
+              <input
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="01xxxxxxxxx"
+                dir="ltr"
+                className="w-full py-3 px-4 rounded-xl text-center outline-none"
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(122,0,255,0.4)', color: '#F0E6FF' }}
+              />
+            </div>
+
             <div className="flex flex-col gap-3">
-              <motion.button whileTap={{ scale: 0.98 }} onClick={handleStripeCheckout} disabled={checkingOut}
+              <motion.button whileTap={{ scale: 0.98 }} onClick={handleMeezaCheckout} disabled={checkingOut}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white transition-all disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg, #5416B5, #7F3AA1)', boxShadow: '0 0 20px rgba(84,22,181,0.3)' }}>
-                <CreditCard size={18} /> {checkingOut ? 'Redirecting...' : 'Pay with Stripe'}
+                <CreditCard size={18} /> {checkingOut ? 'جارٍ التحويل...' : 'الدفع بكارت ميزة / Visa'}
               </motion.button>
-              <PayPalButton items={items} total={total} session={session} />
+              <PayPalButton items={items} total={total} session={session} phone={phone} validPhone={validPhone} />
             </div>
 
             <button onClick={clearCart} className="w-full mt-3 text-xs text-text-muted hover:text-red-400 transition-colors">
@@ -132,24 +161,22 @@ export default function CartPage() {
   );
 }
 
-function PayPalButton({ items, total, session }: any) {
+function PayPalButton({ items, total, session, phone, validPhone }: any) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handlePayPal = async () => {
+  const handlePayPal = () => {
     if (!session) { router.push('/auth/signin'); return; }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/paypal/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-      });
-      const data = await res.json();
-      const approveLink = data.links?.find((l: any) => l.rel === 'approve');
-      if (approveLink) window.location.href = approveLink.href;
-    } catch { alert('PayPal checkout failed.'); }
-    finally { setLoading(false); }
+    if (!validPhone()) return;
+    // سجّل الطلب مع رقم العميل عشان يوصل الأدمن، ثم حوّل لرابط PayPal.me
+    const names = items.map((i: any) => `${i.product.title} ×${i.quantity}`).join('، ');
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: names, amount: total, phone: (phone ?? '').trim(), method: 'PayPal' }),
+    }).catch(() => {});
+    const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
+    window.location.href = `https://www.paypal.me/${handle}/${total.toFixed(2)}`;
   };
 
   return (

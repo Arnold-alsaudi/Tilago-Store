@@ -1,15 +1,15 @@
-'use client';
+﻿'use client';
 
 export function SiteFooter() {
   return (
     <footer>
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '2rem', marginBottom: '2rem' }}>
         <div>
-          <h4 style={{ fontFamily: "'Orbitron',sans-serif", color: '#fff', marginBottom: '1rem', textShadow: '0 0 8px #7A00FF' }}>Tilago</h4>
+          <h4 style={{ fontFamily: "'Oxanium',sans-serif", color: '#fff', marginBottom: '1rem', textShadow: '0 0 8px #7A00FF' }}>Tilago</h4>
           <p style={{ color: '#aaa', maxWidth: 300 }}>أفضل اليرتات جاهزة لقنواتك، تصميم مستقبلي، أداء عالي، ودعم احترافي.</p>
         </div>
         <div>
-          <h4 style={{ fontFamily: "'Orbitron',sans-serif", color: '#fff', marginBottom: '1rem' }}>روابط سريعة</h4>
+          <h4 style={{ fontFamily: "'Oxanium',sans-serif", color: '#fff', marginBottom: '1rem' }}>روابط سريعة</h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {[['/', 'الرئيسية'], ['/alerts', 'الاليرتات'], ['/stream', 'الاوفرليات'], ['/package', 'الباقات']].map(([href, label]) => (
               <li key={href}><a href={href} style={{ color: '#bbb', textDecoration: 'none', transition: '0.3s' }}
@@ -19,7 +19,7 @@ export function SiteFooter() {
           </ul>
         </div>
         <div>
-          <h4 style={{ fontFamily: "'Orbitron',sans-serif", color: '#fff', marginBottom: '1rem' }}>تواصل معنا</h4>
+          <h4 style={{ fontFamily: "'Oxanium',sans-serif", color: '#fff', marginBottom: '1rem' }}>تواصل معنا</h4>
           <div style={{ display: 'flex', gap: '1rem' }}>
             {[
               { icon: 'fab fa-instagram', href: '#' },

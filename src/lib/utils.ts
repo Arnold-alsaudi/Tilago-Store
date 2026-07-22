@@ -5,10 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// العملة الأساسية للموقع — الجنيه المصري
+export const CURRENCY = 'EGP';
+
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('ar-EG', {
     style: 'currency',
-    currency: 'USD',
+    currency: CURRENCY,
+    maximumFractionDigits: 2,
   }).format(price);
 }
 

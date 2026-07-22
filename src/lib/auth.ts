@@ -41,6 +41,21 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as any).role;
         token.id = user.id;
       }
+      // تحديث الـ role من قاعدة البيانات — مع تحمل انقطاع الاتصال
+      if (token.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email },
+            select: { id: true, role: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.id = dbUser.id;
+          }
+        } catch {
+          // DB غير متاح — نحتفظ بالـ token الحالي بدون تعطيل الجلسة
+        }
+      }
       return token;
     },
     async session({ session, token }) {

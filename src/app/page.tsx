@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { DEFAULT_HOME_CONTENT, type HomeContent, type HomeWork } from '@/lib/homeContent';
 
 /* ─── Gallery Data ─── */
 const GALLERIES = {
@@ -87,16 +88,7 @@ function GalleryCard({ id, data }: { id: string; data: typeof GALLERIES.left }) 
 }
 
 /* ─── Works Section ─── */
-const WORKS_ITEMS = [
-  { tag:'باكدج ستريم', title:'Venom Pack',      img:'/photo/venom-1.png',       href:'/stream', featured: true  },
-  { tag:'يرتات',       title:'Alert Designs',   img:'/photo/alert-special.png', href:'/alerts', featured: false },
-  { tag:'أوفرلاي',    title:'Stream Overlay',  img:'/photo/venom-5.png',        href:'/stream', featured: false },
-  { tag:'ستريم',       title:'Venom Pack II',   img:'/photo/venom-7.png',        href:'/stream', featured: false },
-  { tag:'ستريم',       title:'Pack Details',    img:'/photo/venom-9.png',        href:'/stream', featured: false },
-  { tag:'يرتات',       title:'Special Alerts',  img:'/photo/venom-10.png',       href:'/alerts', featured: false },
-];
-
-function WorksSection() {
+function WorksSection({ items }: { items: HomeWork[] }) {
   const secRef   = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [arrived, setArrived] = useState(false);
@@ -121,7 +113,7 @@ function WorksSection() {
     setTimeout(() => { setActive(i); setFading(false); }, 260);
   }
 
-  const item = WORKS_ITEMS[active];
+  const item = items[active];
 
   return (
     <section className="wsc-sec" ref={secRef}>
@@ -157,11 +149,11 @@ function WorksSection() {
         .wsc-left.in { opacity:1; transform:none; }
 
         .wsc-sup {
-          font-family:'Cairo'; font-size:.58rem; font-weight:700; letter-spacing:4px;
+          font-family:'29LtBukra','Montserrat'; font-size:.58rem; font-weight:700; letter-spacing:4px;
           text-transform:uppercase; color:rgba(155,89,208,.6); margin-bottom:10px;
         }
         .wsc-title {
-          font-family:'Cairo'; font-size:clamp(1.8rem,3vw,2.5rem);
+          font-family:'29LtBukra','Montserrat'; font-size:clamp(1.8rem,3vw,2.5rem);
           font-weight:900; color:#f0ecff; line-height:1.15; margin-bottom:8px;
         }
         .wsc-title em {
@@ -170,20 +162,20 @@ function WorksSection() {
           -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
         }
         .wsc-sub {
-          font-family:'Cairo'; font-size:.82rem;
+          font-family:'29LtBukra','Montserrat'; font-size:.82rem;
           color:rgba(170,160,205,.38); line-height:1.7; max-width:210px;
           margin-bottom:32px;
         }
 
         /* Active item name */
         .wsc-active-name {
-          font-family:'Cairo'; font-size:1rem; font-weight:800;
+          font-family:'29LtBukra','Montserrat'; font-size:1rem; font-weight:800;
           color:#ede8ff; margin-bottom:6px;
           transition:opacity .26s, transform .26s;
         }
         .wsc-active-name.fade { opacity:0; transform:translateY(6px); }
         .wsc-active-tag {
-          font-family:'Cairo'; font-size:.58rem; font-weight:700;
+          font-family:'29LtBukra','Montserrat'; font-size:.58rem; font-weight:700;
           letter-spacing:3px; text-transform:uppercase;
           color:rgba(155,89,208,.6); margin-bottom:28px;
           transition:opacity .26s;
@@ -210,7 +202,7 @@ function WorksSection() {
         /* Explore link */
         .wsc-link {
           display:inline-flex; align-items:center; gap:8px; margin-top:24px;
-          font-family:'Cairo'; font-size:.8rem; font-weight:700;
+          font-family:'29LtBukra','Montserrat'; font-size:.8rem; font-weight:700;
           color:rgba(180,165,215,.45); text-decoration:none;
           transition:color .25s, gap .25s;
         }
@@ -283,7 +275,7 @@ function WorksSection() {
 
           {/* Thumbnails */}
           <div className="wsc-thumbs">
-            {WORKS_ITEMS.map((w,i)=>(
+            {items.map((w,i)=>(
               <div key={i} className={`wsc-thumb${active===i?' active':''}`} onClick={()=>pick(i)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={w.img} alt={w.title}/>
@@ -371,7 +363,7 @@ function ShowcaseSection() {
         }
 
         .sc-label{
-          font-family:'Cairo',sans-serif;
+          font-family:'29LtBukra','Montserrat',sans-serif;
           font-size:clamp(1.1rem,2vw,1.5rem);
           font-weight:900;color:#ede8ff;
           transition:opacity .3s,transform .3s;
@@ -397,7 +389,7 @@ function ShowcaseSection() {
         /* Explore link */
         .sc-link{
           display:inline-flex;align-items:center;gap:8px;
-          font-family:'Cairo';font-size:.82rem;font-weight:700;
+          font-family:'29LtBukra','Montserrat';font-size:.82rem;font-weight:700;
           color:rgba(180,165,215,0.55);text-decoration:none;
           transition:color .25s,gap .25s;
         }
@@ -500,10 +492,14 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [introVisible, setIntroVisible] = useState(true);
   const [formMsg, setFormMsg] = useState('');
+  const [content, setContent] = useState<HomeContent>(DEFAULT_HOME_CONTENT);
 
   useEffect(() => {
     setMounted(true);
     const t = setTimeout(() => setIntroVisible(false), 4000);
+
+    // محتوى الصفحة الرئيسية القابل للتعديل من الأدمن
+    fetch('/api/settings/home').then(r => r.json()).then(setContent).catch(() => {});
 
     return () => clearTimeout(t);
   }, []);
@@ -528,7 +524,7 @@ export default function HomePage() {
         <div className="hero-container">
           <div className="hero-image">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/55.png" alt="Tilago Store" />
+            <img src={content.heroImage} alt="Tilago Store" />
           </div>
         </div>
       </section>
@@ -570,20 +566,32 @@ export default function HomePage() {
       <section className="quick-nav-section">
         <div className="quick-nav-grid">
           <Link href="/3d" className="quick-nav-btn" data-reveal="up" data-delay="1">
-            <div className="quick-nav-icon"><i className="fa-solid fa-cube"/></div>
-            ثري دي
+            <div className="quick-nav-icon">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
+            </div>
+            3D
           </Link>
           <Link href="/video" className="quick-nav-btn" data-reveal="up" data-delay="2">
-            <div className="quick-nav-icon"><i className="fas fa-film"/></div>
-            فيديو
+            <div className="quick-nav-icon">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
+            </div>
+            Video
           </Link>
           <Link href="/stream" className="quick-nav-btn" data-reveal="up" data-delay="3">
-            <div className="quick-nav-icon"><i className="fas fa-video"/></div>
-            ستريم
+            <div className="quick-nav-icon">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
+            </div>
+            Stream
           </Link>
           <Link href="/alerts" className="quick-nav-btn" data-reveal="up" data-delay="4">
-            <div className="quick-nav-icon"><i className="fas fa-bell"/></div>
-            اليرت
+            <div className="quick-nav-icon">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
+            </div>
+            Alerts
           </Link>
         </div>
       </section>
@@ -639,7 +647,7 @@ export default function HomePage() {
 
 
       {/* Works */}
-      <WorksSection/>
+      <WorksSection items={content.works}/>
 
       {/* Why Us / Image Grid */}
       <section className="wt-sec" id="about">
@@ -648,14 +656,14 @@ export default function HomePage() {
           .wt-glow{position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(84,22,181,.11) 0%,transparent 70%);left:-120px;top:50%;transform:translateY(-50%);pointer-events:none}
           .wt-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:260px 1fr;gap:44px;align-items:center;position:relative;z-index:1;direction:rtl}
           .wt-left{display:flex;flex-direction:column;gap:0}
-          .wt-left h2{font-family:'Cairo';font-size:clamp(1.8rem,2.8vw,2.5rem);font-weight:900;color:#f0ecff;line-height:1.2;margin-bottom:14px}
+          .wt-left h2{font-family:'29LtBukra','Montserrat';font-size:clamp(1.8rem,2.8vw,2.5rem);font-weight:900;color:#f0ecff;line-height:1.2;margin-bottom:14px}
           .wt-left h2 em{font-style:normal;background:linear-gradient(90deg,#9B59D0,#c084f5,#7F3AA1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-          .wt-left p{font-family:'Cairo';font-size:.86rem;line-height:1.8;color:rgba(170,160,205,.42);margin-bottom:28px}
+          .wt-left p{font-family:'29LtBukra','Montserrat';font-size:.86rem;line-height:1.8;color:rgba(170,160,205,.42);margin-bottom:28px}
           .wt-stat-row{display:flex;flex-direction:column;gap:12px}
           .wt-stat{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);transition:border-color .3s,background .3s}
           .wt-stat:hover{border-color:rgba(155,89,208,.3);background:rgba(84,22,181,.06)}
-          .wt-stat-num{font-family:'Orbitron';font-size:1.35rem;font-weight:900;color:#c4a0e0;min-width:60px}
-          .wt-stat-lbl{font-family:'Cairo';font-size:.8rem;font-weight:700;color:rgba(200,185,230,.5)}
+          .wt-stat-num{font-family:'Oxanium',sans-serif;font-size:1.35rem;font-weight:900;color:#c4a0e0;min-width:60px;font-variant-numeric:tabular-nums}
+          .wt-stat-lbl{font-family:'Cairo','29LtBukra',sans-serif;font-size:.8rem;font-weight:700;color:rgba(200,185,230,.5)}
           .wt-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,175px);gap:12px}
           .wt-card{border-radius:16px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.055);transition:border-color .3s,transform .35s,box-shadow .35s;cursor:pointer}
           .wt-card:hover{border-color:rgba(155,89,208,.4);transform:translateY(-5px);box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 0 1px rgba(155,89,208,.18)}
@@ -665,8 +673,8 @@ export default function HomePage() {
           .wt-card:hover img{transform:scale(1.07)}
           .wt-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,1,12,.92) 0%,transparent 55%);z-index:1}
           .wt-card-label{position:absolute;bottom:12px;right:14px;left:14px;z-index:2}
-          .wt-card-tag{font-family:'Cairo';font-size:.52rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(155,89,208,.7);margin-bottom:3px}
-          .wt-card-name{font-family:'Cairo';font-size:.88rem;font-weight:900;color:#f0ecff;text-shadow:0 2px 8px rgba(0,0,0,.9)}
+          .wt-card-tag{font-family:'29LtBukra','Montserrat';font-size:.52rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(155,89,208,.7);margin-bottom:3px}
+          .wt-card-name{font-family:'29LtBukra','Montserrat';font-size:.88rem;font-weight:900;color:#f0ecff;text-shadow:0 2px 8px rgba(0,0,0,.9)}
           @media(max-width:1024px){.wt-inner{grid-template-columns:1fr}.wt-left{flex-direction:row;flex-wrap:wrap}.wt-left h2,.wt-left p{width:100%}.wt-stat-row{flex-direction:row;flex-wrap:wrap}.wt-stat{flex:1 1 140px}}
           @media(max-width:700px){.wt-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:auto}.wt-card[style]{grid-column:span 2!important;grid-row:auto!important;height:210px}.wt-sec{padding:52px 16px}}
           @media(max-width:480px){.wt-grid{grid-template-columns:1fr}.wt-card[style]{grid-column:1!important}}
@@ -698,23 +706,17 @@ export default function HomePage() {
             <h2>أكثر من مجرد <em>تصميم</em></h2>
             <p>نقدم تجربة متكاملة من التصميم إلى التسليم — بجودة عالية وأسلوب فريد يناسب قناتك</p>
             <div className="wt-stat-row">
-              {[['500+','عميل راضي'],['200+','تصميم منجز'],['24/7','دعم فني'],['100%','ضمان الجودة']].map(([n,l])=>(
-                <div className="wt-stat" key={l}>
-                  <div className="wt-stat-num">{n}</div>
-                  <div className="wt-stat-lbl">{l}</div>
+              {content.stats.map((s)=>(
+                <div className="wt-stat" key={s.label}>
+                  <div className="wt-stat-num">{s.num}</div>
+                  <div className="wt-stat-lbl">{s.label}</div>
                 </div>
               ))}
             </div>
           </div>
           <div className="wt-grid" data-reveal="left">
-            {[
-              {img:'/photo/venom-9.png',   tag:'ستريم',   name:'Pack Details',   col:undefined,   row:undefined},
-              {img:'/photo/venom-1.png',   tag:'باكدج',   name:'Venom Pack',     col:'2',         row:'1/3'},
-              {img:'/photo/alert-special.png', tag:'يرتات', name:'Alert Special', col:undefined,   row:undefined},
-              {img:'/photo/venom-7.png',   tag:'ستريم',   name:'Venom Pack II',  col:undefined,   row:undefined},
-              {img:'/photo/venom-5.png',   tag:'أوفرلاي', name:'Stream Overlay', col:undefined,   row:undefined},
-            ].map((c,i)=>(
-              <div key={i} className="wt-card" style={c.col?{gridColumn:c.col,gridRow:c.row}:{}}>
+            {content.gallery.map((c,i)=>(
+              <div key={i} className="wt-card" style={c.featured?{gridColumn:'2',gridRow:'1/3'}:{}}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={c.img} alt={c.name}/>
                 <div className="wt-card-overlay"/>
@@ -909,7 +911,7 @@ export default function HomePage() {
           max-width: 1400px; margin: 0 auto;
           border-radius: 28px; overflow: hidden;
           border: 1px solid rgba(127,58,161,0.18);
-          height: 580px;
+          height: clamp(200px, 42vw, 600px);
           box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(84,22,181,0.07);
         }
         .hero-image { width: 100%; height: 100%; }
@@ -933,7 +935,7 @@ export default function HomePage() {
           text-transform: uppercase;
           color: rgba(196,160,224,0.45);
           margin-bottom: 18px;
-          font-family: 'Rajdhani', sans-serif;
+          font-family:'Montserrat', sans-serif;
         }
         .platforms-track-wrap {
           overflow: hidden;
@@ -961,7 +963,7 @@ export default function HomePage() {
           font-size: 0.85rem;
           font-weight: 500;
           color: rgba(196,160,224,0.45);
-          font-family: 'Rajdhani', sans-serif;
+          font-family:'Montserrat', sans-serif;
           letter-spacing: 1px;
         }
         .track-fwd { animation: platFwd 28s linear infinite; }
@@ -1042,7 +1044,7 @@ export default function HomePage() {
           position: absolute; bottom: 0; left: 0; right: 0;
           padding: 40px 30px 30px;
           background: linear-gradient(to top, rgba(12,5,22,0.95), transparent);
-          font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 700;
+          font-family:'Oxanium', sans-serif; font-size: 1.8rem; font-weight: 700;
           color: #c4a0e0;
           opacity: 0; transform: translateY(30px); transition: all 0.4s; z-index: 5;
         }
@@ -1052,7 +1054,7 @@ export default function HomePage() {
           transform: translateX(-50%) translateY(20px);
           background: linear-gradient(135deg,#5416B5,#7F3AA1);
           color: #fff; padding: 13px 32px; border-radius: 30px;
-          font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700;
+          font-family:'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 700;
           text-decoration: none; text-transform: uppercase; letter-spacing: 2px;
           box-shadow: 0 4px 18px rgba(84,22,181,0.4);
           opacity: 0; z-index: 10; transition: all 0.4s;
@@ -1075,7 +1077,7 @@ export default function HomePage() {
         }
         .services-tag {
           display: inline-block;
-          font-family: 'Cairo', sans-serif; font-size: 0.65rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.65rem;
           font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
           color: rgba(155,89,208,0.7); padding: 5px 20px; border-radius: 20px;
           border: 1px solid rgba(155,89,208,0.18);
@@ -1083,11 +1085,11 @@ export default function HomePage() {
           margin-bottom: 16px;
         }
         .services-header h2 {
-          font-family: 'Cairo', sans-serif; font-size: clamp(1.7rem,3.5vw,2.4rem);
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: clamp(1.7rem,3.5vw,2.4rem);
           color: #eae6ff; font-weight: 900; margin-bottom: 10px; letter-spacing: .5px;
         }
         .services-header p {
-          font-family: 'Cairo', sans-serif; font-size: 0.92rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.92rem;
           color: rgba(170,160,205,0.4); line-height: 1.7;
         }
         .services-grid {
@@ -1134,11 +1136,11 @@ export default function HomePage() {
         }
         .srv-body { flex: 1; position: relative; z-index: 1; }
         .srv-body h3 {
-          font-family: 'Cairo', sans-serif; font-size: 0.98rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.98rem;
           color: #e8e2ff; font-weight: 800; margin-bottom: 4px;
         }
         .srv-body p {
-          font-family: 'Cairo', sans-serif; font-size: 0.82rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.82rem;
           color: rgba(170,160,205,0.38); line-height: 1.5;
         }
         .srv-arrow {
@@ -1167,7 +1169,7 @@ export default function HomePage() {
         .why-header { text-align: center; margin-bottom: 52px; }
         .why-tag {
           display: inline-block;
-          font-family: 'Cairo', sans-serif; font-size: 0.65rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.65rem;
           font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
           color: rgba(155,89,208,0.7); padding: 5px 20px; border-radius: 20px;
           border: 1px solid rgba(155,89,208,0.18);
@@ -1175,7 +1177,7 @@ export default function HomePage() {
           margin-bottom: 16px; display: block; width: fit-content; margin: 0 auto 16px;
         }
         .why-header h2 {
-          font-family: 'Cairo', sans-serif; font-size: clamp(1.6rem,3.5vw,2.3rem);
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: clamp(1.6rem,3.5vw,2.3rem);
           color: #eae6ff; font-weight: 900; letter-spacing: .5px;
         }
         .why-grid {
@@ -1217,11 +1219,11 @@ export default function HomePage() {
           color: #9B59D0; transform: scale(1.08);
         }
         .why-card h3 {
-          font-family: 'Cairo', sans-serif; font-size: 1rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 1rem;
           color: #e8e2ff; font-weight: 800; margin-bottom: 10px;
         }
         .why-card p {
-          font-family: 'Cairo', sans-serif; font-size: 0.84rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.84rem;
           color: rgba(170,160,205,0.4); line-height: 1.75;
         }
         @media (max-width: 900px) {
@@ -1248,11 +1250,11 @@ export default function HomePage() {
           align-items: center; gap: 10px;
         }
         .stat-number {
-          font-family: 'Orbitron', sans-serif; font-size: 2.6rem;
+          font-family:'Oxanium', sans-serif; font-size: 2.6rem;
           font-weight: 900; color: #c4a0e0; letter-spacing: 2px;
         }
         .stat-label {
-          font-family: 'Rajdhani', sans-serif; font-size: 1rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 1rem;
           color: rgba(255,255,255,0.55); letter-spacing: 1px;
           text-transform: uppercase; font-weight: 600;
         }
@@ -1277,7 +1279,7 @@ export default function HomePage() {
         .contact-header { text-align: center; margin-bottom: 55px; }
         .contact-tag {
           display: inline-block;
-          font-family: 'Rajdhani', sans-serif; font-size: 0.85rem;
+          font-family:'Montserrat', sans-serif; font-size: 0.85rem;
           font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
           color: #7F3AA1; margin-bottom: 14px;
           padding: 5px 18px; border-radius: 20px;
@@ -1285,11 +1287,11 @@ export default function HomePage() {
           background: rgba(84,22,181,0.1);
         }
         .contact-header h2 {
-          font-family: 'Orbitron', sans-serif; font-size: 2.4rem;
+          font-family:'Oxanium', sans-serif; font-size: 2.4rem;
           color: #fff; letter-spacing: 2px; margin-bottom: 14px;
         }
         .contact-sub {
-          font-family: 'Rajdhani', sans-serif; font-size: 1.05rem;
+          font-family:'Montserrat', sans-serif; font-size: 1.05rem;
           color: rgba(255,255,255,0.5); letter-spacing: 0.5px;
         }
         .contact-body {
@@ -1313,12 +1315,12 @@ export default function HomePage() {
           flex-shrink: 0;
         }
         .info-label {
-          display: block; font-family: 'Rajdhani', sans-serif;
+          display: block; font-family:'Montserrat', sans-serif;
           font-size: 0.78rem; color: rgba(255,255,255,0.4);
           letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px;
         }
         .info-value {
-          display: block; font-family: 'Rajdhani', sans-serif;
+          display: block; font-family:'Montserrat', sans-serif;
           font-size: 1rem; color: rgba(255,255,255,0.85); font-weight: 600;
         }
         .contact-form { display: flex; flex-direction: column; gap: 14px; }
@@ -1335,7 +1337,7 @@ export default function HomePage() {
           width: 100%; padding: 14px 42px 14px 18px;
           border: 1px solid rgba(84,22,181,0.35); border-radius: 12px;
           background: rgba(15,8,59,0.55); color: #fff;
-          font-size: 0.95rem; font-family: 'Rajdhani', sans-serif;
+          font-size: 0.95rem; font-family:'Montserrat', sans-serif;
           outline: none; transition: all 0.25s;
         }
         .input-group input::placeholder,
@@ -1352,7 +1354,7 @@ export default function HomePage() {
           background: linear-gradient(135deg,#5416B5,#7F3AA1);
           color: #fff; padding: 15px; border: none; border-radius: 12px;
           font-size: 1rem; font-weight: 700;
-          font-family: 'Orbitron', sans-serif; cursor: pointer;
+          font-family:'Oxanium', sans-serif; cursor: pointer;
           transition: all 0.3s; letter-spacing: 1.5px;
         }
         .contact-form button:hover { opacity: 0.9; transform: translateY(-2px); }
@@ -1360,7 +1362,7 @@ export default function HomePage() {
           position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
           background: linear-gradient(135deg,#5416B5,#7F3AA1);
           color: #fff; padding: 14px 32px; border-radius: 30px;
-          font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 600;
+          font-family:'Montserrat', sans-serif; font-size: 1rem; font-weight: 600;
           z-index: 9999; letter-spacing: 1px;
         }
         @media (max-width: 768px) {
@@ -1405,7 +1407,7 @@ export default function HomePage() {
         .ticker-bar:hover .ticker-track { animation-play-state: paused; }
         .ticker-item {
           display: inline-flex; align-items: center; gap: 7px;
-          font-family: 'Rajdhani', sans-serif; font-size: 0.78rem;
+          font-family:'Montserrat', sans-serif; font-size: 0.78rem;
           font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
           color: rgba(255,255,255,0.7);
           padding: 0 28px;
@@ -1422,7 +1424,7 @@ export default function HomePage() {
 
         /* ── Quick Nav ── */
         .quick-nav-section {
-          max-width: 1100px; margin: 0 auto; padding: 32px 20px 44px;
+          max-width: 1100px; margin: 0 auto; padding: 16px 20px 32px;
         }
         .quick-nav-grid {
           display: grid; grid-template-columns: repeat(4,1fr); gap: 14px;
@@ -1430,12 +1432,12 @@ export default function HomePage() {
         .quick-nav-btn {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          gap: 12px; padding: 28px 12px 24px;
+          gap: 10px; padding: 18px 12px 16px;
           border-radius: 20px;
           background: rgba(255,255,255,0.025);
           border: 1px solid rgba(255,255,255,0.07);
           color: rgba(175,165,208,0.5);
-          font-family: 'Cairo', sans-serif; font-size: 0.95rem;
+          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.95rem;
           font-weight: 700; text-decoration: none;
           position: relative; overflow: hidden;
           transition: all 0.3s cubic-bezier(.25,.8,.25,1);
@@ -1480,14 +1482,14 @@ export default function HomePage() {
 
         /* ── Responsive ── */
         @media (max-width: 1024px) {
-          .hero-container { height: 500px; border-radius: 40px; }
+          .hero-container { border-radius: 20px; }
           .gallery-section { grid-template-columns: 1fr; padding: 40px 20px; }
           .services-grid { grid-template-columns: repeat(2,1fr); }
           .why-grid { grid-template-columns: repeat(2,1fr); }
         }
         @media (max-width: 768px) {
           .hero-section { margin-top: 12px; padding: 0 8px; }
-          .hero-container { height: 360px; border-radius: 24px; border-width: 3px; }
+          .hero-container { border-radius: 16px; border-width: 2px; }
           .quick-nav-section { padding: 0 8px; margin-bottom: 28px; }
           .quick-nav-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
           .quick-nav-btn { padding: 12px 10px; font-size: .8rem; border-radius: 12px; }
@@ -1507,7 +1509,7 @@ export default function HomePage() {
           #contact { padding: 50px 20px; }
         }
         @media (max-width: 560px) {
-          .hero-container { height: 220px; border-radius: 16px; }
+          .hero-container { border-radius: 12px; }
           .quick-nav-grid { grid-template-columns: repeat(2,1fr); gap: 8px; }
           .quick-nav-btn { padding: 11px 8px; font-size: .75rem; }
           .services-grid { grid-template-columns: 1fr; }
@@ -1517,8 +1519,12 @@ export default function HomePage() {
           .platforms-section { padding: 18px 0 24px; }
         }
         @media (max-width: 360px) {
-          .hero-container { height: 180px; border-radius: 12px; }
+          .hero-container { border-radius: 10px; }
           .quick-nav-btn { font-size: .68rem; padding: 10px 6px; }
+        }
+        @media (min-width: 1600px) {
+          .hero-section { padding: 0 clamp(20px, 3vw, 60px); }
+          .services-section { max-width: 1400px; }
         }
         @media (hover: none) {
           .quick-nav-btn:hover { transform: none; box-shadow: none; }

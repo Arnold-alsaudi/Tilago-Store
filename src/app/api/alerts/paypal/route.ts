@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { rateLimit } from '@/lib/rateLimit';
+import { prisma } from '@/lib/prisma';
+
+const schema = z.object({
+  name:   z.string().min(1).max(200),
+  amount: z.number().positive().max(100_000),
+});
+
+// sandbox افتراضياً — للإنتاج ضع PAYPAL_API_BASE=https://api-m.paypal.com
+const PAYPAL_API_BASE = process.env.PAYPAL_API_BASE ?? 'https://api-m.sandbox.paypal.com';
 
 async function getPayPalToken() {
-  const res = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+  const res = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64')}`,
@@ -14,19 +25,32 @@ async function getPayPalToken() {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, amount } = await req.json();
-  if (!name || !amount) return NextResponse.json({ error: 'Missing data' }, { status: 400 });
+  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const { success } = await rateLimit(ip, 10, 60_000);
+  if (!success) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+
+  const paused = await prisma.siteSetting.findUnique({ where: { key: 'storePaused' } });
+  if (paused?.value === 'true') {
+    return NextResponse.json({ error: 'الطلبات متوقفة مؤقتاً' }, { status: 503 });
+  }
+
+  const body = await req.json();
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+
+  const { name, amount } = parsed.data;
 
   try {
     const token = await getPayPalToken();
 
-    const res = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+    const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         intent: 'CAPTURE',
         purchase_units: [{
-          amount: { currency_code: 'SAR', value: Number(amount).toFixed(2) },
+          // PayPal لا يدعم EGP كعملة تسوية — العملة قابلة للضبط عبر PAYPAL_CURRENCY
+          amount: { currency_code: process.env.PAYPAL_CURRENCY ?? 'USD', value: Number(amount).toFixed(2) },
           description: `Tilago Alert — ${name}`,
         }],
         application_context: {

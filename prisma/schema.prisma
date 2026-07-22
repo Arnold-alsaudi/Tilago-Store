@@ -64,12 +64,19 @@ enum Role {
 
 model Product {
   id          String      @id @default(cuid())
+  slug        String?     @unique
   title       String
   description String      @db.Text
   price       Float
+  priceLabel  String?
   category    Category
+  subCategory String?
   imageUrl    String
+  images      String[]    @default([])
   videoUrl    String?
+  videos      String[]    @default([])
+  rating      Float       @default(5)
+  ratingCount Int         @default(0)
   tags        String[]
   featured    Boolean     @default(false)
   active      Boolean     @default(true)
@@ -79,11 +86,31 @@ model Product {
   cartItems   CartItem[]
 }
 
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String
+  name      String?
+  password  String?
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 enum Category {
   ALERTS
   STREAM
   PACKAGE
   THREE_D
+  VIDEO
 }
 
 model Order {
@@ -104,6 +131,8 @@ model Order {
 enum OrderStatus {
   PENDING
   PAID
+  IN_PROGRESS
+  DELIVERED
   FAILED
   REFUNDED
 }
@@ -131,14 +160,16 @@ model CartItem {
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  orderId     String?
-  userEmail   String
-  userName    String?
-  productName String?
-  amount      Float
-  currency    String   @default("EGP")
-  method      String
-  status      String   @default("success")
-  createdAt   DateTime @default(now())
+  id             String   @id @default(cuid())
+  orderId        String?
+  userEmail      String
+  userName       String?
+  userPhone      String?
+  productName    String?
+  amount         Float
+  currency       String   @default("EGP")
+  method         String
+  status         String   @default("success")
+  deliveryStatus String   @default("pending") // pending | in_progress | delivered
+  createdAt      DateTime @default(now())
 }

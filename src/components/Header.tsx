@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -49,6 +49,13 @@ export function Header() {
                 <Link href="/contact"><i className="fa fa-code" /> Developer</Link>
               </div>
             </li>
+            <li>
+              <a href="#">E-Sports <i className="fas fa-chevron-down" /></a>
+              <div className="dropdown-content">
+                <Link href="/esports/pubg"><i className="fas fa-trophy" /> Championship Pubg</Link>
+                <Link href="/esports/tdm"><i className="fas fa-crosshairs" /> TDM</Link>
+              </div>
+            </li>
             <li><Link href="/contact">Contact</Link></li>
             <li><Link href="/#about">About</Link></li>
             <li><Link href="/3d">3D Model</Link></li>
@@ -69,6 +76,13 @@ export function Header() {
               </span>
             )}
           </Link>
+
+          {/* My Orders */}
+          {session && (
+            <Link href="/orders" title="طلباتي" style={{ position: 'relative', color: '#c4a0e0', fontSize: '1.3rem', width: 45, height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'rgba(15,8,59,0.6)', border: '1px solid rgba(84,22,181,0.4)' }}>
+              <i className="fas fa-box" />
+            </Link>
+          )}
 
           {/* Auth */}
           {session ? (
@@ -119,7 +133,7 @@ export function Header() {
         header nav ul li a {
           text-decoration: none;
           color: rgba(255, 255, 255, 0.85);
-          font-family: 'Rajdhani', sans-serif;
+          font-family:'Montserrat', sans-serif;
           font-size: 1.1rem;
           font-weight: 600;
           letter-spacing: 1.5px;
@@ -216,7 +230,7 @@ export function Header() {
           font-weight: 700;
           cursor: pointer;
           color: #fff;
-          font-family: 'Rajdhani', sans-serif;
+          font-family:'Montserrat', sans-serif;
           text-transform: uppercase;
           letter-spacing: 1px;
           box-shadow: 0 4px 15px rgba(84, 22, 181, 0.4);
@@ -236,19 +250,13 @@ export function Header() {
           font-size: 1.5rem;
           cursor: pointer;
         }
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
           header { padding: 15px 30px; }
-          header nav ul { gap: 25px; }
+          header nav ul { gap: 20px; }
+          header nav ul li a { font-size: 1rem; }
         }
-        @media (max-width: 768px) {
-          header { padding: 15px 20px; }
-          header nav ul { gap: 15px; font-size: 0.9rem; }
-          header nav ul li a { padding: 6px 0; font-size: 0.9rem; }
-          .icons { gap: 14px; }
-          .login-btn { padding: 8px 18px; font-size: 0.85rem; }
-          .logo-img { height: 40px; }
-        }
-        @media (max-width: 480px) {
+        @media (max-width: 900px) {
+          header { padding: 14px 20px; }
           header nav ul { display: none; }
           header nav ul.mobile-open {
             display: flex;
@@ -256,12 +264,36 @@ export function Header() {
             position: absolute;
             top: 100%; left: 0; right: 0;
             background: rgba(12, 5, 22, 0.99);
-            padding: 20px;
+            padding: 20px 24px;
             z-index: 999;
             border-bottom: 1px solid rgba(84, 22, 181, 0.4);
+            gap: 4px;
           }
+          header nav ul.mobile-open li a { font-size: 1rem; padding: 10px 0; }
+          header nav ul.mobile-open .dropdown-content {
+            position: static;
+            display: flex !important;
+            flex-direction: column;
+            background: rgba(30,15,55,0.9);
+            border: none;
+            border-left: 2px solid rgba(84,22,181,0.4);
+            border-radius: 0;
+            padding: 0 0 0 14px;
+            margin: 0 0 0 10px;
+            box-shadow: none;
+            animation: none;
+          }
+          header nav ul.mobile-open .dropdown-content a { font-size: 0.9rem !important; padding: 8px 12px !important; }
           .mobile-menu-btn { display: block; }
-          .logo-img { height: 35px; }
+          .logo-img { height: 38px; }
+          .icons { gap: 12px; }
+          .login-btn { padding: 9px 18px; font-size: 0.85rem; }
+        }
+        @media (max-width: 480px) {
+          header { padding: 12px 14px; }
+          .logo-img { height: 32px; }
+          .icons { gap: 8px; }
+          .login-btn { padding: 8px 14px; font-size: 0.8rem; }
         }
       `}</style>
     </>

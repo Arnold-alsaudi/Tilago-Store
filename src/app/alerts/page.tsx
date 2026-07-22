@@ -1,6 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
+import type { Product } from '@/types';
 
 /* ─── Types ─── */
 interface AlertItem {
@@ -11,68 +13,32 @@ interface AlertItem {
 
 /* ─── Data ─── */
 const CATEGORIES = [
-  { id: 'diamond',  title: 'الأليرتات الماسية',    desc: 'اليرت خاص تقدر تحط أسهمك أو شعارك',        img: '/photo/alert-special.png' },
-  { id: 'golden',   title: 'الأليرتات الذهبية',    desc: 'إيرتات جيفت متنوعة ومميزة',                 img: '/photo/alert-gift.png'    },
-  { id: 'platinum', title: 'الأليرتات البلاتينية', desc: 'اليرت تكبيس للفولو والريد',                 img: '/photo/alert-follow.png'  },
+  { id: 'diamond',  title: 'الاليرتات الخاصة',    desc: 'اليرت خاص تقدر تحط أسهمك أو شعارك',        img: '/photo/alert-special.png' },
+  { id: 'golden',   title: 'الاليرتات جيفت',    desc: 'إيرتات جيفت متنوعة ومميزة',                 img: '/photo/alert-gift.png'    },
+  { id: 'platinum', title: 'الاليرتات التكبيس', desc: 'اليرت تكبيس للفولو والريد',                 img: '/photo/alert-follow.png'  },
   { id: 'anime',    title: 'الأليرتات الأنمي',     desc: 'مخصصة لعشاق الأنمي',                        img: '/photo/anime.png'         },
-  { id: 'snow',     title: 'الأليرتات الثلجية',    desc: 'افضل لعشاق الأنمي والثلج',                  img: '/caf.png'                 },
+  { id: 'snow',     title: 'الاليرتات الدعم',    desc: 'افضل لعشاق الأنمي والثلج',                  img: '/caf.png'                 },
   { id: 'fire',     title: 'الأليرتات ثري دي',     desc: 'اليرتات ثري دي بتصميم مبهر',               img: '/photo/alert-3d.png'      },
 ];
 
-const V = (n: number) => `/photo/venom-${n}.png`;
+interface DbProduct {
+  id: string; slug: string | null; title: string; description: string;
+  price: number; priceLabel: string | null; subCategory: string | null;
+  imageUrl: string; images: string[]; videoUrl: string | null;
+  rating: number; ratingCount: number; tags: string[];
+}
 
-const ALERTS: Record<string, AlertItem[]> = {
-  diamond: [
-    { id: 'valhalla',   name: 'VALHALLA',      rating: '5',   ratingCount: 1,  price: '94 ريال',  desc: 'الإيرت فل سكرين مع اضافة شعارك الخاص',  category: 'الأليرتات الماسية', imgs:[V(1),V(2)],             video:'/video/tilago.mp4' },
-    { id: 'in-the-sky', name: 'In The Sky',    rating: '5',   ratingCount: 5,  price: '94 ريال',  desc: 'الإيرت فل سكرين مع اضافة شعارك الخاص',  category: 'الأليرتات الماسية', imgs:[V(5),V(7)],             video:'/video/tilago.mp4' },
-    { id: 'battlecry',  name: 'BATTLECRY',     rating: '4',   ratingCount: 4,  price: '94 ريال',  desc: 'الإيرت فل سكرين مع اضافة شعارك الخاص',  category: 'الأليرتات الماسية', imgs:[V(9),V(10)],            video:'/video/tilago.mp4' },
-    { id: 'dj-mo',      name: 'DJ MO - Mwaki', rating: '5',   ratingCount: 1,  price: '94 ريال',  desc: 'الإيرت فل سكرين مع اضافة شعارك الخاص',  category: 'الأليرتات الماسية', imgs:[V(11),V(1)],            video:'/video/tilago.mp4' },
-    { id: 'dont-say',   name: "DON'T SAY",     rating: '4.5', ratingCount: 3,  price: '94 ريال',  desc: 'الإيرت فل سكرين مع اضافة شعارك الخاص',  category: 'الأليرتات الماسية', imgs:[V(2),V(5)],             video:'/video/tilago.mp4' },
-    { id: 'this-is-it', name: 'THIS IS IT',    rating: '4.8', ratingCount: 6,  price: '94 ريال',  desc: 'الإيرت فل سكرين مع اضافة شعارك الخاص',  category: 'الأليرتات الماسية', imgs:[V(7),V(9)],             video:'/video/tilago.mp4' },
-  ],
-  golden: [
-    { id: 'gold-1',      name: 'Golden Blaze',  rating: '4.8', ratingCount: 12, price: '120 ريال', desc: 'إيرت ذهبي بتصميم متألق ومميز',         category: 'الأليرتات الذهبية', imgs:['/photo/alert-gift.png',   V(1)],  video:'/video/tilago.mp4' },
-    { id: 'gold-2',      name: 'Royal Crown',   rating: '5',   ratingCount: 6,  price: '110 ريال', desc: 'الإيرت الملكي بألوان ذهبية راقية',     category: 'الأليرتات الذهبية', imgs:[V(2),'/photo/alert-gift.png'],    video:'/video/tilago.mp4' },
-    { id: 'gold-3',      name: 'Golden Storm',  rating: '4.7', ratingCount: 8,  price: '115 ريال', desc: 'إيرت ذهبي بتأثيرات كهربائية',         category: 'الأليرتات الذهبية', imgs:[V(5),V(7)],               video:'/video/tilago.mp4' },
-    { id: 'sunlight',    name: 'Sunlight',      rating: '4.9', ratingCount: 5,  price: '125 ريال', desc: 'إيرت ذهبي بتصميم شمسي',               category: 'الأليرتات الذهبية', imgs:[V(9),V(10)],              video:'/video/tilago.mp4' },
-    { id: 'gold-rush',   name: 'Gold Rush',     rating: '4.6', ratingCount: 7,  price: '110 ريال', desc: 'إيرت ذهبي بحركة سريعة',               category: 'الأليرتات الذهبية', imgs:[V(11),V(1)],              video:'/video/tilago.mp4' },
-    { id: 'golden-king', name: 'Golden King',   rating: '5',   ratingCount: 4,  price: '130 ريال', desc: 'إيرت ذهبي بتصميم ملكي',               category: 'الأليرتات الذهبية', imgs:[V(2),V(5)],               video:'/video/tilago.mp4' },
-  ],
-  platinum: [
-    { id: 'plat-1', name: 'Platinum Pulse', rating: '4.9', ratingCount: 8, price: '130 ريال', desc: 'إيرت بلاتيني بتأثيرات كهربائية', category: 'الأليرتات البلاتينية', imgs:['/photo/alert-follow.png', V(1)],  video:'/video/tilago.mp4' },
-    { id: 'plat-2', name: 'Platinum Glow',  rating: '4.8', ratingCount: 6, price: '125 ريال', desc: 'إيرت بلاتيني بلمعان دقيق',        category: 'الأليرتات البلاتينية', imgs:[V(2),'/photo/alert-follow.png'],  video:'/video/tilago.mp4' },
-    { id: 'plat-3', name: 'Platinum Nova',  rating: '5',   ratingCount: 3, price: '140 ريال', desc: 'إيرت بلاتيني بتأثيرات نجمية',     category: 'الأليرتات البلاتينية', imgs:[V(5),V(7)],                       video:'/video/tilago.mp4' },
-    { id: 'plat-4', name: 'Platinum Edge',  rating: '4.7', ratingCount: 5, price: '135 ريال', desc: 'إيرت بلاتيني بحدود حادة',          category: 'الأليرتات البلاتينية', imgs:[V(9),V(10)],                      video:'/video/tilago.mp4' },
-    { id: 'plat-5', name: 'Platinum Wave',  rating: '4.6', ratingCount: 4, price: '120 ريال', desc: 'إيرت بلاتيني بحركة موجية',         category: 'الأليرتات البلاتينية', imgs:[V(11),V(1)],                      video:'/video/tilago.mp4' },
-    { id: 'plat-6', name: 'Platinum Star',  rating: '5',   ratingCount: 2, price: '145 ريال', desc: 'إيرت بلاتيني بتصميم نجمي',         category: 'الأليرتات البلاتينية', imgs:[V(2),V(5)],                       video:'/video/tilago.mp4' },
-  ],
-  anime: [
-    { id: 'anime-1',      name: 'Anime Spark',    rating: '5',   ratingCount: 3, price: '100 ريال', desc: 'مخصص لعشاق الأنمي والفن الياباني', category: 'الأليرتات الأنمي', imgs:['/photo/anime.png',V(1)],   video:'/video/tilago.mp4' },
-    { id: 'ninja-flame',  name: 'Ninja Flame',    rating: '4.8', ratingCount: 5, price: '105 ريال', desc: 'إيرت أنمي بتأثيرات نار',            category: 'الأليرتات الأنمي', imgs:[V(2),'/photo/anime.png'],   video:'/video/tilago.mp4' },
-    { id: 'samurai-rise', name: 'Samurai Rise',   rating: '4.7', ratingCount: 4, price: '110 ريال', desc: 'إيرت أنمي بتصميم ساموراي',          category: 'الأليرتات الأنمي', imgs:[V(5),V(7)],                 video:'/video/tilago.mp4' },
-    { id: 'dragon-spirit',name: 'Dragon Spirit',  rating: '5',   ratingCount: 2, price: '115 ريال', desc: 'إيرت أنمي بتصميم تنين',             category: 'الأليرتات الأنمي', imgs:[V(9),V(10)],                video:'/video/tilago.mp4' },
-    { id: 'hero-journey', name: "Hero's Journey", rating: '4.6', ratingCount: 3, price: '100 ريال', desc: 'إيرت أنمي بقصة بطل',               category: 'الأليرتات الأنمي', imgs:[V(11),'/photo/anime.png'],  video:'/video/tilago.mp4' },
-    { id: 'mystic-aura',  name: 'Mystic Aura',    rating: '4.9', ratingCount: 4, price: '120 ريال', desc: 'إيرت أنمي بأورا سحرية',            category: 'الأليرتات الأنمي', imgs:[V(1),V(2)],                 video:'/video/tilago.mp4' },
-  ],
-  snow: [
-    { id: 'snow-1',       name: 'Snow Flare',   rating: '4.7', ratingCount: 5, price: '105 ريال', desc: 'إيرت بارد بألوان زرقاء متلألئة', category: 'الأليرتات الثلجية', imgs:['/photo/alert-special.png',V(5)],  video:'/video/tilago.mp4' },
-    { id: 'frostbite',    name: 'Frostbite',    rating: '4.8', ratingCount: 4, price: '110 ريال', desc: 'إيرت ثلجي بتأثيرات برد',          category: 'الأليرتات الثلجية', imgs:[V(7),'/photo/alert-special.png'],  video:'/video/tilago.mp4' },
-    { id: 'winter-storm', name: 'Winter Storm', rating: '4.6', ratingCount: 3, price: '105 ريال', desc: 'إيرت ثلجي بحركة عاصفة',           category: 'الأليرتات الثلجية', imgs:[V(9),V(10)],                       video:'/video/tilago.mp4' },
-    { id: 'ice-crystal',  name: 'Ice Crystal',  rating: '4.9', ratingCount: 5, price: '115 ريال', desc: 'إيرت ثلجي بتصميم بلوري',          category: 'الأليرتات الثلجية', imgs:[V(11),V(1)],                       video:'/video/tilago.mp4' },
-    { id: 'blizzard',     name: 'Blizzard',     rating: '4.5', ratingCount: 4, price: '100 ريال', desc: 'إيرت ثلجي بحركة عاصفة شديدة',    category: 'الأليرتات الثلجية', imgs:[V(2),V(5)],                        video:'/video/tilago.mp4' },
-    { id: 'arctic-frost', name: 'Arctic Frost', rating: '4.7', ratingCount: 3, price: '110 ريال', desc: 'إيرت ثلجي بتصميم قطبي',           category: 'الأليرتات الثلجية', imgs:[V(7),V(9)],                        video:'/video/tilago.mp4' },
-  ],
-  fire: [
-    { id: 'fire-1',        name: 'Fire Storm',     rating: '5',   ratingCount: 4, price: '115 ريال', desc: 'إيرت ناري بتأثيرات لهب حقيقية', category: 'الأليرتات النارية', imgs:['/photo/alert-3d.png',V(1)],  video:'/video/tilago.mp4' },
-    { id: 'inferno',       name: 'Inferno',        rating: '4.9', ratingCount: 6, price: '120 ريال', desc: 'إيرت ناري بتصميم جهنم',           category: 'الأليرتات النارية', imgs:[V(2),'/photo/alert-3d.png'],  video:'/video/tilago.mp4' },
-    { id: 'flame-burst',   name: 'Flame Burst',    rating: '4.8', ratingCount: 5, price: '115 ريال', desc: 'إيرت ناري بانفجار لهب',           category: 'الأليرتات النارية', imgs:[V(5),V(7)],                   video:'/video/tilago.mp4' },
-    { id: 'phoenix-flame', name: 'Phoenix Flame',  rating: '5',   ratingCount: 3, price: '125 ريال', desc: 'إيرت ناري بتصميم طائر الفينيق',  category: 'الأليرتات النارية', imgs:[V(9),V(10)],                  video:'/video/tilago.mp4' },
-    { id: 'volcanic-surge',name: 'Volcanic Surge', rating: '4.7', ratingCount: 4, price: '110 ريال', desc: 'إيرت ناري بتأثيرات بركان',        category: 'الأليرتات النارية', imgs:[V(11),V(1)],                  video:'/video/tilago.mp4' },
-    { id: 'hellfire',      name: 'Hellfire',       rating: '4.6', ratingCount: 5, price: '115 ريال', desc: 'إيرت ناري بتصميم جهنمي',          category: 'الأليرتات النارية', imgs:[V(2),V(5)],                   video:'/video/tilago.mp4' },
-  ],
-};
-
-const ALL_ALERTS = Object.values(ALERTS).flat();
+const toAlertItem = (p: DbProduct): AlertItem => ({
+  id: p.slug ?? p.id,
+  name: p.title,
+  rating: String(p.rating),
+  ratingCount: p.ratingCount,
+  price: p.priceLabel ?? `${p.price} $`,
+  desc: p.description,
+  category: p.tags?.[0] ?? '',
+  imgs: p.images?.length ? p.images : [p.imageUrl],
+  video: p.videoUrl ?? undefined,
+});
 
 const CONTACT_BTNS = [
   { icon: 'fab fa-whatsapp', label: 'طلب الآن',     href: 'https://wa.me/1234567890', color: '#25D366' },
@@ -89,57 +55,99 @@ export default function AlertsPage() {
   const [slide, setSlide]           = useState(0);
   const [payLoading, setPayLoading] = useState<'paypal' | 'meeza' | null>(null);
   const [delivered, setDelivered]   = useState(false);
+  const [alertsData, setAlertsData] = useState<Record<string, AlertItem[]>>({});
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [storePaused, setStorePaused] = useState(false);
+  const [pauseMessage, setPauseMessage] = useState('');
+  const { addItem } = useCart();
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [phone, setPhone] = useState('');
 
   const priceValue = (price: string) => Number(price.replace(/[^\d.]/g, '')) || 0;
 
+  const validPhone = () => {
+    if (phone.replace(/\D/g, '').length < 8) {
+      alert('من فضلك اكتب رقم موبايلك الصحيح للتواصل معك وتسليم المنتج');
+      return false;
+    }
+    return true;
+  };
+
+  const addAlertToCart = (item: AlertItem) => {
+    addItem({
+      id: item.id,
+      title: item.name,
+      description: item.desc,
+      price: priceValue(item.price),
+      category: 'ALERTS',
+      imageUrl: item.imgs?.[0] ?? '',
+      videoUrl: item.video ?? null,
+      tags: [item.category],
+      featured: false,
+      active: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Product);
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  // جلب المنتجات من قاعدة البيانات
   useEffect(() => {
+    fetch('/api/products?category=ALERTS')
+      .then(r => r.json())
+      .then((products: DbProduct[]) => {
+        const grouped: Record<string, AlertItem[]> = {};
+        for (const p of products) {
+          const key = p.subCategory ?? 'other';
+          (grouped[key] ??= []).push(toAlertItem(p));
+        }
+        setAlertsData(grouped);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingProducts(false));
+
+    // التحقق من حالة الشراء
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(s => { setStorePaused(!!s.storePaused); setPauseMessage(s.pauseMessage ?? ''); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (loadingProducts) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') !== 'success') return;
     const alertId = params.get('alertId');
-    const purchased = ALL_ALERTS.find(a => a.id === alertId);
+    const purchased = Object.values(alertsData).flat().find(a => a.id === alertId);
     if (purchased) {
       setModal(purchased);
       setDelivered(true);
-      // تسجيل الدفع تلقائياً
-      fetch('/api/admin/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productName: purchased.name,
-          amount: priceValue(purchased.price),
-          method: 'Fawry/Meeza',
-          userEmail: params.get('email') ?? 'unknown',
-          userName: params.get('name') ?? '',
-        }),
-      }).catch(() => {});
+      // الـ webhook من Paymob هو المصدر الحقيقي لتسجيل الدفع
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingProducts, alertsData]);
 
-  const payWithPaypal = async (item: AlertItem) => {
-    setPayLoading('paypal');
-    try {
-      const res = await fetch('/api/alerts/paypal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: item.name, amount: priceValue(item.price) }),
-      });
-      const data = await res.json();
-      if (data.approveUrl) window.location.href = data.approveUrl;
-      else alert('تعذر بدء عملية الدفع، حاول مرة أخرى');
-    } catch {
-      alert('تعذر بدء عملية الدفع، حاول مرة أخرى');
-    } finally {
-      setPayLoading(null);
-    }
+  const payWithPaypal = (item: AlertItem) => {
+    if (!validPhone()) return;
+    // سجّل الطلب مع رقم العميل عشان يوصل الأدمن، ثم حوّل لرابط PayPal.me
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: item.name, amount: priceValue(item.price), phone: phone.trim(), method: 'PayPal' }),
+    }).catch(() => {});
+    const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
+    window.location.href = `https://www.paypal.me/${handle}/${priceValue(item.price)}`;
   };
 
   const payWithMeeza = async (item: AlertItem) => {
+    if (!validPhone()) return;
     setPayLoading('meeza');
     try {
-      const res = await fetch('/api/alerts/fawry', {
+      const res = await fetch('/api/alerts/paymob', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: item.name, amount: priceValue(item.price), alertId: item.id }),
+        body: JSON.stringify({ name: item.name, amount: priceValue(item.price), alertId: item.id, phone: phone.trim() }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -152,7 +160,7 @@ export default function AlertsPage() {
   };
 
   const catData  = activeCat ? CATEGORIES.find(c => c.id === activeCat) : null;
-  const alerts   = activeCat ? ALERTS[activeCat] ?? [] : [];
+  const alerts   = activeCat ? alertsData[activeCat] ?? [] : [];
   const total    = CATEGORIES.length;
 
   useEffect(() => {
@@ -178,7 +186,7 @@ export default function AlertsPage() {
     <>
       <style>{`
         /* ── Base ── */
-        .al-page { font-family:'Poppins',sans-serif; color:#d0cce8; overflow-x:hidden; }
+        .al-page { font-family:'29LtBukra','Montserrat',sans-serif; color:#d0cce8; overflow-x:hidden; }
 
         /* ── Hero ── */
         .al-hero {
@@ -193,7 +201,7 @@ export default function AlertsPage() {
         .al-hero-video video { width:100%; height:auto; display:block; }
         .al-hero-content { flex:1; min-width:300px; max-width:500px; padding:1rem; }
         .al-hero-content h2 {
-          font-family:'Orbitron',sans-serif; font-size:2.2rem; color:#e8e4f8;
+          font-family:'Oxanium',sans-serif; font-size:2.2rem; color:#e8e4f8;
           margin-bottom:1rem;
         }
         .al-hero-content p { color:#a09abf; font-size:1rem; margin-bottom:2rem; line-height:1.7; }
@@ -217,7 +225,7 @@ export default function AlertsPage() {
           background:linear-gradient(180deg,#0F083B,#0C0516);
         }
         .al-carousel-title {
-          font-family:'Orbitron',sans-serif; font-size:1.4rem;
+          font-family:'Oxanium',sans-serif; font-size:1.4rem;
           color:#d0cce8; text-align:center; margin-bottom:1.5rem;
         }
         .al-carousel-wrap {
@@ -240,7 +248,7 @@ export default function AlertsPage() {
         }
         .al-stat-item:last-child { border-left:none; }
         .al-stat-num {
-          font-family:'Orbitron',sans-serif; font-size:1.8rem; font-weight:800;
+          font-family:'Oxanium',sans-serif; font-size:1.8rem; font-weight:800;
           color:#9B59D0; display:block; margin-bottom:.3rem;
         }
         .al-stat-label { color:rgba(170,155,200,0.65); font-size:.8rem; letter-spacing:1px; }
@@ -282,7 +290,13 @@ export default function AlertsPage() {
           border-color:rgba(84,22,181,0.5);
         }
         .al-product-img { width:100%; height:180px; object-fit:cover; }
-        .al-product-title { padding:1rem; font-size:1.1rem; font-weight:600; color:#e8e4f8; margin-bottom:.4rem; }
+        .al-product-title {
+          padding:.5rem 1.2rem; font-size:1.1rem; font-weight:600; color:#e8e4f8; margin:.6rem auto .4rem;
+          display:inline-block;
+          background:rgba(84,22,181,0.25); border:1px solid rgba(127,58,161,0.4);
+          border-radius:10px; backdrop-filter:blur(6px);
+          box-shadow:0 0 16px rgba(84,22,181,0.18);
+        }
         .al-product-desc  { padding:0 1rem; color:#9090b0; font-size:.85rem; margin-bottom:1rem; }
 
         /* ── Category Page ── */
@@ -298,7 +312,10 @@ export default function AlertsPage() {
         }
         .al-back-btn:hover { background:rgba(84,22,181,0.45); color:#fff; }
         .al-cat-title {
-          font-family:'Orbitron',sans-serif; color:#e8e4f8; font-size:1.4rem;
+          font-family:'Oxanium',sans-serif; color:#e8e4f8; font-size:1.4rem;
+          background:rgba(84,22,181,0.22); border:1px solid rgba(127,58,161,0.35);
+          padding:.45rem 1.4rem; border-radius:12px;
+          backdrop-filter:blur(6px); box-shadow:0 0 18px rgba(84,22,181,0.2);
         }
         .al-cat-grid {
           display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
@@ -453,7 +470,7 @@ export default function AlertsPage() {
         .al-modal-close:hover { background:rgba(84,22,181,0.55); color:#fff; }
         .al-modal-head { text-align:center; margin-bottom:2rem; }
         .al-modal-head h2 {
-          font-family:'Orbitron',sans-serif; font-size:1.8rem;
+          font-family:'Oxanium',sans-serif; font-size:1.8rem;
           color:#e8e4f8; margin-bottom:.5rem;
         }
         .al-modal-head p { color:#9090b0; }
@@ -484,7 +501,7 @@ export default function AlertsPage() {
 
         /* ── Media Toggle ── */
         .al-media-toggle { display:flex; gap:.6rem; justify-content:center; margin-bottom:.8rem; }
-        .al-toggle-btn { display:inline-flex; align-items:center; gap:6px; padding:.45rem 1.4rem; border-radius:50px; border:2px solid #7F3AA1; background:transparent; color:#fff; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:700; cursor:pointer; transition:all .22s; }
+        .al-toggle-btn { display:inline-flex; align-items:center; gap:6px; padding:.45rem 1.4rem; border-radius:50px; border:2px solid #7F3AA1; background:transparent; color:#fff; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.88rem; font-weight:700; cursor:pointer; transition:all .22s; }
         .al-toggle-btn.active { background:linear-gradient(135deg,#5416B5,#7F3AA1); border-color:transparent; box-shadow:0 3px 14px rgba(84,22,181,0.45); }
         .al-toggle-btn:hover:not(.active) { background:rgba(84,22,181,0.15); }
 
@@ -493,12 +510,12 @@ export default function AlertsPage() {
         .al-media-imgs { display:flex; gap:.8rem; }
         .al-media-img-wrap { flex:1; position:relative; border-radius:12px; overflow:hidden; border:1px solid rgba(84,22,181,0.25); box-shadow:0 4px 16px rgba(0,0,0,0.4); }
         .al-media-img-wrap img { width:100%; height:180px; object-fit:cover; display:block; }
-        .al-media-img-label { position:absolute; bottom:8px; right:50%; transform:translateX(50%); background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.1); border-radius:50px; padding:.2rem .75rem; font-size:.75rem; color:rgba(255,255,255,0.8); white-space:nowrap; font-family:'Cairo',sans-serif; }
-        .al-video-btn { display:flex; align-items:center; gap:.9rem; width:100%; padding:.85rem 1.2rem; background:rgba(84,22,181,0.12); border:1px solid rgba(84,22,181,0.3); border-radius:12px; color:#fff; font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer; transition:all .22s; }
+        .al-media-img-label { position:absolute; bottom:8px; right:50%; transform:translateX(50%); background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.1); border-radius:50px; padding:.2rem .75rem; font-size:.75rem; color:rgba(255,255,255,0.8); white-space:nowrap; font-family:'29LtBukra','Montserrat',sans-serif; }
+        .al-video-btn { display:flex; align-items:center; gap:.9rem; width:100%; padding:.85rem 1.2rem; background:rgba(84,22,181,0.12); border:1px solid rgba(84,22,181,0.3); border-radius:12px; color:#fff; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer; transition:all .22s; }
         .al-video-btn:hover { background:rgba(84,22,181,0.25); border-color:#7F3AA1; transform:translateY(-1px); }
         .al-video-btn-icon { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#5416B5,#7F3AA1); display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; box-shadow:0 3px 12px rgba(84,22,181,0.4); }
         .al-video-player { display:flex; flex-direction:column; gap:.6rem; }
-        .al-video-close-btn { display:flex; align-items:center; gap:6px; background:rgba(84,22,181,0.15); border:1px solid rgba(84,22,181,0.25); color:rgba(255,255,255,0.7); border-radius:8px; padding:.4rem .9rem; font-family:'Cairo',sans-serif; font-size:.82rem; cursor:pointer; width:fit-content; transition:all .2s; }
+        .al-video-close-btn { display:flex; align-items:center; gap:6px; background:rgba(84,22,181,0.15); border:1px solid rgba(84,22,181,0.25); color:rgba(255,255,255,0.7); border-radius:8px; padding:.4rem .9rem; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.82rem; cursor:pointer; width:fit-content; transition:all .2s; }
         .al-video-close-btn:hover { background:rgba(84,22,181,0.3); color:#fff; }
 
         /* ── Footer ── */
@@ -510,7 +527,7 @@ export default function AlertsPage() {
           display:flex; flex-wrap:wrap; justify-content:space-between;
           gap:2rem; margin-bottom:2rem; text-align:right;
         }
-        .al-footer-col h4 { color:#e8e4f8; margin-bottom:1rem; font-family:'Orbitron',sans-serif; }
+        .al-footer-col h4 { color:#e8e4f8; margin-bottom:1rem; font-family:'Oxanium',sans-serif; }
         .al-footer-col ul { list-style:none; }
         .al-footer-col li { margin:.5rem 0; }
         .al-footer-col a { color:#9090b0; text-decoration:none; transition:.3s; }
@@ -726,36 +743,89 @@ export default function AlertsPage() {
                     </ul>
                     <br />
                     <ul>
-                      <li><strong>الحجم:</strong> 26MB</li>
-                      <li><strong>المدة:</strong> 45 ثانية</li>
-                      <li><strong>وقت الظهور:</strong> 36 ثانية</li>
+                      <li>✅ متوافق مع OBS Studio و Streamlabs</li>
+                      <li>✅ جودة عالية بدون حقوق نشر</li>
+                      <li>✅ يدعم الخلفية الشفافة (WebM)</li>
                     </ul>
                     <br />
+                    <p style={{ color: '#a78bfa', fontSize: '.85rem', marginBottom: '.5rem' }}>
+                      💡 كبِّر شاشة الفيديو للحصول على رؤية أفضل
+                    </p>
                     <p style={{ color: 'red', fontSize: '.85rem' }}>ممنوع إعادة بيع المنتج بعد الشراء.</p>
 
                     {/* Payment */}
                     {delivered ? (
-                      <div className="al-pay-section">
-                        <p className="al-pay-label" style={{ color:'#4caf50' }}>تم الدفع بنجاح ✓</p>
-                        <p style={{ color:'#9090b0', fontSize:'.85rem', marginBottom:'1rem' }}>
-                          تم تسليم منتجك تلقائياً، يمكنك تحميله الآن:
-                        </p>
-                        <div className="al-pay-btns">
-                          {modal.imgs?.map((img, i) => (
-                            <a key={img} href={img} download className="al-pay-btn al-pay-btn-stc">
-                              <i className="fas fa-download" /> صورة {i + 1}
-                            </a>
-                          ))}
-                          {modal.video && (
-                            <a href={modal.video} download className="al-pay-btn al-pay-btn-stc">
-                              <i className="fas fa-download" /> الفيديو
-                            </a>
-                          )}
+                      <div className="al-pay-section" style={{ textAlign: 'center' }}>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #0f2a1a, #1a3d28)',
+                          border: '1px solid #2ecc71',
+                          borderRadius: '16px',
+                          padding: '28px 24px',
+                          marginTop: '8px',
+                        }}>
+                          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>✅</div>
+                          <p style={{ color: '#2ecc71', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                            تم استلام دفعتك بنجاح
+                          </p>
+                          <p style={{ color: '#a0c4b0', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '16px' }}>
+                            سيتم مراجعة طلبك وتسليم المنتج خلال
+                          </p>
+                          <div style={{
+                            background: '#2ecc71',
+                            color: '#000',
+                            borderRadius: '12px',
+                            padding: '12px 24px',
+                            fontSize: '1.4rem',
+                            fontWeight: 'bold',
+                            display: 'inline-block',
+                            marginBottom: '16px',
+                          }}>
+                            ⏳ 24 ساعة
+                          </div>
+                          <p style={{ color: '#7aab8a', fontSize: '0.82rem' }}>
+                            سيتواصل معك فريق Tilago عبر البريد الإلكتروني أو وسائل التواصل الاجتماعي
+                          </p>
+                        </div>
+                      </div>
+                    ) : storePaused ? (
+                      <div className="al-pay-section" style={{ textAlign: 'center' }}>
+                        <div style={{
+                          background: 'rgba(231,76,60,0.08)',
+                          border: '1px solid rgba(231,76,60,0.4)',
+                          borderRadius: '14px',
+                          padding: '22px 18px',
+                        }}>
+                          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏸️</div>
+                          <p style={{ color: '#e74c3c', fontWeight: 'bold', marginBottom: '6px' }}>
+                            الطلبات متوقفة مؤقتاً
+                          </p>
+                          <p style={{ color: '#c09090', fontSize: '.85rem', margin: 0 }}>
+                            {pauseMessage || 'نعتذر — الطلبات متوقفة مؤقتاً بسبب الضغط، سنعود قريباً'}
+                          </p>
                         </div>
                       </div>
                     ) : (
                       <div className="al-pay-section">
+                        <div style={{ marginBottom: 16 }}>
+                          <label style={{ display: 'block', color: '#c0a0ff', fontSize: '.85rem', marginBottom: 6, fontWeight: 'bold' }}>
+                            📱 رقم موبايلك للتواصل والتسليم
+                          </label>
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
+                            placeholder="01xxxxxxxxx"
+                            dir="ltr"
+                            style={{
+                              width: '100%', padding: '12px 14px', borderRadius: 10,
+                              border: '1px solid rgba(122,0,255,0.4)', background: 'rgba(0,0,0,0.3)',
+                              color: '#F0E6FF', fontSize: '.95rem', textAlign: 'center',
+                            }}
+                          />
+                        </div>
                         <p className="al-pay-label">اختر طريقة الدفع</p>
+
                         <div className="al-pay-btns">
                           <button
                             className="al-pay-btn al-pay-btn-paypal"
@@ -775,6 +845,23 @@ export default function AlertsPage() {
                             {payLoading === 'meeza' ? 'جارٍ التحويل...' : 'ميزة'}
                           </button>
                         </div>
+                        <button
+                          onClick={() => addAlertToCart(modal)}
+                          style={{
+                            width: '100%',
+                            marginTop: '10px',
+                            padding: '12px',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(122,0,255,0.4)',
+                            background: addedToCart ? 'rgba(46,204,113,0.15)' : 'rgba(122,0,255,0.1)',
+                            color: addedToCart ? '#2ecc71' : '#c0a0ff',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            fontSize: '.95rem',
+                          }}
+                        >
+                          {addedToCart ? '✓ تمت الإضافة للسلة' : '🛒 أضف للسلة'}
+                        </button>
                       </div>
                     )}
                   </div>
@@ -798,7 +885,7 @@ export default function AlertsPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={modal.imgs?.[0] ?? '/caf.png'} alt={modal.name} />
                     ) : (
-                      <video controls autoPlay muted>
+                      <video controls autoPlay id="al-modal-vid">
                         <source src={modal.video ?? '/video/tilago.mp4'} type="video/mp4"/>
                       </video>
                     )}

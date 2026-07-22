@@ -30,6 +30,14 @@ yarn-error.log*
 # vercel
 .vercel
 
+# ملفات الوسائط المحلية — اترفعت على Cloudinary فمش محتاجينها على GitHub
+/public/uploads
+/public/uploads-originals
+# فيديو كبير (679MB) غير مستخدم في الكود
+/public/video/shroud-starting-soon.mp4
+# لوج النقل
+migrate-log.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

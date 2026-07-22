@@ -55,5 +55,5 @@ export interface DashboardStats {
   totalUsers: number;
   totalProducts: number;
   revenueByMonth: { month: string; revenue: number }[];
-  ordersByCategory: { category: string; count: number }[];
+  paymentsByMethod: { method: string; count: number }[];
 }

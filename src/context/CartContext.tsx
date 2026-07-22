@@ -24,8 +24,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('tilago-cart');
-    if (saved) setItems(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('tilago-cart');
+      if (saved) setItems(JSON.parse(saved));
+    } catch {
+      localStorage.removeItem('tilago-cart');
+    }
   }, []);
 
   useEffect(() => {

@@ -3,94 +3,373 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { motion } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff, Chrome } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const [step, setStep] = useState<'form' | 'code'>('form');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // الخطوة 1: إرسال كود التحقق للإيميل
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Registration failed'); setLoading(false); return; }
+      if (!res.ok) { setError(data.error || 'تعذر إرسال الكود'); setLoading(false); return; }
+      setStep('code');
+      setInfo(`تم إرسال كود التحقق إلى ${email}`);
+    } catch {
+      setError('حدث خطأ ما، حاول مرة أخرى');
+    }
+    setLoading(false);
+  };
+
+  // الخطوة 2: التحقق من الكود وإنشاء الحساب
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'الكود غير صحيح'); setLoading(false); return; }
       await signIn('credentials', { email, password, redirect: false });
       router.push('/alerts');
     } catch {
-      setError('Something went wrong');
+      setError('حدث خطأ ما، حاول مرة أخرى');
       setLoading(false);
     }
   };
 
+  const resendCode = async () => {
+    setError('');
+    setInfo('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) setError(data.error || 'تعذر إعادة الإرسال');
+      else setInfo('تم إرسال كود جديد');
+    } catch {
+      setError('حدث خطأ ما');
+    }
+    setLoading(false);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 pt-16">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-8 w-full max-w-md rounded-2xl"
-      >
-        <h1 className="font-orbitron font-bold text-2xl gradient-text text-center mb-2">Create Account</h1>
-        <p className="text-text-muted text-sm text-center mb-8">Join Tilago and elevate your stream</p>
-
-        {error && (
-          <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="relative">
-            <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Full name" required
-              className="w-full bg-accent-deep/10 border border-accent-deep/30 rounded-xl pl-10 pr-4 py-3 text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent-violet transition-colors" />
-          </div>
-          <div className="relative">
-            <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" required
-              className="w-full bg-accent-deep/10 border border-accent-deep/30 rounded-xl pl-10 pr-4 py-3 text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent-violet transition-colors" />
-          </div>
-          <div className="relative">
-            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min 8 chars)" required minLength={8}
-              className="w-full bg-accent-deep/10 border border-accent-deep/30 rounded-xl pl-10 pr-10 py-3 text-sm text-text-primary placeholder-text-muted outline-none focus:border-accent-violet transition-colors" />
-            <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
-              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-          <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-white transition-all disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg, #5416B5, #7F3AA1)', boxShadow: '0 0 20px rgba(84,22,181,0.4)' }}>
-            {loading ? 'Creating account...' : 'Create Account'}
-          </motion.button>
-        </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-accent-deep/30" /></div>
-          <div className="relative flex justify-center text-xs text-text-muted"><span className="px-2 bg-[rgba(12,5,22,0.8)]">or</span></div>
+    <div className="si-wrap" dir="rtl">
+      <div className="si-card">
+        {/* Logo */}
+        <div className="si-logo-box">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images.png" alt="Tilago" className="si-logo" />
         </div>
 
-        <button onClick={() => signIn('google', { callbackUrl: '/alerts' })}
-          className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-accent-deep/30 text-sm text-text-muted hover:border-accent-violet hover:text-text-primary transition-all">
-          <Chrome size={18} /> Continue with Google
-        </button>
+        {step === 'form' ? (
+          <>
+            <h1 className="si-title">إنشاء حساب جديد</h1>
+            <p className="si-sub">انضم إلى Tilago وارتقِ ببثك المباشر</p>
 
-        <p className="text-center text-text-muted text-sm mt-6">
-          Already have an account?{' '}
-          <Link href="/auth/signin" className="text-accent-violet hover:text-highlight transition-colors font-medium">Sign in</Link>
-        </p>
-      </motion.div>
+            {/* Google */}
+            <button
+              type="button"
+              onClick={() => signIn('google', { callbackUrl: '/alerts' })}
+              className="si-google"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z" />
+                <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z" />
+              </svg>
+              المتابعة بحساب Google
+            </button>
+
+            <div className="si-divider">
+              <span />
+              <p>أو</p>
+              <span />
+            </div>
+
+            {error && <div className="si-error">{error}</div>}
+
+            <form onSubmit={handleSendCode} className="si-form">
+              <label className="si-label">الاسم الكامل</label>
+              <div className="si-field">
+                <i className="fas fa-user" />
+                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="اكتب اسمك" required />
+              </div>
+
+              <label className="si-label">البريد الإلكتروني</label>
+              <div className="si-field">
+                <i className="fas fa-envelope" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" required />
+              </div>
+
+              <label className="si-label">كلمة المرور</label>
+              <div className="si-field">
+                <i className="fas fa-lock" />
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="8 أحرف على الأقل"
+                  required
+                  minLength={8}
+                />
+                <button type="button" className="si-eye" onClick={() => setShowPw(!showPw)}>
+                  <i className={showPw ? 'fas fa-eye-slash' : 'fas fa-eye'} />
+                </button>
+              </div>
+
+              <button type="submit" disabled={loading} className="si-submit" style={{ marginTop: '0.4rem' }}>
+                {loading ? 'جارٍ إرسال الكود...' : 'إرسال كود التحقق'}
+              </button>
+            </form>
+
+            <p className="si-signup">
+              لديك حساب بالفعل؟{' '}
+              <Link href="/auth/signin">تسجيل الدخول</Link>
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="si-title">تأكيد البريد</h1>
+            <p className="si-sub">أدخل الكود المكوّن من 6 أرقام المُرسل إلى بريدك</p>
+
+            {info && <div className="si-info">{info}</div>}
+            {error && <div className="si-error">{error}</div>}
+
+            <form onSubmit={handleVerify} className="si-form">
+              <div className="si-field">
+                <i className="fas fa-shield-halved" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={code}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  required
+                  style={{ textAlign: 'center', letterSpacing: '10px', fontSize: '1.3rem', fontWeight: 700 }}
+                />
+              </div>
+
+              <button type="submit" disabled={loading || code.length !== 6} className="si-submit" style={{ marginTop: '0.4rem' }}>
+                {loading ? 'جارٍ التحقق...' : 'تأكيد وإنشاء الحساب'}
+              </button>
+            </form>
+
+            <div className="si-signup" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button type="button" onClick={resendCode} disabled={loading}
+                style={{ background: 'none', border: 'none', color: '#9B59D0', fontWeight: 700, cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '0.85rem' }}>
+                إعادة إرسال الكود
+              </button>
+              <button type="button" onClick={() => { setStep('form'); setError(''); setInfo(''); setCode(''); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(170,160,205,0.6)', cursor: 'pointer', fontFamily: 'Cairo, sans-serif', fontSize: '0.8rem' }}>
+                تعديل البيانات
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <style>{`
+        .si-wrap {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 100px 20px 60px;
+          background: linear-gradient(180deg, #0F083B, #0C0516);
+          font-family: 'Cairo', sans-serif;
+        }
+        .si-card {
+          width: 100%;
+          max-width: 400px;
+          background: rgba(15, 8, 59, 0.55);
+          border: 1px solid rgba(84, 22, 181, 0.35);
+          border-radius: 20px;
+          padding: 2.5rem 2rem;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .si-logo-box {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 1rem;
+        }
+        .si-logo {
+          height: 80px;
+          width: auto;
+          object-fit: contain;
+          mix-blend-mode: screen;
+          image-rendering: -webkit-optimize-contrast;
+        }
+        .si-title {
+          text-align: center;
+          font-size: 1.5rem;
+          font-weight: 800;
+          margin: 0 0 6px;
+          background: linear-gradient(135deg, #9B59D0, #5416B5);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .si-sub {
+          text-align: center;
+          color: rgba(185, 175, 215, 0.5);
+          font-size: 0.9rem;
+          margin: 0 0 1.8rem;
+        }
+        .si-google {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: #fff;
+          color: #222;
+          font-size: 0.95rem;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: 'Cairo', sans-serif;
+          transition: all 0.25s;
+        }
+        .si-google:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
+        .si-divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 1.3rem 0;
+        }
+        .si-divider span {
+          flex: 1;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(84, 22, 181, 0.5), transparent);
+        }
+        .si-divider p {
+          color: rgba(170, 155, 200, 0.5);
+          font-size: 0.75rem;
+          margin: 0;
+        }
+        .si-error {
+          margin-bottom: 1rem;
+          padding: 10px 14px;
+          border-radius: 10px;
+          background: rgba(231, 76, 60, 0.1);
+          border: 1px solid rgba(231, 76, 60, 0.35);
+          color: #e74c3c;
+          font-size: 0.85rem;
+          text-align: center;
+        }
+        .si-info {
+          margin-bottom: 1rem;
+          padding: 10px 14px;
+          border-radius: 10px;
+          background: rgba(46, 204, 113, 0.1);
+          border: 1px solid rgba(46, 204, 113, 0.35);
+          color: #2ecc71;
+          font-size: 0.82rem;
+          text-align: center;
+        }
+        .si-form { display: flex; flex-direction: column; }
+        .si-label {
+          color: rgba(185, 175, 215, 0.7);
+          font-size: 0.82rem;
+          margin-bottom: 6px;
+        }
+        .si-field {
+          position: relative;
+          margin-bottom: 1rem;
+        }
+        .si-field > i {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(155, 89, 208, 0.6);
+          font-size: 0.95rem;
+        }
+        .si-field input {
+          width: 100%;
+          box-sizing: border-box;
+          padding: 12px 40px 12px 40px;
+          border-radius: 11px;
+          border: 1px solid rgba(84, 22, 181, 0.3);
+          background: rgba(15, 8, 59, 0.6);
+          color: #eae6ff;
+          font-size: 0.9rem;
+          text-align: right;
+          font-family: 'Cairo', sans-serif;
+          outline: none;
+          transition: border-color 0.25s;
+        }
+        .si-field input:focus { border-color: #9B59D0; }
+        .si-field input::placeholder { color: rgba(150, 140, 175, 0.5); }
+        .si-eye {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: rgba(155, 89, 208, 0.6);
+          cursor: pointer;
+          font-size: 0.9rem;
+        }
+        .si-submit {
+          width: 100%;
+          padding: 14px;
+          border-radius: 12px;
+          border: none;
+          background: linear-gradient(135deg, #5416B5, #7F3AA1);
+          color: #fff;
+          font-size: 0.95rem;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: 'Cairo', sans-serif;
+          box-shadow: 0 4px 20px rgba(84, 22, 181, 0.4);
+          transition: all 0.25s;
+        }
+        .si-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 26px rgba(84, 22, 181, 0.55); }
+        .si-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .si-signup {
+          text-align: center;
+          color: rgba(170, 160, 205, 0.6);
+          font-size: 0.85rem;
+          margin: 1.3rem 0 0;
+        }
+        .si-signup a {
+          color: #9B59D0;
+          text-decoration: none;
+          font-weight: 700;
+        }
+        .si-signup a:hover { color: #b370e0; }
+      `}</style>
     </div>
   );
 }

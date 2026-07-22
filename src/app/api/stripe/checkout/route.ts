@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   const lineItems = items.map((item: any) => ({
     price_data: {
-      currency: 'usd',
+      currency: process.env.STRIPE_CURRENCY ?? 'egp',
       product_data: {
         name: item.product.title,
         images: item.product.imageUrl ? [item.product.imageUrl] : [],

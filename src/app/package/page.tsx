@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -55,7 +55,7 @@ export default function PackagePage() {
   return (
     <div style={{ padding: '2rem 5%' }}>
       <section style={{ textAlign: 'center', padding: '3rem 0 2rem' }}>
-        <h1 style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '2.5rem', color: '#fff', textShadow: '0 0 20px #7A00FF', marginBottom: '1rem' }}>
+        <h1 style={{ fontFamily: "'Oxanium',sans-serif", fontSize: '2.5rem', color: '#fff', textShadow: '0 0 20px #7A00FF', marginBottom: '1rem' }}>
           الباقات الكاملة
         </h1>
         <p style={{ color: '#bbb', fontSize: '1.1rem', maxWidth: 600, margin: '0 auto 2rem' }}>
@@ -85,7 +85,7 @@ export default function PackagePage() {
               </div>
             )}
             <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>{pkg.emoji}</div>
-            <h2 style={{ fontFamily: "'Orbitron',sans-serif", color: '#fff', fontSize: '1.3rem', marginBottom: '0.5rem' }}>{pkg.title}</h2>
+            <h2 style={{ fontFamily: "'Oxanium',sans-serif", color: '#fff', fontSize: '1.3rem', marginBottom: '0.5rem' }}>{pkg.title}</h2>
             <p style={{ color: '#bbb', fontSize: '0.9rem', marginBottom: '1.5rem' }}>{pkg.desc}</p>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: pkg.color, marginBottom: '1.5rem', textShadow: `0 0 10px ${pkg.color}` }}>
               {pkg.price}
@@ -123,7 +123,7 @@ export default function PackagePage() {
             <button className="modal-close" onClick={() => setSelected(null)}>×</button>
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
               <div style={{ fontSize: '4rem', marginBottom: '0.5rem' }}>{selected.emoji}</div>
-              <h2 style={{ fontFamily: "'Orbitron',sans-serif", color: '#fff', fontSize: '1.8rem', textShadow: `0 0 10px ${selected.color}` }}>{selected.title}</h2>
+              <h2 style={{ fontFamily: "'Oxanium',sans-serif", color: '#fff', fontSize: '1.8rem', textShadow: `0 0 10px ${selected.color}` }}>{selected.title}</h2>
               <div style={{ fontSize: '2.5rem', fontWeight: 700, color: selected.color, margin: '1rem 0' }}>{selected.price}</div>
             </div>
             <div className="info-box">

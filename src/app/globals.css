@@ -1,4 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+/* ── Local Fonts ───────────────────────────────────────────── */
+
+/* 29LtBukra — Arabic display */
+@font-face { font-family:'29LtBukra'; src:url('/fonts/29ltbukra-light.ttf')   format('truetype'); font-weight:300; font-style:normal; font-display:swap; }
+@font-face { font-family:'29LtBukra'; src:url('/fonts/29ltbukra-regular.ttf') format('truetype'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:'29LtBukra'; src:url('/fonts/29ltbukra-bold.ttf')    format('truetype'); font-weight:700; font-style:normal; font-display:swap; }
+
+/* Cairo — Arabic body & UI text */
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-extralight.ttf') format('truetype'); font-weight:200; font-style:normal; font-display:swap; }
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-light.ttf')      format('truetype'); font-weight:300; font-style:normal; font-display:swap; }
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-regular.ttf')    format('truetype'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-medium.ttf')     format('truetype'); font-weight:500; font-style:normal; font-display:swap; }
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-semibold.ttf')   format('truetype'); font-weight:600; font-style:normal; font-display:swap; }
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-bold.ttf')       format('truetype'); font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-extrabold.ttf')  format('truetype'); font-weight:800; font-style:normal; font-display:swap; }
+@font-face { font-family:'Cairo'; src:url('/fonts/cairo-black.ttf')      format('truetype'); font-weight:900; font-style:normal; font-display:swap; }
+
+/* Oxanium — English headings & all numbers */
+@font-face { font-family:'Oxanium'; src:url('/fonts/oxanium-extralight.ttf') format('truetype'); font-weight:200; font-style:normal; font-display:swap; }
+@font-face { font-family:'Oxanium'; src:url('/fonts/oxanium-light.ttf')      format('truetype'); font-weight:300; font-style:normal; font-display:swap; }
+@font-face { font-family:'Oxanium'; src:url('/fonts/oxanium-regular.ttf')    format('truetype'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:'Oxanium'; src:url('/fonts/oxanium-medium.ttf')     format('truetype'); font-weight:500; font-style:normal; font-display:swap; }
+@font-face { font-family:'Oxanium'; src:url('/fonts/oxanium-semibold.ttf')   format('truetype'); font-weight:600; font-style:normal; font-display:swap; }
+@font-face { font-family:'Oxanium'; src:url('/fonts/oxanium-bold.ttf')       format('truetype'); font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:'Oxanium'; src:url('/fonts/oxanium-extrabold.ttf')  format('truetype'); font-weight:800; font-style:normal; font-display:swap; }
+
+/* Montserrat — English body */
+@font-face { font-family:'Montserrat'; src:url('/fonts/montserrat-light.ttf')     format('truetype'); font-weight:300; font-style:normal; font-display:swap; }
+@font-face { font-family:'Montserrat'; src:url('/fonts/montserrat-regular.ttf')   format('truetype'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:'Montserrat'; src:url('/fonts/montserrat-medium.ttf')    format('truetype'); font-weight:500; font-style:normal; font-display:swap; }
+@font-face { font-family:'Montserrat'; src:url('/fonts/montserrat-semibold.ttf')  format('truetype'); font-weight:600; font-style:normal; font-display:swap; }
+@font-face { font-family:'Montserrat'; src:url('/fonts/montserrat-bold.ttf')      format('truetype'); font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:'Montserrat'; src:url('/fonts/montserrat-extrabold.ttf') format('truetype'); font-weight:800; font-style:normal; font-display:swap; }
+@font-face { font-family:'Montserrat'; src:url('/fonts/montserrat-black.ttf')     format('truetype'); font-weight:900; font-style:normal; font-display:swap; }
 
 @tailwind base;
 @tailwind components;
@@ -20,13 +53,21 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Cairo', '29LtBukra', 'Montserrat', sans-serif;
   background: linear-gradient(180deg, var(--bg2), var(--bg));
   color: var(--text);
   line-height: 1.6;
   overflow-x: hidden;
   min-height: 100vh;
 }
+
+/* Numbers everywhere use Oxanium */
+[class*="stat-num"], [class*="-price"],
+.vp-stat-num, .sp-stat-num, .al-stat-num, .tdp-stat-num,
+.wt-stat-num, .stat-number { font-family: 'Oxanium', sans-serif; font-variant-numeric: tabular-nums; }
+
+/* Headings use 29LtBukra (bold) */
+h1, h2, h3, h4, h5, h6 { font-family: '29LtBukra', 'Cairo', 'Montserrat', sans-serif; }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -59,7 +100,7 @@ body {
   box-shadow: 0 0 20px rgba(122,0,255,0.6);
   transition: all 0.3s ease;
   text-decoration: none;
-  font-family: 'Poppins', sans-serif;
+  font-family: '29LtBukra', 'Montserrat', sans-serif;
 }
 .btn-purple:hover {
   transform: translateY(-3px);
@@ -160,7 +201,7 @@ body {
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
+  font-family: '29LtBukra', 'Montserrat', sans-serif;
   transition: all 0.3s;
 }
 .alert-card .btn-preview:hover {
@@ -332,7 +373,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  font-family: 'Poppins', sans-serif;
+  font-family: '29LtBukra', 'Montserrat', sans-serif;
 }
 .toggle-btn.active {
   background: var(--purple);
@@ -342,7 +383,7 @@ body {
 
 /* Section title */
 .section-title {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Oxanium', sans-serif;
   color: #fff;
   text-shadow: 0 0 10px #7A00FF;
   margin-bottom: 2rem;
@@ -389,7 +430,7 @@ footer {
   transition: 0.3s;
   cursor: pointer;
   border: none;
-  font-family: 'Poppins', sans-serif;
+  font-family: '29LtBukra', 'Montserrat', sans-serif;
 }
 .back-btn:hover { background: var(--purple); }
 
@@ -426,30 +467,51 @@ img, video { max-width: 100%; height: auto; }
 /* Prevent horizontal scroll on all pages */
 html, body { overflow-x: hidden; max-width: 100vw; }
 
-/* Touch targets minimum size */
-@media(max-width:768px){
-  button, a { min-height: 40px; }
+/* Fluid container used across pages */
+.container-fluid {
+  width: 100%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(12px, 4vw, 60px);
+  padding-right: clamp(12px, 4vw, 60px);
 }
 
-/* Header responsive */
-@media(max-width:768px){
-  header nav { gap: 8px; }
+/* Touch targets minimum size on mobile */
+@media(max-width:900px){
+  button, a { min-height: 44px; }
 }
 
 /* Modal full screen on mobile */
-@media(max-width:480px){
+@media(max-width:600px){
   .modal-box {
     border-radius: 12px;
-    padding: 1.2rem;
-    max-height: 95vh;
+    padding: 1rem;
+    max-height: 96vh;
+    margin: 0 8px;
   }
-  .modal-backdrop { padding: .5rem; }
+  .modal-backdrop { padding: .4rem; align-items: flex-end; }
 }
 
 /* Footer responsive */
-@media(max-width:768px){
+@media(max-width:900px){
   footer { padding: 2rem 4% 1.5rem; }
 }
 @media(max-width:480px){
   footer { padding: 1.5rem 4% 1rem; }
+  footer > div:first-child { flex-direction: column; gap: 1.2rem; }
+}
+
+/* Carousel responsive */
+@media(max-width:600px){
+  .carousel-container { padding: 1rem 3rem; }
+  .carousel-slide { width: 150px; }
+  .carousel-btn { width: 38px; height: 38px; font-size: 1rem; }
+}
+
+/* Large screen cap — prevent content from stretching on 2K/4K */
+@media(min-width:1600px){
+  .hero-container   { max-width: 1500px; }
+  .services-section { max-width: 1400px; }
+  .wt-inner         { max-width: 1380px; }
 }

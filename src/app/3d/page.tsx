@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 
@@ -132,9 +132,8 @@ export default function ThreeDPage() {
   return (
     <div className="tdp" dir="rtl" ref={revRef}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Cairo:wght@400;600;700;900&display=swap');
-
-        .tdp { background:linear-gradient(180deg,#0F083B,#0C0516); min-height:100vh; font-family:'Cairo',sans-serif; color:#fff; }
+        
+        .tdp { background:linear-gradient(180deg,#0F083B,#0C0516); min-height:100vh; font-family:'29LtBukra','Montserrat',sans-serif; color:#fff; }
 
         /* ── HERO ── */
         .tdp-hero { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; padding:4rem 5%; gap:2rem; }
@@ -143,24 +142,24 @@ export default function ThreeDPage() {
         .tdp-hero-vid video { width:100%; display:block; }
         .tdp-hero-content { flex:1; min-width:280px; max-width:540px; text-align:right; }
         .tdp-hero-tag { display:inline-flex; align-items:center; gap:8px; background:rgba(84,22,181,0.15); border:1px solid rgba(84,22,181,0.35); border-radius:50px; padding:.45rem 1.2rem; font-size:.85rem; color:#9B59D0; margin-bottom:1.2rem; }
-        .tdp-hero-content h1 { font-family:'Cairo',sans-serif; font-size:clamp(1.9rem,3.5vw,2.7rem); font-weight:900; line-height:1.25; margin-bottom:.8rem; }
+        .tdp-hero-content h1 { font-family:'29LtBukra','Montserrat',sans-serif; font-size:clamp(1.9rem,3.5vw,2.7rem); font-weight:900; line-height:1.25; margin-bottom:.8rem; }
         .tdp-hero-content h1 span { background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .tdp-hero-divider { width:40px; height:2px; background:linear-gradient(90deg,#5416B5,rgba(84,22,181,0)); margin-bottom:1.2rem; }
         .tdp-hero-content p { color:rgba(255,255,255,0.7); font-size:1rem; line-height:1.8; margin-bottom:1.6rem; }
-        .tdp-hero-cta { display:inline-flex; align-items:center; gap:10px; padding:.9rem 2.2rem; border-radius:50px; background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff; font-family:'Cairo',sans-serif; font-size:1rem; font-weight:700; text-decoration:none; transition:transform .2s,box-shadow .2s; }
+        .tdp-hero-cta { display:inline-flex; align-items:center; gap:10px; padding:.9rem 2.2rem; border-radius:50px; background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff; font-family:'29LtBukra','Montserrat',sans-serif; font-size:1rem; font-weight:700; text-decoration:none; transition:transform .2s,box-shadow .2s; }
         .tdp-hero-cta:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(84,22,181,0.5); }
 
         /* ── STATS ── */
         .tdp-stats { display:flex; justify-content:center; gap:0; padding:1.4rem 5%; border-top:1px solid rgba(84,22,181,0.12); border-bottom:1px solid rgba(84,22,181,0.12); background:rgba(15,8,59,0.4); flex-wrap:wrap; }
         .tdp-stat { flex:1; min-width:120px; text-align:center; padding:.8rem 1.5rem; border-left:1px solid rgba(84,22,181,0.2); }
         .tdp-stat:last-child { border-left:none; }
-        .tdp-stat-num { font-family:'Orbitron',sans-serif; font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .tdp-stat-num { font-family:'Oxanium',sans-serif; font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .tdp-stat-label { font-size:.8rem; color:rgba(255,255,255,0.55); margin-top:2px; }
 
         /* ── CATEGORIES FILTER ── */
         .tdp-filter { padding:2.5rem 5% 1rem; }
         .tdp-filter-inner { display:flex; flex-wrap:wrap; gap:.7rem; justify-content:center; }
-        .tdp-filter-btn { display:inline-flex; align-items:center; gap:7px; padding:.55rem 1.3rem; border-radius:50px; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:rgba(255,255,255,0.6); font-family:'Cairo',sans-serif; font-size:.9rem; cursor:pointer; transition:all .25s; }
+        .tdp-filter-btn { display:inline-flex; align-items:center; gap:7px; padding:.55rem 1.3rem; border-radius:50px; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:rgba(255,255,255,0.6); font-family:'29LtBukra','Montserrat',sans-serif; font-size:.9rem; cursor:pointer; transition:all .25s; }
         .tdp-filter-btn:hover { border-color:#5416B5; color:#fff; }
         .tdp-filter-btn.active { background:linear-gradient(135deg,#5416B5,#7F3AA1); border-color:transparent; color:#fff; box-shadow:0 4px 16px rgba(84,22,181,0.4); }
 
@@ -171,9 +170,9 @@ export default function ThreeDPage() {
         .tdp-card-img { width:100%; height:180px; object-fit:cover; display:block; transition:transform .4s; }
         .tdp-card:hover .tdp-card-img { transform:scale(1.05); }
         .tdp-card-overlay { position:absolute; top:0; left:0; right:0; height:180px; background:linear-gradient(180deg,transparent 40%,rgba(12,5,22,0.9)); pointer-events:none; }
-        .tdp-card-badge { position:absolute; top:10px; right:10px; background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff; font-size:.7rem; font-family:'Cairo',sans-serif; font-weight:700; padding:.25rem .7rem; border-radius:50px; }
+        .tdp-card-badge { position:absolute; top:10px; right:10px; background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff; font-size:.7rem; font-family:'29LtBukra','Montserrat',sans-serif; font-weight:700; padding:.25rem .7rem; border-radius:50px; }
         .tdp-card-body { padding:1rem 1.1rem 1.1rem; }
-        .tdp-card-name { font-family:'Cairo',sans-serif; font-size:1rem; font-weight:700; color:#fff; margin-bottom:.3rem; }
+        .tdp-card-name { font-family:'29LtBukra','Montserrat',sans-serif; font-size:1rem; font-weight:700; color:#fff; margin-bottom:.3rem; }
         .tdp-card-desc { font-size:.8rem; color:rgba(255,255,255,0.55); line-height:1.6; margin-bottom:.8rem; }
         .tdp-card-action { display:flex; align-items:center; justify-content:space-between; }
         .tdp-card-preview { font-size:.8rem; color:#9B59D0; display:inline-flex; align-items:center; gap:5px; }
@@ -181,22 +180,22 @@ export default function ThreeDPage() {
 
         /* ── FEATURES ── */
         .tdp-features { padding:3rem 5%; border-top:1px solid rgba(84,22,181,0.15); border-bottom:1px solid rgba(84,22,181,0.15); background:linear-gradient(180deg,#0C0516,#0F083B); }
-        .tdp-features-title { text-align:center; font-family:'Cairo',sans-serif; font-size:1.6rem; font-weight:900; margin-bottom:.5rem; }
+        .tdp-features-title { text-align:center; font-family:'29LtBukra','Montserrat',sans-serif; font-size:1.6rem; font-weight:900; margin-bottom:.5rem; }
         .tdp-features-title span { background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .tdp-features-sub { text-align:center; color:rgba(255,255,255,0.5); font-size:.9rem; margin-bottom:2rem; }
         .tdp-features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.2rem; }
         .tdp-feat-card { background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.12); border-radius:12px; padding:1.4rem 1.2rem; text-align:center; transition:border-color .25s; }
         .tdp-feat-card:hover { border-color:rgba(84,22,181,0.4); }
         .tdp-feat-icon { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,rgba(84,22,181,0.25),rgba(127,58,161,0.15)); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; font-size:1.2rem; color:#9B59D0; }
-        .tdp-feat-card h4 { font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:.5rem; }
+        .tdp-feat-card h4 { font-family:'29LtBukra','Montserrat',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:.5rem; }
         .tdp-feat-card p { font-size:.8rem; color:rgba(255,255,255,0.5); line-height:1.6; }
 
         /* ── CONTACTS ── */
         .tdp-contacts { padding:2.5rem 5%; text-align:center; }
-        .tdp-contacts h3 { font-family:'Cairo',sans-serif; font-size:1.3rem; font-weight:900; margin-bottom:.5rem; }
+        .tdp-contacts h3 { font-family:'29LtBukra','Montserrat',sans-serif; font-size:1.3rem; font-weight:900; margin-bottom:.5rem; }
         .tdp-contacts p { color:rgba(255,255,255,0.5); font-size:.9rem; margin-bottom:1.5rem; }
         .tdp-contact-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:.8rem; max-width:700px; margin:0 auto; }
-        .tdp-contact-btn { display:flex; align-items:center; justify-content:center; gap:9px; padding:.85rem 1rem; border-radius:10px; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:600; text-decoration:none; transition:all .25s; }
+        .tdp-contact-btn { display:flex; align-items:center; justify-content:center; gap:9px; padding:.85rem 1rem; border-radius:10px; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:#fff; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.9rem; font-weight:600; text-decoration:none; transition:all .25s; }
         .tdp-contact-btn:hover { border-color:#5416B5; background:rgba(84,22,181,0.15); transform:translateY(-2px); }
 
         /* ── MODAL ── */
@@ -246,14 +245,14 @@ export default function ThreeDPage() {
         .tdp-modal-info::-webkit-scrollbar { width:2px; }
         .tdp-modal-info::-webkit-scrollbar-thumb { background:rgba(84,22,181,0.25); border-radius:2px; }
         .tdp-modal-cat { display:inline-flex; align-items:center; gap:6px; background:rgba(84,22,181,0.12); border:1px solid rgba(84,22,181,0.25); border-radius:50px; padding:.32rem .95rem; font-size:.8rem; color:#9B59D0; width:fit-content; }
-        .tdp-modal-name { font-family:'Cairo',sans-serif; font-size:1.55rem; font-weight:900; line-height:1.25; background:linear-gradient(135deg,#fff 55%,#9B59D0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .tdp-modal-name { font-family:'29LtBukra','Montserrat',sans-serif; font-size:1.55rem; font-weight:900; line-height:1.25; background:linear-gradient(135deg,#fff 55%,#9B59D0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .tdp-modal-divider { height:1px; background:linear-gradient(90deg,rgba(84,22,181,0.35),transparent); flex-shrink:0; }
         .tdp-modal-desc-box { background:rgba(15,8,59,0.45); border:1px solid rgba(84,22,181,0.1); border-radius:12px; padding:.8rem 1rem; }
         .tdp-modal-desc-box p { color:rgba(255,255,255,0.6); font-size:.85rem; line-height:1.75; margin:0; }
         .tdp-modal-contact-label { font-size:.75rem; color:rgba(255,255,255,0.3); text-align:center; letter-spacing:.05em; }
         .tdp-modal-actions { display:flex; flex-direction:column; gap:25px; margin-top:.5rem; padding-top:.9rem; border-top:1px solid rgba(84,22,181,0.1); }
         .tdp-modal-actions-label { font-size:.78rem; color:rgba(255,255,255,0.35); text-align:center; margin-bottom:.2rem; }
-        .tdp-modal-actions a { display:flex; align-items:center; gap:10px; padding:.75rem 1.1rem; border-radius:10px; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:700; text-decoration:none; transition:all .2s; white-space:nowrap; }
+        .tdp-modal-actions a { display:flex; align-items:center; gap:10px; padding:.75rem 1.1rem; border-radius:10px; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.88rem; font-weight:700; text-decoration:none; transition:all .2s; white-space:nowrap; }
         .tdp-modal-actions a i { font-size:1.1rem; width:20px; text-align:center; flex-shrink:0; }
         .tdp-modal-actions a { background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.25); color:#fff; }
         .tdp-modal-actions a:first-child { background:linear-gradient(135deg,#5416B5,#7F3AA1); border:none; box-shadow:0 4px 20px rgba(84,22,181,0.4); }
@@ -321,7 +320,7 @@ export default function ThreeDPage() {
 
       <div id="grid" />
 
-      {/* ── CARDS ── */}
+      {/* ── CARDS ── */} 
       <div className="tdp-grid">
         {filtered.map((p, i) => (
           <div
