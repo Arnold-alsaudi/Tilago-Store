@@ -608,7 +608,7 @@ export default function AlertsPage() {
           <section className="al-hero">
             <div className="al-hero-video">
               <video autoPlay muted loop playsInline>
-                <source src="/video/alert.mp4" type="video/mp4" />
+                <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782938/tilago/alert.mp4" type="video/mp4" />
               </video>
             </div>
             <div className="al-hero-content">
@@ -886,7 +886,7 @@ export default function AlertsPage() {
                       <img src={modal.imgs?.[0] ?? '/caf.png'} alt={modal.name} />
                     ) : (
                       <video controls autoPlay id="al-modal-vid">
-                        <source src={modal.video ?? '/video/tilago.mp4'} type="video/mp4"/>
+                        <source src={modal.video ?? 'https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4'} type="video/mp4"/>
                       </video>
                     )}
                   </div>

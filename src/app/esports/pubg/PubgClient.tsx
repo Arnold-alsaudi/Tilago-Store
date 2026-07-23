@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -13,19 +13,19 @@ export interface PubgPkg {
 }
 
 const CONTACTS = [
-  { icon:'fab fa-whatsapp', label:'واتساب',      sub:'اطلب الآن مباشرةً',       href:'https://wa.me/1234567890',       c:'#25D366' },
-  { icon:'fab fa-telegram', label:'تيليجرام',    sub:'تواصل معنا على تيليجرام',  href:'https://t.me/yourchannel',       c:'#0088cc' },
-  { icon:'fab fa-discord',  label:'ديسكورد',     sub:'انضم لسيرفر الدعم',        href:'https://discord.gg/yourserver',  c:'#5865F2' },
-  { icon:'fas fa-headset',  label:'الدعم الفني', sub:'نرد خلال 24 ساعة',         href:'mailto:support@tilago.com',      c:'#9B59D0' },
+  { icon:'fab fa-whatsapp', label:'ظˆط§طھط³ط§ط¨',      sub:'ط§ط·ظ„ط¨ ط§ظ„ط¢ظ† ظ…ط¨ط§ط´ط±ط©ظ‹',       href:'https://wa.me/1234567890',       c:'#25D366' },
+  { icon:'fab fa-telegram', label:'طھظٹظ„ظٹط¬ط±ط§ظ…',    sub:'طھظˆط§طµظ„ ظ…ط¹ظ†ط§ ط¹ظ„ظ‰ طھظٹظ„ظٹط¬ط±ط§ظ…',  href:'https://t.me/yourchannel',       c:'#0088cc' },
+  { icon:'fab fa-discord',  label:'ط¯ظٹط³ظƒظˆط±ط¯',     sub:'ط§ظ†ط¶ظ… ظ„ط³ظٹط±ظپط± ط§ظ„ط¯ط¹ظ…',        href:'https://discord.gg/yourserver',  c:'#5865F2' },
+  { icon:'fas fa-headset',  label:'ط§ظ„ط¯ط¹ظ… ط§ظ„ظپظ†ظٹ', sub:'ظ†ط±ط¯ ط®ظ„ط§ظ„ 24 ط³ط§ط¹ط©',         href:'mailto:support@tilago.com',      c:'#9B59D0' },
 ];
 
 const TICKER_WORDS = ['Championship','Team Logo','Tournament Overlay','Bracket Design','PUBG Pack','Winner Screen','Rank Badge','Esports Kit'];
 
 const FEATURES = [
-  { icon:'fas fa-trophy',      title:'تصميم بطولي',   desc:'تصاميم احترافية مخصصة لبطولات PUBG تعكس هوية فريقك بشكل مميز.' },
-  { icon:'fas fa-bolt',        title:'تسليم سريع',    desc:'تستلم تصميمك كاملاً خلال 24 ساعة من وقت الطلب.' },
-  { icon:'fas fa-sliders-h',   title:'تخصيص كامل',   desc:'أضف اسم فريقك وشعارك وألوانك على أي تصميم تختاره.' },
-  { icon:'fas fa-headset',     title:'دعم مستمر',    desc:'فريقنا متاح دائماً لمساعدتك في أي تعديل أو استفسار.' },
+  { icon:'fas fa-trophy',      title:'طھطµظ…ظٹظ… ط¨ط·ظˆظ„ظٹ',   desc:'طھطµط§ظ…ظٹظ… ط§ط­طھط±ط§ظپظٹط© ظ…ط®طµطµط© ظ„ط¨ط·ظˆظ„ط§طھ PUBG طھط¹ظƒط³ ظ‡ظˆظٹط© ظپط±ظٹظ‚ظƒ ط¨ط´ظƒظ„ ظ…ظ…ظٹط².' },
+  { icon:'fas fa-bolt',        title:'طھط³ظ„ظٹظ… ط³ط±ظٹط¹',    desc:'طھط³طھظ„ظ… طھطµظ…ظٹظ…ظƒ ظƒط§ظ…ظ„ط§ظ‹ ط®ظ„ط§ظ„ 24 ط³ط§ط¹ط© ظ…ظ† ظˆظ‚طھ ط§ظ„ط·ظ„ط¨.' },
+  { icon:'fas fa-sliders-h',   title:'طھط®طµظٹطµ ظƒط§ظ…ظ„',   desc:'ط£ط¶ظپ ط§ط³ظ… ظپط±ظٹظ‚ظƒ ظˆط´ط¹ط§ط±ظƒ ظˆط£ظ„ظˆط§ظ†ظƒ ط¹ظ„ظ‰ ط£ظٹ طھطµظ…ظٹظ… طھط®طھط§ط±ظ‡.' },
+  { icon:'fas fa-headset',     title:'ط¯ط¹ظ… ظ…ط³طھظ…ط±',    desc:'ظپط±ظٹظ‚ظ†ط§ ظ…طھط§ط­ ط¯ط§ط¦ظ…ط§ظ‹ ظ„ظ…ط³ط§ط¹ط¯طھظƒ ظپظٹ ط£ظٹ طھط¹ط¯ظٹظ„ ط£ظˆ ط§ط³طھظپط³ط§ط±.' },
 ];
 
 export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
@@ -42,7 +42,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
           color:#d0cce8; font-family:'29LtBukra','Montserrat',sans-serif;
         }
 
-        /* ── Hero ── */
+        /* â”€â”€ Hero â”€â”€ */
         .pg-hero {
           display:flex; flex-wrap:wrap; align-items:center;
           justify-content:space-around; padding:4rem 5%; gap:2rem;
@@ -101,7 +101,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
           .pg-hero-cta { margin-inline:auto; }
         }
 
-        /* ── Ticker ── */
+        /* â”€â”€ Ticker â”€â”€ */
         .pg-ticker {
           margin:22px 0 0; height:38px; overflow:hidden; position:relative;
           border-top:1px solid rgba(84,22,181,0.12); border-bottom:1px solid rgba(84,22,181,0.12);
@@ -125,7 +125,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         .pg-ticker-item i { color:rgba(84,22,181,0.5); font-size:.55rem; }
         .pg-ticker-dot { color:rgba(84,22,181,0.25); margin:0 4px; }
 
-        /* ── Nav ── */
+        /* â”€â”€ Nav â”€â”€ */
         .pg-nav { width:100%; padding:20px 5% 28px; }
         .pg-nav-row { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; direction:ltr; }
         .pg-nav-btn {
@@ -158,7 +158,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
           color:#9B59D0; transform:scale(1.08);
         }
 
-        /* ── Stats ── */
+        /* â”€â”€ Stats â”€â”€ */
         .pg-stats {
           display:flex; justify-content:center; flex-wrap:wrap; gap:0;
           background:rgba(15,8,59,0.6);
@@ -179,7 +179,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
           .pg-stat-num { font-size:1.5rem; }
         }
 
-        /* ── Section Head ── */
+        /* â”€â”€ Section Head â”€â”€ */
         .pg-head { text-align:center; padding:40px 16px 36px; }
         .pg-head-tag {
           display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:4px;
@@ -194,13 +194,13 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         .pg-head h2 span { color:#9B59D0; }
         .pg-head p { font-size:.9rem; color:rgba(170,160,205,0.38); max-width:400px; margin:0 auto; line-height:1.7; }
 
-        /* ── Grid ── */
+        /* â”€â”€ Grid â”€â”€ */
         .pg-products {
           padding:0 5% 4rem;
           display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem;
         }
 
-        /* ── Card ── */
+        /* â”€â”€ Card â”€â”€ */
         .pg-card {
           position:relative; border-radius:14px; overflow:hidden;
           background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.2);
@@ -236,7 +236,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         .pg-empty i { font-size:3rem; margin-bottom:16px; display:block; opacity:.3; }
         .pg-empty p { font-size:.9rem; }
 
-        /* ── Features ── */
+        /* â”€â”€ Features â”€â”€ */
         .pg-features {
           padding:3rem 5%; display:grid;
           grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.2rem;
@@ -257,7 +257,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         .pg-feature-title { font-weight:700; color:#e8e4f8; margin-bottom:.5rem; font-size:1rem; }
         .pg-feature-desc  { color:rgba(160,150,190,0.65); font-size:.82rem; line-height:1.6; }
 
-        /* ── Contact Buttons ── */
+        /* â”€â”€ Contact Buttons â”€â”€ */
         .pg-contact-btns { display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; padding:2rem 5%; }
         .pg-contact-btn {
           display:flex; align-items:center; gap:10px;
@@ -272,11 +272,11 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         .pg-contact-btn-sub   { font-size:.68rem; color:rgba(180,170,210,0.5); font-weight:400; }
         .pg-contact-btn:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.14); transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.2); }
 
-        /* ── Backdrop ── */
+        /* â”€â”€ Backdrop â”€â”€ */
         .pg-backdrop { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px); animation:pgFade .25s ease; }
         @keyframes pgFade { from{opacity:0} to{opacity:1} }
 
-        /* ── Drawer ── */
+        /* â”€â”€ Drawer â”€â”€ */
         .pg-detail {
           position:fixed; top:0; right:0; bottom:0;
           width:62%; max-width:760px; z-index:301;
@@ -330,7 +330,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         .pg-img-wrap img { width:100%; height:auto; display:block; image-rendering:-webkit-optimize-contrast; }
         .pg-img-sep { height:2px; background:linear-gradient(90deg,transparent,rgba(84,22,181,0.3),transparent); }
 
-        /* ── Contacts Panel ── */
+        /* â”€â”€ Contacts Panel â”€â”€ */
         .pg-contacts-panel {
           position:fixed; top:0; left:0; bottom:0; width:38%; z-index:302;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -366,7 +366,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         .pg-contact:hover .pg-contact-arrow { color:rgba(155,89,208,0.7); transform:translateX(-4px); }
         @media(max-width:768px){ .pg-contacts-panel{display:none} }
 
-        /* ── Responsive ── */
+        /* â”€â”€ Responsive â”€â”€ */
         @media(max-width:1024px){ .pg-products { grid-template-columns:repeat(2,1fr); } }
         @media(max-width:768px){
           .pg-nav-row { gap:8px; }
@@ -388,15 +388,15 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
       <section className="pg-hero">
         <div className="pg-hero-video">
           <video autoPlay muted loop playsInline>
-            <source src="/video/tilago.mp4" type="video/mp4"/>
+            <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4" type="video/mp4"/>
           </video>
         </div>
         <div className="pg-hero-content">
           <div className="pg-hero-tag"><i className="fas fa-trophy"/> PUBG Championship</div>
-          <h2>بطولات <span>PUBG</span> من Tilago</h2>
+          <h2>ط¨ط·ظˆظ„ط§طھ <span>PUBG</span> ظ…ظ† Tilago</h2>
           <div className="pg-hero-divider"/>
-          <p>تصاميم بطولية احترافية لفرق PUBG — شعارات، أوفرلاي، براكيت، وشاشات الفوز. كل شيء مخصص لفريقك.</p>
-          <a href="#packages" className="pg-hero-cta">تصفح الباكدجات <i className="fas fa-arrow-left"/></a>
+          <p>طھطµط§ظ…ظٹظ… ط¨ط·ظˆظ„ظٹط© ط§ط­طھط±ط§ظپظٹط© ظ„ظپط±ظ‚ PUBG â€” ط´ط¹ط§ط±ط§طھطŒ ط£ظˆظپط±ظ„ط§ظٹطŒ ط¨ط±ط§ظƒظٹطھطŒ ظˆط´ط§ط´ط§طھ ط§ظ„ظپظˆط². ظƒظ„ ط´ظٹط، ظ…ط®طµطµ ظ„ظپط±ظٹظ‚ظƒ.</p>
+          <a href="#packages" className="pg-hero-cta">طھطµظپط­ ط§ظ„ط¨ط§ظƒط¯ط¬ط§طھ <i className="fas fa-arrow-left"/></a>
         </div>
       </section>
 
@@ -406,7 +406,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
           {[...TICKER_WORDS,...TICKER_WORDS].map((w,i)=>(
             <span key={i} className="pg-ticker-item">
               <i className="fas fa-trophy"/>{w}
-              <span className="pg-ticker-dot">✦</span>
+              <span className="pg-ticker-dot">âœ¦</span>
             </span>
           ))}
         </div>
@@ -426,10 +426,10 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
       {!active && (
         <div className="pg-stats">
           {[
-            { num: packages.length > 0 ? `+${packages.length}` : '0', label:'باكدج جاهز' },
-            { num:'50+',  label:'فريق مصمم' },
-            { num:'24h',  label:'وقت التسليم' },
-            { num:'100%', label:'مخصص لفريقك' },
+            { num: packages.length > 0 ? `+${packages.length}` : '0', label:'ط¨ط§ظƒط¯ط¬ ط¬ط§ظ‡ط²' },
+            { num:'50+',  label:'ظپط±ظٹظ‚ ظ…طµظ…ظ…' },
+            { num:'24h',  label:'ظˆظ‚طھ ط§ظ„طھط³ظ„ظٹظ…' },
+            { num:'100%', label:'ظ…ط®طµطµ ظ„ظپط±ظٹظ‚ظƒ' },
           ].map(s=>(
             <div key={s.label} className="pg-stat-item">
               <span className="pg-stat-num">{s.num}</span>
@@ -444,15 +444,15 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         <>
           <div className="pg-head" id="packages">
             <span className="pg-head-tag">PUBG Championship</span>
-            <h2>باكدجات <span>البطولة</span></h2>
-            <p>اضغط على أي باكدج لمشاهدة تفاصيله وكل ما يحتويه</p>
+            <h2>ط¨ط§ظƒط¯ط¬ط§طھ <span>ط§ظ„ط¨ط·ظˆظ„ط©</span></h2>
+            <p>ط§ط¶ط؛ط· ط¹ظ„ظ‰ ط£ظٹ ط¨ط§ظƒط¯ط¬ ظ„ظ…ط´ط§ظ‡ط¯ط© طھظپط§طµظٹظ„ظ‡ ظˆظƒظ„ ظ…ط§ ظٹط­طھظˆظٹظ‡</p>
           </div>
 
           <div className="pg-products">
             {packages.length === 0 ? (
               <div className="pg-empty">
                 <i className="fas fa-trophy"/>
-                <p>لا توجد باكدجات متاحة حالياً</p>
+                <p>ظ„ط§ طھظˆط¬ط¯ ط¨ط§ظƒط¯ط¬ط§طھ ظ…طھط§ط­ط© ط­ط§ظ„ظٹط§ظ‹</p>
               </div>
             ) : packages.map(pkg=>(
               <div key={pkg.id} className="pg-card" onClick={()=>setActive(pkg)}>
@@ -461,7 +461,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
                 <div className="pg-card-grad"/>
                 <div className="pg-card-badge">
                   <i className="fas fa-trophy"/>
-                  {pkg.images.length} عنصر
+                  {pkg.images.length} ط¹ظ†طµط±
                 </div>
                 <div className="pg-card-body">
                   <div className="pg-card-name">{pkg.nameAr}</div>
@@ -491,7 +491,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
                 </div>
                 <div className="pg-contact-btn-text">
                   <span className="pg-contact-btn-title">{btn.label}</span>
-                  <span className="pg-contact-btn-sub">تواصل معنا</span>
+                  <span className="pg-contact-btn-sub">طھظˆط§طµظ„ ظ…ط¹ظ†ط§</span>
                 </div>
               </a>
             ))}
@@ -509,7 +509,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
               <i className="fas fa-times"/>
             </button>
             <div className="pg-contacts-inner">
-              <div className="pg-order-label">تواصل للطلب</div>
+              <div className="pg-order-label">طھظˆط§طµظ„ ظ„ظ„ط·ظ„ط¨</div>
               <div className="pg-contacts-list">
                 {CONTACTS.map(b=>(
                   <a key={b.label} href={b.href} target="_blank" rel="noreferrer" className="pg-contact">
@@ -530,7 +530,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
           <div className="pg-detail">
             <div className="pg-detail-bar">
               <div className="pg-detail-name">{active.nameAr}</div>
-              <div className="pg-detail-cnt">{active.images.length} عنصر</div>
+              <div className="pg-detail-cnt">{active.images.length} ط¹ظ†طµط±</div>
               <button className="pg-back" onClick={()=>setActive(null)}>
                 <i className="fas fa-times"/>
               </button>
@@ -551,7 +551,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
 
             {active.video && (
               <div className="pg-pkg-video">
-                <div className="pg-pkg-video-label"><i className="fas fa-play-circle"/> معاينة الباكدج</div>
+                <div className="pg-pkg-video-label"><i className="fas fa-play-circle"/> ظ…ط¹ط§ظٹظ†ط© ط§ظ„ط¨ط§ظƒط¯ط¬</div>
                 <video controls muted loop playsInline preload="metadata" src={active.video}/>
               </div>
             )}

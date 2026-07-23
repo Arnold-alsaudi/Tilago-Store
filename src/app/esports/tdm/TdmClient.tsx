@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -13,19 +13,19 @@ export interface TdmPkg {
 }
 
 const CONTACTS = [
-  { icon:'fab fa-whatsapp', label:'واتساب',      sub:'اطلب الآن مباشرةً',       href:'https://wa.me/1234567890',       c:'#25D366' },
-  { icon:'fab fa-telegram', label:'تيليجرام',    sub:'تواصل معنا على تيليجرام',  href:'https://t.me/yourchannel',       c:'#0088cc' },
-  { icon:'fab fa-discord',  label:'ديسكورد',     sub:'انضم لسيرفر الدعم',        href:'https://discord.gg/yourserver',  c:'#5865F2' },
-  { icon:'fas fa-headset',  label:'الدعم الفني', sub:'نرد خلال 24 ساعة',         href:'mailto:support@tilago.com',      c:'#9B59D0' },
+  { icon:'fab fa-whatsapp', label:'ظˆط§طھط³ط§ط¨',      sub:'ط§ط·ظ„ط¨ ط§ظ„ط¢ظ† ظ…ط¨ط§ط´ط±ط©ظ‹',       href:'https://wa.me/1234567890',       c:'#25D366' },
+  { icon:'fab fa-telegram', label:'طھظٹظ„ظٹط¬ط±ط§ظ…',    sub:'طھظˆط§طµظ„ ظ…ط¹ظ†ط§ ط¹ظ„ظ‰ طھظٹظ„ظٹط¬ط±ط§ظ…',  href:'https://t.me/yourchannel',       c:'#0088cc' },
+  { icon:'fab fa-discord',  label:'ط¯ظٹط³ظƒظˆط±ط¯',     sub:'ط§ظ†ط¶ظ… ظ„ط³ظٹط±ظپط± ط§ظ„ط¯ط¹ظ…',        href:'https://discord.gg/yourserver',  c:'#5865F2' },
+  { icon:'fas fa-headset',  label:'ط§ظ„ط¯ط¹ظ… ط§ظ„ظپظ†ظٹ', sub:'ظ†ط±ط¯ ط®ظ„ط§ظ„ 24 ط³ط§ط¹ط©',         href:'mailto:support@tilago.com',      c:'#9B59D0' },
 ];
 
 const TICKER_WORDS = ['Team Deathmatch','Kill Feed','Team Logo','Score Board','TDM Pack','Victory Screen','Team Jersey','Esports Kit'];
 
 const FEATURES = [
-  { icon:'fas fa-crosshairs',   title:'هوية الفريق',        desc:'تصاميم احترافية مخصصة لفرق TDM تعكس هوية فريقك بشكل مميز.' },
-  { icon:'fas fa-bolt',         title:'تسليم سريع',         desc:'تستلم تصميمك كاملاً خلال 24 ساعة من وقت الطلب.' },
-  { icon:'fas fa-sliders-h',    title:'تخصيص كامل',         desc:'أضف اسم فريقك وشعارك وألوانك على أي تصميم تختاره.' },
-  { icon:'fas fa-headset',      title:'دعم مستمر',          desc:'فريقنا متاح دائماً لمساعدتك في أي تعديل أو استفسار.' },
+  { icon:'fas fa-crosshairs',   title:'ظ‡ظˆظٹط© ط§ظ„ظپط±ظٹظ‚',        desc:'طھطµط§ظ…ظٹظ… ط§ط­طھط±ط§ظپظٹط© ظ…ط®طµطµط© ظ„ظپط±ظ‚ TDM طھط¹ظƒط³ ظ‡ظˆظٹط© ظپط±ظٹظ‚ظƒ ط¨ط´ظƒظ„ ظ…ظ…ظٹط².' },
+  { icon:'fas fa-bolt',         title:'طھط³ظ„ظٹظ… ط³ط±ظٹط¹',         desc:'طھط³طھظ„ظ… طھطµظ…ظٹظ…ظƒ ظƒط§ظ…ظ„ط§ظ‹ ط®ظ„ط§ظ„ 24 ط³ط§ط¹ط© ظ…ظ† ظˆظ‚طھ ط§ظ„ط·ظ„ط¨.' },
+  { icon:'fas fa-sliders-h',    title:'طھط®طµظٹطµ ظƒط§ظ…ظ„',         desc:'ط£ط¶ظپ ط§ط³ظ… ظپط±ظٹظ‚ظƒ ظˆط´ط¹ط§ط±ظƒ ظˆط£ظ„ظˆط§ظ†ظƒ ط¹ظ„ظ‰ ط£ظٹ طھطµظ…ظٹظ… طھط®طھط§ط±ظ‡.' },
+  { icon:'fas fa-headset',      title:'ط¯ط¹ظ… ظ…ط³طھظ…ط±',          desc:'ظپط±ظٹظ‚ظ†ط§ ظ…طھط§ط­ ط¯ط§ط¦ظ…ط§ظ‹ ظ„ظ…ط³ط§ط¹ط¯طھظƒ ظپظٹ ط£ظٹ طھط¹ط¯ظٹظ„ ط£ظˆ ط§ط³طھظپط³ط§ط±.' },
 ];
 
 export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
@@ -42,7 +42,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
           color:#d0cce8; font-family:'29LtBukra','Montserrat',sans-serif;
         }
 
-        /* ── Hero ── */
+        /* â”€â”€ Hero â”€â”€ */
         .td-hero {
           display:flex; flex-wrap:wrap; align-items:center;
           justify-content:space-around; padding:4rem 5%; gap:2rem;
@@ -101,7 +101,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
           .td-hero-cta { margin-inline:auto; }
         }
 
-        /* ── Ticker ── */
+        /* â”€â”€ Ticker â”€â”€ */
         .td-ticker {
           margin:22px 0 0; height:38px; overflow:hidden; position:relative;
           border-top:1px solid rgba(84,22,181,0.12); border-bottom:1px solid rgba(84,22,181,0.12);
@@ -125,7 +125,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         .td-ticker-item i { color:rgba(84,22,181,0.5); font-size:.55rem; }
         .td-ticker-dot { color:rgba(84,22,181,0.25); margin:0 4px; }
 
-        /* ── Nav ── */
+        /* â”€â”€ Nav â”€â”€ */
         .td-nav { width:100%; padding:20px 5% 28px; }
         .td-nav-row { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; direction:ltr; }
         .td-nav-btn {
@@ -158,7 +158,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
           color:#9B59D0; transform:scale(1.08);
         }
 
-        /* ── Stats ── */
+        /* â”€â”€ Stats â”€â”€ */
         .td-stats {
           display:flex; justify-content:center; flex-wrap:wrap; gap:0;
           background:rgba(15,8,59,0.6);
@@ -179,7 +179,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
           .td-stat-num { font-size:1.5rem; }
         }
 
-        /* ── Section Head ── */
+        /* â”€â”€ Section Head â”€â”€ */
         .td-head { text-align:center; padding:40px 16px 36px; }
         .td-head-tag {
           display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:4px;
@@ -194,13 +194,13 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         .td-head h2 span { color:#9B59D0; }
         .td-head p { font-size:.9rem; color:rgba(170,160,205,0.38); max-width:400px; margin:0 auto; line-height:1.7; }
 
-        /* ── Grid ── */
+        /* â”€â”€ Grid â”€â”€ */
         .td-products {
           padding:0 5% 4rem;
           display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem;
         }
 
-        /* ── Card ── */
+        /* â”€â”€ Card â”€â”€ */
         .td-card {
           position:relative; border-radius:14px; overflow:hidden;
           background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.2);
@@ -236,7 +236,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         .td-empty i { font-size:3rem; margin-bottom:16px; display:block; opacity:.3; }
         .td-empty p { font-size:.9rem; }
 
-        /* ── Features ── */
+        /* â”€â”€ Features â”€â”€ */
         .td-features {
           padding:3rem 5%; display:grid;
           grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.2rem;
@@ -257,7 +257,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         .td-feature-title { font-weight:700; color:#e8e4f8; margin-bottom:.5rem; font-size:1rem; }
         .td-feature-desc  { color:rgba(160,150,190,0.65); font-size:.82rem; line-height:1.6; }
 
-        /* ── Contact Buttons ── */
+        /* â”€â”€ Contact Buttons â”€â”€ */
         .td-contact-btns { display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; padding:2rem 5%; }
         .td-contact-btn {
           display:flex; align-items:center; gap:10px;
@@ -272,11 +272,11 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         .td-contact-btn-sub   { font-size:.68rem; color:rgba(180,170,210,0.5); font-weight:400; }
         .td-contact-btn:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.14); transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.2); }
 
-        /* ── Backdrop ── */
+        /* â”€â”€ Backdrop â”€â”€ */
         .td-backdrop { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px); animation:tdFade .25s ease; }
         @keyframes tdFade { from{opacity:0} to{opacity:1} }
 
-        /* ── Drawer ── */
+        /* â”€â”€ Drawer â”€â”€ */
         .td-detail {
           position:fixed; top:0; right:0; bottom:0;
           width:62%; max-width:760px; z-index:301;
@@ -330,7 +330,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         .td-img-wrap img { width:100%; height:auto; display:block; image-rendering:-webkit-optimize-contrast; }
         .td-img-sep { height:2px; background:linear-gradient(90deg,transparent,rgba(84,22,181,0.3),transparent); }
 
-        /* ── Contacts Panel ── */
+        /* â”€â”€ Contacts Panel â”€â”€ */
         .td-contacts-panel {
           position:fixed; top:0; left:0; bottom:0; width:38%; z-index:302;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -366,7 +366,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         .td-contact:hover .td-contact-arrow { color:rgba(155,89,208,0.7); transform:translateX(-4px); }
         @media(max-width:768px){ .td-contacts-panel{display:none} }
 
-        /* ── Responsive ── */
+        /* â”€â”€ Responsive â”€â”€ */
         @media(max-width:1024px){ .td-products { grid-template-columns:repeat(2,1fr); } }
         @media(max-width:768px){
           .td-nav-row { gap:8px; }
@@ -388,15 +388,15 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
       <section className="td-hero">
         <div className="td-hero-video">
           <video autoPlay muted loop playsInline>
-            <source src="/video/tilago.mp4" type="video/mp4"/>
+            <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4" type="video/mp4"/>
           </video>
         </div>
         <div className="td-hero-content">
           <div className="td-hero-tag"><i className="fas fa-crosshairs"/> TDM ESPORTS</div>
-          <h2>تصاميم <span>TDM</span> من Tilago</h2>
+          <h2>طھطµط§ظ…ظٹظ… <span>TDM</span> ظ…ظ† Tilago</h2>
           <div className="td-hero-divider"/>
-          <p>تصاميم احترافية لفرق TDM — هويات بصرية، كيل-فيد، أوفرلاي، وشاشات الفوز. كل شيء مخصص لفريقك.</p>
-          <a href="#packages" className="td-hero-cta">تصفح الباكدجات <i className="fas fa-arrow-left"/></a>
+          <p>طھطµط§ظ…ظٹظ… ط§ط­طھط±ط§ظپظٹط© ظ„ظپط±ظ‚ TDM â€” ظ‡ظˆظٹط§طھ ط¨طµط±ظٹط©طŒ ظƒظٹظ„-ظپظٹط¯طŒ ط£ظˆظپط±ظ„ط§ظٹطŒ ظˆط´ط§ط´ط§طھ ط§ظ„ظپظˆط². ظƒظ„ ط´ظٹط، ظ…ط®طµطµ ظ„ظپط±ظٹظ‚ظƒ.</p>
+          <a href="#packages" className="td-hero-cta">طھطµظپط­ ط§ظ„ط¨ط§ظƒط¯ط¬ط§طھ <i className="fas fa-arrow-left"/></a>
         </div>
       </section>
 
@@ -406,7 +406,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
           {[...TICKER_WORDS,...TICKER_WORDS].map((w,i)=>(
             <span key={i} className="td-ticker-item">
               <i className="fas fa-crosshairs"/>{w}
-              <span className="td-ticker-dot">✦</span>
+              <span className="td-ticker-dot">âœ¦</span>
             </span>
           ))}
         </div>
@@ -426,10 +426,10 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
       {!active && (
         <div className="td-stats">
           {[
-            { num: packages.length > 0 ? `+${packages.length}` : '0', label:'باكدج جاهز' },
-            { num:'30+',  label:'فريق مصمم' },
-            { num:'24h',  label:'وقت التسليم' },
-            { num:'100%', label:'مخصص لفريقك' },
+            { num: packages.length > 0 ? `+${packages.length}` : '0', label:'ط¨ط§ظƒط¯ط¬ ط¬ط§ظ‡ط²' },
+            { num:'30+',  label:'ظپط±ظٹظ‚ ظ…طµظ…ظ…' },
+            { num:'24h',  label:'ظˆظ‚طھ ط§ظ„طھط³ظ„ظٹظ…' },
+            { num:'100%', label:'ظ…ط®طµطµ ظ„ظپط±ظٹظ‚ظƒ' },
           ].map(s=>(
             <div key={s.label} className="td-stat-item">
               <span className="td-stat-num">{s.num}</span>
@@ -444,15 +444,15 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
         <>
           <div className="td-head" id="packages">
             <span className="td-head-tag">TDM ESPORTS</span>
-            <h2>باكدجات <span>TDM</span></h2>
-            <p>اضغط على أي باكدج لمشاهدة تفاصيله وكل ما يحتويه</p>
+            <h2>ط¨ط§ظƒط¯ط¬ط§طھ <span>TDM</span></h2>
+            <p>ط§ط¶ط؛ط· ط¹ظ„ظ‰ ط£ظٹ ط¨ط§ظƒط¯ط¬ ظ„ظ…ط´ط§ظ‡ط¯ط© طھظپط§طµظٹظ„ظ‡ ظˆظƒظ„ ظ…ط§ ظٹط­طھظˆظٹظ‡</p>
           </div>
 
           <div className="td-products">
             {packages.length === 0 ? (
               <div className="td-empty">
                 <i className="fas fa-crosshairs"/>
-                <p>لا توجد باكدجات متاحة حالياً</p>
+                <p>ظ„ط§ طھظˆط¬ط¯ ط¨ط§ظƒط¯ط¬ط§طھ ظ…طھط§ط­ط© ط­ط§ظ„ظٹط§ظ‹</p>
               </div>
             ) : packages.map(pkg=>(
               <div key={pkg.id} className="td-card" onClick={()=>setActive(pkg)}>
@@ -461,7 +461,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
                 <div className="td-card-grad"/>
                 <div className="td-card-badge">
                   <i className="fas fa-crosshairs"/>
-                  {pkg.images.length} عنصر
+                  {pkg.images.length} ط¹ظ†طµط±
                 </div>
                 <div className="td-card-body">
                   <div className="td-card-name">{pkg.nameAr}</div>
@@ -491,7 +491,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
                 </div>
                 <div className="td-contact-btn-text">
                   <span className="td-contact-btn-title">{btn.label}</span>
-                  <span className="td-contact-btn-sub">تواصل معنا</span>
+                  <span className="td-contact-btn-sub">طھظˆط§طµظ„ ظ…ط¹ظ†ط§</span>
                 </div>
               </a>
             ))}
@@ -509,7 +509,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
               <i className="fas fa-times"/>
             </button>
             <div className="td-contacts-inner">
-              <div className="td-order-label">تواصل للطلب</div>
+              <div className="td-order-label">طھظˆط§طµظ„ ظ„ظ„ط·ظ„ط¨</div>
               <div className="td-contacts-list">
                 {CONTACTS.map(b=>(
                   <a key={b.label} href={b.href} target="_blank" rel="noreferrer" className="td-contact">
@@ -530,7 +530,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
           <div className="td-detail">
             <div className="td-detail-bar">
               <div className="td-detail-name">{active.nameAr}</div>
-              <div className="td-detail-cnt">{active.images.length} عنصر</div>
+              <div className="td-detail-cnt">{active.images.length} ط¹ظ†طµط±</div>
               <button className="td-back" onClick={()=>setActive(null)}>
                 <i className="fas fa-times"/>
               </button>
@@ -551,7 +551,7 @@ export default function TdmClient({ packages }: { packages: TdmPkg[] }) {
 
             {active.video && (
               <div className="td-pkg-video">
-                <div className="td-pkg-video-label"><i className="fas fa-play-circle"/> معاينة الباكدج</div>
+                <div className="td-pkg-video-label"><i className="fas fa-play-circle"/> ظ…ط¹ط§ظٹظ†ط© ط§ظ„ط¨ط§ظƒط¯ط¬</div>
                 <video controls muted loop playsInline preload="metadata" src={active.video}/>
               </div>
             )}

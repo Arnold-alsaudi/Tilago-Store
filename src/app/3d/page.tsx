@@ -289,7 +289,7 @@ export default function ThreeDPage() {
           {[1,2,3].map(i => (
             <div key={i} className="tdp-hero-vid">
               <video autoPlay muted loop playsInline>
-                <source src="/video/tilago.mp4" type="video/mp4" />
+                <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4" type="video/mp4" />
               </video>
             </div>
           ))}
