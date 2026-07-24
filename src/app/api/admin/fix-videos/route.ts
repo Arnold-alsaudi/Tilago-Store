@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const secret = new URL(req.url).searchParams.get('secret');
+  if (secret !== process.env.ADMIN_SECRET && !await isRequestAdmin(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const products = await prisma.product.findMany({ where: { videoUrl: { not: null } } });
   let updated = 0;
