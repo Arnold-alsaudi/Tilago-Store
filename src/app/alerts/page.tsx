@@ -731,27 +731,16 @@ export default function AlertsPage() {
                 {/* Info */}
                 <div className="al-modal-left">
                   <div className="al-info-box">
-                    <h3>التصنيف: <span className="al-highlight">{modal.category}</span></h3>
-                    <p>{modal.desc}</p>
+                    <p><strong>التصنيف:</strong> <span className="al-highlight">{modal.category}</span></p>
                     <p><strong>تقييم:</strong> {'★'.repeat(Math.floor(Number(modal.rating)))} ({modal.ratingCount})</p>
-                    <p><strong>السعر:</strong> <span className="al-highlight">{modal.price}</span></p>
-                    <br />
-                    <p><strong>ميزات الإيرت:</strong></p>
-                    <ul>
+                    <p><strong>السعر:</strong> <span className="al-highlight">{modal.price} $</span></p>
+                    <ul style={{ margin: '8px 0', paddingRight: '1.2rem', fontSize: '.88rem', color: '#c0b0e0' }}>
                       <li>إضافة الشعار الخاص بك أو اسمك</li>
-                      <li>مدة التسليم: من ساعة إلى 24 ساعة</li>
-                    </ul>
-                    <br />
-                    <ul>
+                      <li>التسليم: من ساعة إلى 24 ساعة</li>
                       <li>✅ متوافق مع OBS Studio و Streamlabs</li>
-                      <li>✅ جودة عالية بدون حقوق نشر</li>
-                      <li>✅ يدعم الخلفية الشفافة (WebM)</li>
+                      <li>✅ جودة عالية — يدعم الخلفية الشفافة (WebM)</li>
                     </ul>
-                    <br />
-                    <p style={{ color: '#a78bfa', fontSize: '.85rem', marginBottom: '.5rem' }}>
-                      💡 كبِّر شاشة الفيديو للحصول على رؤية أفضل
-                    </p>
-                    <p style={{ color: 'red', fontSize: '.85rem' }}>ممنوع إعادة بيع المنتج بعد الشراء.</p>
+                    <p style={{ color: 'red', fontSize: '.8rem', margin: '4px 0 0' }}>ممنوع إعادة بيع المنتج بعد الشراء.</p>
 
                     {/* Payment */}
                     {delivered ? (
