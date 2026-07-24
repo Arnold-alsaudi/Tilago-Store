@@ -149,11 +149,11 @@ function WorksSection({ items }: { items: HomeWork[] }) {
         .wsc-left.in { opacity:1; transform:none; }
 
         .wsc-sup {
-          font-family:'29LtBukra','Montserrat'; font-size:.58rem; font-weight:700; letter-spacing:4px;
+          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.58rem; font-weight:700; letter-spacing:4px;
           text-transform:uppercase; color:rgba(155,89,208,.6); margin-bottom:10px;
         }
         .wsc-title {
-          font-family:'29LtBukra','Montserrat'; font-size:clamp(1.8rem,3vw,2.5rem);
+          font-family:'Cairo','29LtBukra','Montserrat'; font-size:clamp(1.8rem,3vw,2.5rem);
           font-weight:900; color:#f0ecff; line-height:1.15; margin-bottom:8px;
         }
         .wsc-title em {
@@ -162,20 +162,20 @@ function WorksSection({ items }: { items: HomeWork[] }) {
           -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
         }
         .wsc-sub {
-          font-family:'29LtBukra','Montserrat'; font-size:.82rem;
+          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.82rem;
           color:rgba(170,160,205,.38); line-height:1.7; max-width:210px;
           margin-bottom:32px;
         }
 
         /* Active item name */
         .wsc-active-name {
-          font-family:'29LtBukra','Montserrat'; font-size:1rem; font-weight:800;
+          font-family:'Cairo','29LtBukra','Montserrat'; font-size:1rem; font-weight:800;
           color:#ede8ff; margin-bottom:6px;
           transition:opacity .26s, transform .26s;
         }
         .wsc-active-name.fade { opacity:0; transform:translateY(6px); }
         .wsc-active-tag {
-          font-family:'29LtBukra','Montserrat'; font-size:.58rem; font-weight:700;
+          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.58rem; font-weight:700;
           letter-spacing:3px; text-transform:uppercase;
           color:rgba(155,89,208,.6); margin-bottom:28px;
           transition:opacity .26s;
@@ -202,7 +202,7 @@ function WorksSection({ items }: { items: HomeWork[] }) {
         /* Explore link */
         .wsc-link {
           display:inline-flex; align-items:center; gap:8px; margin-top:24px;
-          font-family:'29LtBukra','Montserrat'; font-size:.8rem; font-weight:700;
+          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.8rem; font-weight:700;
           color:rgba(180,165,215,.45); text-decoration:none;
           transition:color .25s, gap .25s;
         }
@@ -363,7 +363,7 @@ function ShowcaseSection() {
         }
 
         .sc-label{
-          font-family:'29LtBukra','Montserrat',sans-serif;
+          font-family:'Cairo','29LtBukra','Montserrat',sans-serif;
           font-size:clamp(1.1rem,2vw,1.5rem);
           font-weight:900;color:#ede8ff;
           transition:opacity .3s,transform .3s;
@@ -389,7 +389,7 @@ function ShowcaseSection() {
         /* Explore link */
         .sc-link{
           display:inline-flex;align-items:center;gap:8px;
-          font-family:'29LtBukra','Montserrat';font-size:.82rem;font-weight:700;
+          font-family:'Cairo','29LtBukra','Montserrat';font-size:.82rem;font-weight:700;
           color:rgba(180,165,215,0.55);text-decoration:none;
           transition:color .25s,gap .25s;
         }
@@ -656,9 +656,9 @@ export default function HomePage() {
           .wt-glow{position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(84,22,181,.11) 0%,transparent 70%);left:-120px;top:50%;transform:translateY(-50%);pointer-events:none}
           .wt-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:260px 1fr;gap:44px;align-items:center;position:relative;z-index:1;direction:rtl}
           .wt-left{display:flex;flex-direction:column;gap:0}
-          .wt-left h2{font-family:'29LtBukra','Montserrat';font-size:clamp(1.8rem,2.8vw,2.5rem);font-weight:900;color:#f0ecff;line-height:1.2;margin-bottom:14px}
+          .wt-left h2{font-family:'Cairo','29LtBukra','Montserrat';font-size:clamp(1.8rem,2.8vw,2.5rem);font-weight:900;color:#f0ecff;line-height:1.2;margin-bottom:14px}
           .wt-left h2 em{font-style:normal;background:linear-gradient(90deg,#9B59D0,#c084f5,#7F3AA1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-          .wt-left p{font-family:'29LtBukra','Montserrat';font-size:.86rem;line-height:1.8;color:rgba(170,160,205,.42);margin-bottom:28px}
+          .wt-left p{font-family:'Cairo','29LtBukra','Montserrat';font-size:.86rem;line-height:1.8;color:rgba(170,160,205,.42);margin-bottom:28px}
           .wt-stat-row{display:flex;flex-direction:column;gap:12px}
           .wt-stat{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);transition:border-color .3s,background .3s}
           .wt-stat:hover{border-color:rgba(155,89,208,.3);background:rgba(84,22,181,.06)}
@@ -673,8 +673,8 @@ export default function HomePage() {
           .wt-card:hover img{transform:scale(1.07)}
           .wt-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,1,12,.92) 0%,transparent 55%);z-index:1}
           .wt-card-label{position:absolute;bottom:12px;right:14px;left:14px;z-index:2}
-          .wt-card-tag{font-family:'29LtBukra','Montserrat';font-size:.52rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(155,89,208,.7);margin-bottom:3px}
-          .wt-card-name{font-family:'29LtBukra','Montserrat';font-size:.88rem;font-weight:900;color:#f0ecff;text-shadow:0 2px 8px rgba(0,0,0,.9)}
+          .wt-card-tag{font-family:'Cairo','29LtBukra','Montserrat';font-size:.52rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(155,89,208,.7);margin-bottom:3px}
+          .wt-card-name{font-family:'Cairo','29LtBukra','Montserrat';font-size:.88rem;font-weight:900;color:#f0ecff;text-shadow:0 2px 8px rgba(0,0,0,.9)}
           @media(max-width:1024px){.wt-inner{grid-template-columns:1fr}.wt-left{flex-direction:row;flex-wrap:wrap}.wt-left h2,.wt-left p{width:100%}.wt-stat-row{flex-direction:row;flex-wrap:wrap}.wt-stat{flex:1 1 140px}}
           @media(max-width:700px){.wt-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:auto}.wt-card[style]{grid-column:span 2!important;grid-row:auto!important;height:210px}.wt-sec{padding:52px 16px}}
           @media(max-width:480px){.wt-grid{grid-template-columns:1fr}.wt-card[style]{grid-column:1!important}}
@@ -1077,7 +1077,7 @@ export default function HomePage() {
         }
         .services-tag {
           display: inline-block;
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.65rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.65rem;
           font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
           color: rgba(155,89,208,0.7); padding: 5px 20px; border-radius: 20px;
           border: 1px solid rgba(155,89,208,0.18);
@@ -1085,11 +1085,11 @@ export default function HomePage() {
           margin-bottom: 16px;
         }
         .services-header h2 {
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: clamp(1.7rem,3.5vw,2.4rem);
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: clamp(1.7rem,3.5vw,2.4rem);
           color: #eae6ff; font-weight: 900; margin-bottom: 10px; letter-spacing: .5px;
         }
         .services-header p {
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.92rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.92rem;
           color: rgba(170,160,205,0.4); line-height: 1.7;
         }
         .services-grid {
@@ -1136,11 +1136,11 @@ export default function HomePage() {
         }
         .srv-body { flex: 1; position: relative; z-index: 1; }
         .srv-body h3 {
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.98rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.98rem;
           color: #e8e2ff; font-weight: 800; margin-bottom: 4px;
         }
         .srv-body p {
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.82rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.82rem;
           color: rgba(170,160,205,0.38); line-height: 1.5;
         }
         .srv-arrow {
@@ -1169,7 +1169,7 @@ export default function HomePage() {
         .why-header { text-align: center; margin-bottom: 52px; }
         .why-tag {
           display: inline-block;
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.65rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.65rem;
           font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
           color: rgba(155,89,208,0.7); padding: 5px 20px; border-radius: 20px;
           border: 1px solid rgba(155,89,208,0.18);
@@ -1177,7 +1177,7 @@ export default function HomePage() {
           margin-bottom: 16px; display: block; width: fit-content; margin: 0 auto 16px;
         }
         .why-header h2 {
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: clamp(1.6rem,3.5vw,2.3rem);
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: clamp(1.6rem,3.5vw,2.3rem);
           color: #eae6ff; font-weight: 900; letter-spacing: .5px;
         }
         .why-grid {
@@ -1219,11 +1219,11 @@ export default function HomePage() {
           color: #9B59D0; transform: scale(1.08);
         }
         .why-card h3 {
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 1rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 1rem;
           color: #e8e2ff; font-weight: 800; margin-bottom: 10px;
         }
         .why-card p {
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.84rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.84rem;
           color: rgba(170,160,205,0.4); line-height: 1.75;
         }
         @media (max-width: 900px) {
@@ -1254,7 +1254,7 @@ export default function HomePage() {
           font-weight: 900; color: #c4a0e0; letter-spacing: 2px;
         }
         .stat-label {
-          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 1rem;
+          font-family:'Cairo','Cairo','29LtBukra','Montserrat', sans-serif; font-size: 1rem;
           color: rgba(255,255,255,0.55); letter-spacing: 1px;
           text-transform: uppercase; font-weight: 600;
         }
@@ -1437,7 +1437,7 @@ export default function HomePage() {
           background: rgba(255,255,255,0.025);
           border: 1px solid rgba(255,255,255,0.07);
           color: rgba(175,165,208,0.5);
-          font-family:'29LtBukra','Montserrat', sans-serif; font-size: 0.95rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.95rem;
           font-weight: 700; text-decoration: none;
           position: relative; overflow: hidden;
           transition: all 0.3s cubic-bezier(.25,.8,.25,1);
