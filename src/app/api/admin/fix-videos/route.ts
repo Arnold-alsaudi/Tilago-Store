@@ -7,6 +7,10 @@ const VIDEO_MAP: Record<string, string> = {
   '/video/tilago.mp4': 'https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4',
 };
 
+export async function GET(req: NextRequest) {
+  return POST(req);
+}
+
 export async function POST(req: NextRequest) {
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
