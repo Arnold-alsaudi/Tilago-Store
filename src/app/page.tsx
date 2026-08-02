@@ -1416,10 +1416,10 @@ export default function HomePage() {
 
         /* ── Quick Nav ── */
         .quick-nav-section {
-          max-width: 1100px; margin: 0 auto; padding: 16px 20px 32px;
+          max-width: 1400px; margin: 0 auto; padding: 16px clamp(16px,3vw,40px) 32px;
         }
         .quick-nav-grid {
-          display: grid; grid-template-columns: repeat(4,1fr); gap: 14px;
+          display: grid; grid-template-columns: repeat(4,1fr); gap: clamp(14px,2vw,28px);
         }
         .quick-nav-btn {
           display: flex; align-items: center; justify-content: center;
@@ -1427,16 +1427,17 @@ export default function HomePage() {
           aspect-ratio: 16 / 9; width: 100%;
           border-radius: 20px;
           text-decoration: none;
-          transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+          transition: transform 0.3s cubic-bezier(.25,.8,.25,1);
         }
         .quick-nav-shape {
           position: absolute; inset: 0;
           width: 100%; height: 100%; object-fit: contain;
-          transition: transform 0.3s cubic-bezier(.25,.8,.25,1), filter 0.3s;
+          transition: transform 0.3s cubic-bezier(.25,.8,.25,1);
         }
         .quick-nav-label {
           position: relative; z-index: 1;
-          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 1rem;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif;
+          font-size: clamp(1rem, 1.6vw, 1.5rem);
           font-weight: 700; color: #f0ecff;
           text-shadow: 0 2px 10px rgba(0,0,0,0.5);
           padding-bottom: 10px;
@@ -1445,7 +1446,6 @@ export default function HomePage() {
           transform: translateY(-5px);
         }
         .quick-nav-btn:hover .quick-nav-shape {
-          filter: brightness(1.2) drop-shadow(0 10px 24px rgba(84,22,181,0.5));
           transform: scale(1.03);
         }
         @media (max-width: 768px) {
@@ -1507,10 +1507,10 @@ export default function HomePage() {
         }
         @media (hover: none) {
           .quick-nav-btn:hover { transform: none; }
-          .quick-nav-btn:hover .quick-nav-shape { filter: none; transform: none; }
+          .quick-nav-btn:hover .quick-nav-shape { transform: none; }
           .srv-card:hover { transform: none; }
           .why-card:hover { transform: none; }
-          .quick-nav-btn:active .quick-nav-shape { filter: brightness(1.25); }
+          .quick-nav-btn:active .quick-nav-shape { transform: scale(0.97); }
         }
       `}</style>
     </>
