@@ -566,32 +566,24 @@ export default function HomePage() {
       <section className="quick-nav-section">
         <div className="quick-nav-grid">
           <Link href="/3d" className="quick-nav-btn" data-reveal="up" data-delay="1">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            3D
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/photo/nav-shape.png" alt="" className="quick-nav-shape" />
+            <span className="quick-nav-label">3D</span>
           </Link>
           <Link href="/video" className="quick-nav-btn" data-reveal="up" data-delay="2">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            Video
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/photo/nav-shape.png" alt="" className="quick-nav-shape" />
+            <span className="quick-nav-label">Video</span>
           </Link>
           <Link href="/stream" className="quick-nav-btn" data-reveal="up" data-delay="3">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            Stream
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/photo/nav-shape.png" alt="" className="quick-nav-shape" />
+            <span className="quick-nav-label">Stream</span>
           </Link>
           <Link href="/alerts" className="quick-nav-btn" data-reveal="up" data-delay="4">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            Alerts
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/photo/nav-shape.png" alt="" className="quick-nav-shape" />
+            <span className="quick-nav-label">Alerts</span>
           </Link>
         </div>
       </section>
@@ -1430,54 +1422,40 @@ export default function HomePage() {
           display: grid; grid-template-columns: repeat(4,1fr); gap: 14px;
         }
         .quick-nav-btn {
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          gap: 10px; padding: 18px 12px 16px;
-          border-radius: 20px;
-          background: rgba(255,255,255,0.025);
-          border: 1px solid rgba(255,255,255,0.07);
-          color: rgba(175,165,208,0.5);
-          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 0.95rem;
-          font-weight: 700; text-decoration: none;
+          display: flex; align-items: center; justify-content: center;
           position: relative; overflow: hidden;
+          aspect-ratio: 16 / 9; width: 100%;
+          border-radius: 20px;
+          text-decoration: none;
           transition: all 0.3s cubic-bezier(.25,.8,.25,1);
         }
-        .quick-nav-btn::before {
-          content: '';position: absolute; inset: 0;
-          background: radial-gradient(ellipse at 50% 0%, rgba(84,22,181,0.13), transparent 70%);
-          opacity: 0; transition: opacity 0.3s;
+        .quick-nav-shape {
+          position: absolute; inset: 0;
+          width: 100%; height: 100%; object-fit: contain;
+          transition: transform 0.3s cubic-bezier(.25,.8,.25,1), filter 0.3s;
         }
-        .quick-nav-btn:hover::before { opacity: 1; }
-        .quick-nav-icon {
-          width: 54px; height: 54px; border-radius: 16px;
-          display: flex; align-items: center; justify-content: center;
-          background: rgba(84,22,181,0.1);
-          border: 1px solid rgba(84,22,181,0.18);
-          font-size: 1.45rem; color: rgba(155,89,208,0.55);
-          transition: all 0.3s; flex-shrink: 0;
+        .quick-nav-label {
+          position: relative; z-index: 1;
+          font-family:'Cairo','29LtBukra','Montserrat', sans-serif; font-size: 1rem;
+          font-weight: 700; color: #f0ecff;
+          text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+          padding-bottom: 10px;
         }
         .quick-nav-btn:hover {
-          background: rgba(84,22,181,0.07);
-          border-color: rgba(155,89,208,0.28);
-          color: #e2dcff;
           transform: translateY(-5px);
-          box-shadow: 0 14px 36px rgba(84,22,181,0.18);
         }
-        .quick-nav-btn:hover .quick-nav-icon {
-          background: rgba(84,22,181,0.22);
-          border-color: rgba(155,89,208,0.45);
-          color: #9B59D0;
-          transform: scale(1.08);
+        .quick-nav-btn:hover .quick-nav-shape {
+          filter: brightness(1.2) drop-shadow(0 10px 24px rgba(84,22,181,0.5));
+          transform: scale(1.03);
         }
         @media (max-width: 768px) {
           .quick-nav-section { padding: 24px 16px 36px; }
           .quick-nav-grid { gap: 10px; }
-          .quick-nav-btn { padding: 22px 8px 18px; gap: 10px; border-radius: 16px; font-size: .85rem; }
-          .quick-nav-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+          .quick-nav-btn { border-radius: 16px; }
+          .quick-nav-label { font-size: .85rem; }
         }
         @media (max-width: 480px) {
-          .quick-nav-btn { padding: 18px 6px 14px; gap: 8px; font-size: .78rem; }
-          .quick-nav-icon { width: 38px; height: 38px; font-size: 1rem; }
+          .quick-nav-label { font-size: .78rem; }
         }
 
         /* ── Responsive ── */
@@ -1492,7 +1470,8 @@ export default function HomePage() {
           .hero-container { border-radius: 16px; border-width: 2px; }
           .quick-nav-section { padding: 0 8px; margin-bottom: 28px; }
           .quick-nav-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
-          .quick-nav-btn { padding: 12px 10px; font-size: .8rem; border-radius: 12px; }
+          .quick-nav-btn { border-radius: 12px; }
+          .quick-nav-label { font-size: .8rem; }
           .services-section { padding: 50px 20px; }
           .services-header h2 { font-size: 1.5rem; }
           .services-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
@@ -1511,7 +1490,7 @@ export default function HomePage() {
         @media (max-width: 560px) {
           .hero-container { border-radius: 12px; }
           .quick-nav-grid { grid-template-columns: repeat(2,1fr); gap: 8px; }
-          .quick-nav-btn { padding: 11px 8px; font-size: .75rem; }
+          .quick-nav-label { font-size: .75rem; }
           .services-grid { grid-template-columns: 1fr; }
           .why-grid { grid-template-columns: 1fr; }
           .why-card { padding: 22px 18px; }
@@ -1520,17 +1499,18 @@ export default function HomePage() {
         }
         @media (max-width: 360px) {
           .hero-container { border-radius: 10px; }
-          .quick-nav-btn { font-size: .68rem; padding: 10px 6px; }
+          .quick-nav-label { font-size: .68rem; }
         }
         @media (min-width: 1600px) {
           .hero-section { padding: 0 clamp(20px, 3vw, 60px); }
           .services-section { max-width: 1400px; }
         }
         @media (hover: none) {
-          .quick-nav-btn:hover { transform: none; box-shadow: none; }
+          .quick-nav-btn:hover { transform: none; }
+          .quick-nav-btn:hover .quick-nav-shape { filter: none; transform: none; }
           .srv-card:hover { transform: none; }
           .why-card:hover { transform: none; }
-          .quick-nav-btn:active { background: rgba(84,22,181,0.25); border-color: #7F3AA1; }
+          .quick-nav-btn:active .quick-nav-shape { filter: brightness(1.25); }
         }
       `}</style>
     </>
