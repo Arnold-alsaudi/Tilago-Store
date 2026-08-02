@@ -19,13 +19,24 @@ function memoryLimit(ip: string, limit: number, windowMs: number): { success: bo
 // ── Upstash Redis — يعمل عبر كل الـ instances على serverless ──
 const url = process.env.UPSTASH_REDIS_REST_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-const redis = url && token ? new Redis({ url, token }) : null;
+
+// new Redis() بيتحقق من شكل الـ URL فوراً ولو غلط بيرمي خطأ وقت تحميل الملف —
+// ده ممكن يكسر الـ build كله، فلازم نلفه بـ try/catch بدل ما نثق إن القيمة سليمة
+let redis: Redis | null = null;
+if (url && token) {
+  try {
+    redis = new Redis({ url, token });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[Security] UPSTASH_REDIS_REST_URL/TOKEN غير صحيحين، هنرجع للذاكرة المحلية:', msg);
+  }
+}
 
 if (!redis) {
   // بدون Redis، الـ rate limit بيشتغل بذاكرة كل instance لوحدها —
   // على Vercel (serverless) كل استدعاء ممكن ياخد instance جديدة، يعني الحد فعلياً غير موثوق
   console.warn(
-    '[Security] UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN غير مُعدّين — ' +
+    '[Security] UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN غير مُعدّين أو غير صحيحين — ' +
     'rate limiting هيشتغل بذاكرة محلية غير موزّعة، ومش فعّال على serverless (Vercel). ' +
     'أنشئ قاعدة Upstash Redis وحط الـ credentials في env vars.'
   );
