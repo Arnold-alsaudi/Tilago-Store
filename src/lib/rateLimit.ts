@@ -21,6 +21,16 @@ const url = process.env.UPSTASH_REDIS_REST_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 const redis = url && token ? new Redis({ url, token }) : null;
 
+if (!redis) {
+  // بدون Redis، الـ rate limit بيشتغل بذاكرة كل instance لوحدها —
+  // على Vercel (serverless) كل استدعاء ممكن ياخد instance جديدة، يعني الحد فعلياً غير موثوق
+  console.warn(
+    '[Security] UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN غير مُعدّين — ' +
+    'rate limiting هيشتغل بذاكرة محلية غير موزّعة، ومش فعّال على serverless (Vercel). ' +
+    'أنشئ قاعدة Upstash Redis وحط الـ credentials في env vars.'
+  );
+}
+
 // عدّاد بنافذة ثابتة عبر Redis (يدعم limit/window ديناميكيين)
 export async function rateLimit(
   ip: string,
@@ -34,8 +44,10 @@ export async function rateLimit(
     const count = await redis.incr(key);
     if (count === 1) await redis.pexpire(key, windowMs);
     return { success: count <= limit };
-  } catch {
-    // لو Redis وقع لأي سبب — نرجع للذاكرة بدل ما نكسر الطلب
+  } catch (err) {
+    // لو Redis وقع لأي سبب — نرجع للذاكرة بدل ما نكسر الطلب، لكن لازم الخطأ يبقى ظاهر
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[Security] Upstash Redis call failed, falling back to in-memory rate limit:', msg);
     return memoryLimit(ip, limit, windowMs);
   }
 }

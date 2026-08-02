@@ -11,18 +11,34 @@ export async function POST(req: NextRequest) {
   const { items } = await req.json();
   if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
-  const lineItems = items.map((item: any) => ({
-    price_data: {
-      currency: process.env.STRIPE_CURRENCY ?? 'egp',
-      product_data: {
-        name: item.product.title,
-        images: item.product.imageUrl ? [item.product.imageUrl] : [],
-        description: item.product.description?.slice(0, 200),
+  // السعر والتفاصيل بتيجي من قاعدة البيانات دايماً — نتجاهل أي بيانات منتج جاية من العميل
+  const ids = items.map((i: any) => String(i?.product?.id));
+  const products = await prisma.product.findMany({ where: { id: { in: ids }, active: true } });
+  const byId = new Map(products.map(p => [p.id, p]));
+
+  const trustedItems: { productId: string; quantity: number; price: number }[] = [];
+  for (const i of items) {
+    const product = byId.get(String(i?.product?.id));
+    if (!product) return NextResponse.json({ error: 'Invalid product in cart' }, { status: 400 });
+    const quantity = Math.max(1, Math.floor(Number(i?.quantity) || 1));
+    trustedItems.push({ productId: product.id, quantity, price: product.price });
+  }
+
+  const lineItems = trustedItems.map(item => {
+    const product = byId.get(item.productId)!;
+    return {
+      price_data: {
+        currency: process.env.STRIPE_CURRENCY ?? 'egp',
+        product_data: {
+          name: product.title,
+          images: product.imageUrl ? [product.imageUrl] : [],
+          description: product.description?.slice(0, 200),
+        },
+        unit_amount: Math.round(product.price * 100),
       },
-      unit_amount: Math.round(item.product.price * 100),
-    },
-    quantity: item.quantity,
-  }));
+      quantity: item.quantity,
+    };
+  });
 
   const userId = (session.user as any).id;
 
@@ -35,7 +51,7 @@ export async function POST(req: NextRequest) {
     customer_email: session.user.email!,
     metadata: {
       userId,
-      items: JSON.stringify(items.map((i: any) => ({ productId: i.product.id, quantity: i.quantity, price: i.product.price }))),
+      items: JSON.stringify(trustedItems),
     },
   });
 

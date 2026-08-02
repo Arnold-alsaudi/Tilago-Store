@@ -2,8 +2,9 @@
 
 import { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, X, Upload, Star, Video } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, Star, Video, ImageDown } from 'lucide-react';
 import Image from 'next/image';
+import { youtubeThumbnail } from '@/lib/youtube';
 
 const empty = { title: '', description: '', price: '', imageUrl: '', videoUrl: '', featured: false, active: true };
 
@@ -15,13 +16,10 @@ export function AdminVideos({ videos: init }: { videos: any[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [uploadingImg, setUploadingImg] = useState(false);
-  const [uploadingVid, setUploadingVid] = useState(false);
   const imgRef = useRef<HTMLInputElement>(null);
-  const vidRef = useRef<HTMLInputElement>(null);
 
-  const upload = async (file: File, field: 'imageUrl' | 'videoUrl') => {
-    const setUploading = field === 'imageUrl' ? setUploadingImg : setUploadingVid;
-    setUploading(true);
+  const upload = async (file: File, field: 'imageUrl') => {
+    setUploadingImg(true);
     try {
       const fd = new FormData();
       fd.append('file', file);
@@ -30,7 +28,7 @@ export function AdminVideos({ videos: init }: { videos: any[] }) {
       if (data.url) setForm(f => ({ ...f, [field]: data.url }));
       else setError(data.error ?? 'فشل الرفع');
     } catch (e: any) { setError(e?.message ?? 'فشل الرفع'); }
-    finally { setUploading(false); }
+    finally { setUploadingImg(false); }
   };
 
   const openCreate = () => { setForm(empty); setEditingId(null); setError(''); setShowForm(true); };
@@ -210,20 +208,24 @@ export function AdminVideos({ videos: init }: { videos: any[] }) {
                   )}
                 </Field>
 
-                {/* Video */}
-                <Field label="الفيديو (اختياري — للمعاينة)">
-                  <div className="flex gap-2">
-                    <input value={form.videoUrl} onChange={e => setForm(f => ({ ...f, videoUrl: e.target.value }))}
-                      placeholder="رابط أو ارفع ملف"
-                      className="flex-1 bg-accent-deep/10 border border-accent-deep/30 rounded-xl px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-violet transition-colors" />
-                    <button type="button" onClick={() => vidRef.current?.click()} disabled={uploadingVid}
-                      className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium bg-accent-deep/20 hover:bg-accent-deep/30 text-text-muted transition-colors whitespace-nowrap">
-                      <Upload size={13} /> {uploadingVid ? '...' : 'رفع'}
-                    </button>
-                    <input ref={vidRef} type="file" accept="video/*" className="hidden"
-                      onChange={e => e.target.files?.[0] && upload(e.target.files[0], 'videoUrl')} />
-                  </div>
-                  {form.videoUrl && <p className="mt-1 text-xs text-green-400 truncate">{form.videoUrl}</p>}
+                {/* رابط يوتيوب */}
+                <Field label="فيديو يوتيوب (اختياري — للمعاينة)">
+                  <input value={form.videoUrl} onChange={e => setForm(f => ({ ...f, videoUrl: e.target.value }))}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    dir="ltr"
+                    className="w-full bg-accent-deep/10 border border-accent-deep/30 rounded-xl px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-violet transition-colors" />
+                  {form.videoUrl && (
+                    youtubeThumbnail(form.videoUrl) ? (
+                      <div className="mt-2 flex items-center gap-3">
+                        <img src={youtubeThumbnail(form.videoUrl)!} alt="" className="h-16 rounded-lg object-cover" />
+                        <button type="button"
+                          onClick={() => setForm(f => ({ ...f, imageUrl: youtubeThumbnail(f.videoUrl) ?? f.imageUrl }))}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-accent-deep/20 hover:bg-accent-deep/30 text-text-muted transition-colors whitespace-nowrap">
+                          <ImageDown size={13} /> استخدمها كصورة مصغرة
+                        </button>
+                      </div>
+                    ) : <p className="mt-1 text-xs text-red-400">مش رابط يوتيوب صحيح</p>
+                  )}
                 </Field>
 
                 <div className="flex gap-4">

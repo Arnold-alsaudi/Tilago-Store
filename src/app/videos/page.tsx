@@ -1,6 +1,7 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { youtubeThumbnail, youtubeEmbedUrl } from '@/lib/youtube';
 
 /* ─── Data ─────────────────────────────────────────────────── */
 type VideoProduct = {
@@ -31,8 +32,6 @@ export default function VideosPage() {
   const [products, setProducts] = useState<VideoProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<VideoProduct | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     fetch('/api/products?category=VIDEO')
@@ -51,28 +50,17 @@ export default function VideosPage() {
     }, { threshold: 0.1 });
     els.forEach(el => revObs.observe(el));
 
-    // play/pause videos based on viewport
-    const videos = document.querySelectorAll<HTMLVideoElement>('.vp-card video');
-    const vidObs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        const v = e.target as HTMLVideoElement;
-        if (e.isIntersecting) v.play().catch(() => {});
-        else { v.pause(); v.currentTime = 0; }
-      });
-    }, { threshold: 0.3 });
-    videos.forEach(v => vidObs.observe(v));
-
-    return () => { revObs.disconnect(); vidObs.disconnect(); };
+    return () => { revObs.disconnect(); };
   }, [loading]);
 
   useEffect(() => {
-    if (!modal) { setPlaying(false); return; }
+    if (!modal) return;
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setModal(null); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [modal]);
 
-  const openModal = (p: VideoProduct) => { setModal(p); setPlaying(false); };
+  const openModal = (p: VideoProduct) => setModal(p);
 
 
   return (
@@ -109,8 +97,8 @@ export default function VideosPage() {
         .vp-card { background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.12); border-radius:16px; overflow:hidden; cursor:pointer; transition:transform .28s,border-color .28s,box-shadow .28s; position:relative; }
         .vp-card:hover { transform:translateY(-6px); border-color:rgba(84,22,181,0.5); box-shadow:0 12px 36px rgba(84,22,181,0.25); }
         .vp-card-thumb { position:relative; width:100%; height:190px; overflow:hidden; background:#0a0420; }
-        .vp-card-thumb video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
-        .vp-card:hover .vp-card-thumb video { transform:scale(1.06); }
+        .vp-card-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
+        .vp-card:hover .vp-card-thumb img { transform:scale(1.06); }
         .vp-card-thumb .no-vid { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:rgba(155,89,208,0.3); font-size:2.5rem; }
         .vp-card-play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.35); opacity:0; transition:opacity .25s; }
         .vp-card:hover .vp-card-play { opacity:1; }
@@ -159,7 +147,7 @@ export default function VideosPage() {
 
         /* video area */
         .vp-modal-video { position:relative; background:#000; }
-        .vp-modal-video video { width:100%; display:block; max-height:65vh; object-fit:contain; }
+        .vp-modal-video iframe { width:100%; display:block; max-height:65vh; }
         .vp-modal-thumb { width:100%; max-height:65vh; object-fit:cover; display:block; }
         .vp-modal-play-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; cursor:pointer; }
         .vp-modal-play-btn { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#5416B5,#7F3AA1); display:flex; align-items:center; justify-content:center; font-size:1.6rem; box-shadow:0 8px 32px rgba(84,22,181,0.6); transition:transform .2s; }
@@ -242,8 +230,9 @@ export default function VideosPage() {
         {products.map((p, i) => (
           <div key={p.id} className="vp-card" onClick={() => openModal(p)}>
             <div className="vp-card-thumb">
-              {p.video
-                ? <video muted loop playsInline preload="none" src={p.video} />
+              {youtubeThumbnail(p.video)
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={youtubeThumbnail(p.video)!} alt={p.name} loading="lazy" />
                 : <div className="no-vid"><i className="fas fa-film" /></div>
               }
               <div className="vp-card-play">
@@ -298,11 +287,14 @@ export default function VideosPage() {
 
             {/* video / thumb */}
             <div className="vp-modal-video">
-              {modal.video ? (
-                <video ref={videoRef} controls autoPlay muted loop playsInline
-                  style={{ width:'100%', maxHeight:'65vh', objectFit:'contain', display:'block', background:'#000' }}>
-                  <source src={modal.video} type="video/mp4" />
-                </video>
+              {youtubeEmbedUrl(modal.video, { autoplay: true }) ? (
+                <iframe
+                  src={youtubeEmbedUrl(modal.video, { autoplay: true })!}
+                  title={modal.name}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ width:'100%', aspectRatio:'16/9', display:'block', background:'#000', border:'none' }}
+                />
               ) : (
                 <div style={{ minHeight:'200px', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(15,8,59,0.6)', color:'rgba(155,89,208,0.4)', fontSize:'3rem' }}>
                   <i className="fas fa-film" />

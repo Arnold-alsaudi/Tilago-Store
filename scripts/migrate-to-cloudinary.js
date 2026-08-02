@@ -1,5 +1,6 @@
 /**
- * نقل ملفات public/uploads إلى Cloudinary وتحديث روابط المنتجات في قاعدة البيانات.
+ * نقل صور public/uploads إلى Cloudinary وتحديث روابط المنتجات في قاعدة البيانات.
+ * (الفيديوهات بقت روابط يوتيوب — السكريبت ده للصور بس)
  *
  * الاستخدام:
  *   node scripts/migrate-to-cloudinary.js --dry   (معاينة بدون أي تغيير)
@@ -21,8 +22,7 @@ const { PrismaClient } = require('@prisma/client');
 const { v2: cloudinary } = require('cloudinary');
 
 const DRY = process.argv.includes('--dry');
-const VIDEO_EXT = ['.mp4', '.webm', '.ogg', '.mov'];
-const MAX_FREE_VIDEO = 100 * 1024 * 1024; // حد الخطة المجانية للفيديو
+const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -38,31 +38,17 @@ async function uploadOne(fileName) {
   const filePath = path.join(process.cwd(), 'public', 'uploads', fileName);
   if (!fs.existsSync(filePath)) return { error: 'الملف غير موجود على القرص' };
 
-  const size = fs.statSync(filePath).size;
   const ext = path.extname(fileName).toLowerCase();
-  const isVideo = VIDEO_EXT.includes(ext);
-
-  if (isVideo && size > MAX_FREE_VIDEO) {
-    return { error: `فيديو ${(size / 1024 / 1024).toFixed(0)}MB — أكبر من حد الخطة المجانية (100MB)` };
+  if (!IMAGE_EXT.includes(ext)) {
+    return { error: 'ملف فيديو — الفيديوهات بقت روابط يوتيوب، ارفعه هناك بدل كده' };
   }
 
-  const opts = {
-    folder: isVideo ? 'tilago/videos' : 'tilago',
-    resource_type: isVideo ? 'video' : 'image',
+  const res = await cloudinary.uploader.upload(filePath, {
+    folder: 'tilago',
+    resource_type: 'image',
     public_id: path.basename(fileName, ext),
     overwrite: false,
-    timeout: 600000, // 10 دقايق لكل طلب — الملفات الكبيرة بتاخد وقت
-  };
-
-  // الملفات الكبيرة بترفع على قطع صغيرة (6 ميجا) عشان ما تعملش timeout
-  const res = size > 6 * 1024 * 1024
-    ? await new Promise((resolve, reject) =>
-        cloudinary.uploader.upload_large(
-          filePath,
-          { ...opts, chunk_size: 6 * 1024 * 1024 },
-          (err, r) => (err ? reject(err) : resolve(r)),
-        ))
-    : await cloudinary.uploader.upload(filePath, opts);
+  });
 
   return { url: res.secure_url };
 }

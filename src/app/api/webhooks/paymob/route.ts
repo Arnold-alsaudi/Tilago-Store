@@ -5,7 +5,8 @@ import { notifyAllChannels } from '@/lib/notify';
 
 function verifyPaymobHmac(data: Record<string, string>, receivedHmac: string): boolean {
   const hmacSecret = process.env.PAYMOB_HMAC_SECRET;
-  if (!hmacSecret) return true; // في التطوير نسمح بدون HMAC
+  if (!hmacSecret) return false; // بدون سر مُعدّ، نرفض بدل ما نثق تلقائياً
+  if (!receivedHmac) return false;
 
   const keys = [
     'amount_cents', 'created_at', 'currency', 'error_occured',
@@ -30,8 +31,9 @@ export async function POST(req: NextRequest) {
   const hmac = req.nextUrl.searchParams.get('hmac') ?? '';
   const obj = body?.obj ?? {};
 
-  if (hmac && !verifyPaymobHmac(obj, hmac)) {
-    console.error('[Webhook] Invalid HMAC');
+  // HMAC إجباري دايماً — أي طلب من غيره أو بتوقيع غلط يترفض فوراً
+  if (!verifyPaymobHmac(obj, hmac)) {
+    console.error('[Webhook] Invalid or missing HMAC');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
   }
 

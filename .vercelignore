@@ -1,4 +1,10 @@
 node_modules
 .next
+.env
 .env.local
 *.log
+
+# ملفات وسائط محلية قديمة — اترفعت على Cloudinary، الكود كله بيستخدم روابط Cloudinary دلوقتي
+public/uploads
+public/uploads-originals
+public/video

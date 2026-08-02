@@ -35,7 +35,15 @@ export default function CartPage() {
       const res = await fetch('/api/alerts/paymob', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: names, amount: total, alertId: 'cart', phone: phone.trim() }),
+        body: JSON.stringify({
+          name: names,
+          alertId: 'cart',
+          phone: phone.trim(),
+          items: items.map((i: { product: { id: string }; quantity: number }) => ({
+            productId: i.product.id,
+            quantity: i.quantity,
+          })),
+        }),
       });
       const { url, error } = await res.json();
       if (url) window.location.href = url;

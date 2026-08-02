@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, Star, X, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { formatPrice } from '@/lib/utils';
+import { youtubeThumbnail } from '@/lib/youtube';
 
 const CATEGORIES = ['ALERTS', 'STREAM', 'PACKAGE', 'THREE_D'] as const;
 const SUB_CATEGORIES: Record<string, { value: string; label: string }[]> = {
@@ -30,25 +31,20 @@ export function AdminProducts({ products: initialProducts }: { products: any[] }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [uploadingImg, setUploadingImg] = useState(false);
-  const [uploadingVid, setUploadingVid] = useState(false);
   const imgRef = useRef<HTMLInputElement>(null);
-  const vidRef = useRef<HTMLInputElement>(null);
 
-  const uploadFile = async (file: File, type: 'image' | 'video') => {
-    const setter = type === 'image' ? setUploadingImg : setUploadingVid;
-    setter(true);
+  const uploadImage = async (file: File) => {
+    setUploadingImg(true);
     try {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
       let data: any = {};
       try { data = await res.json(); } catch { data = { error: `HTTP ${res.status}` }; }
-      if (data.url) {
-        if (type === 'image') setForm(f => ({ ...f, imageUrl: data.url }));
-        else setForm(f => ({ ...f, videoUrl: data.url }));
-      } else setError(data.error ?? 'فشل الرفع');
+      if (data.url) setForm(f => ({ ...f, imageUrl: data.url }));
+      else setError(data.error ?? 'فشل الرفع');
     } catch (e: any) { setError(e?.message ?? 'فشل الرفع'); }
-    finally { setter(false); }
+    finally { setUploadingImg(false); }
   };
 
   const openCreate = () => { setForm(emptyForm); setEditingId(null); setError(''); setShowForm(true); };
@@ -174,25 +170,23 @@ export function AdminProducts({ products: initialProducts }: { products: any[] }
                       className="flex items-center gap-1 px-3 py-2.5 rounded-xl text-sm font-medium bg-accent-deep/20 hover:bg-accent-deep/30 text-text-muted transition-colors whitespace-nowrap">
                       <Upload size={14} /> {uploadingImg ? '...' : 'رفع'}
                     </button>
-                    <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && uploadFile(e.target.files[0], 'image')} />
+                    <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0])} />
                   </div>
                   {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 h-20 rounded-lg object-cover" />}
                 </div>
 
-                {/* Video upload */}
+                {/* رابط يوتيوب */}
                 <div>
-                  <label className="text-xs text-text-muted mb-1 block">الفيديو (اختياري)</label>
-                  <div className="flex gap-2 items-center">
-                    <input value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })}
-                      placeholder="رابط أو ارفع ملف"
-                      className="flex-1 bg-accent-deep/10 border border-accent-deep/30 rounded-xl px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-violet transition-colors" />
-                    <button type="button" onClick={() => vidRef.current?.click()} disabled={uploadingVid}
-                      className="flex items-center gap-1 px-3 py-2.5 rounded-xl text-sm font-medium bg-accent-deep/20 hover:bg-accent-deep/30 text-text-muted transition-colors whitespace-nowrap">
-                      <Upload size={14} /> {uploadingVid ? '...' : 'رفع'}
-                    </button>
-                    <input ref={vidRef} type="file" accept="video/*" className="hidden" onChange={e => e.target.files?.[0] && uploadFile(e.target.files[0], 'video')} />
-                  </div>
-                  {form.videoUrl && <p className="mt-1 text-xs text-green-400 truncate">{form.videoUrl}</p>}
+                  <label className="text-xs text-text-muted mb-1 block">فيديو يوتيوب (اختياري)</label>
+                  <input value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    dir="ltr"
+                    className="w-full bg-accent-deep/10 border border-accent-deep/30 rounded-xl px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-violet transition-colors" />
+                  {form.videoUrl && (
+                    youtubeThumbnail(form.videoUrl)
+                      ? <img src={youtubeThumbnail(form.videoUrl)!} alt="" className="mt-2 h-20 rounded-lg object-cover" />
+                      : <p className="mt-1 text-xs text-red-400">مش رابط يوتيوب صحيح</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs text-text-muted mb-1 block">Description</label>

@@ -1,7 +1,9 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { youtubeEmbedUrl } from '@/lib/youtube';
 import type { Product } from '@/types';
 
 /* ─── Types ─── */
@@ -497,7 +499,7 @@ export default function AlertsPage() {
           border:1px solid rgba(84,22,181,0.3); box-shadow:0 4px 20px rgba(0,0,0,0.4);
         }
         .al-media-box img  { width:100%; height:100%; object-fit:contain; display:block; }
-        .al-media-box video{ width:100%; height:100%; object-fit:contain; display:block; background:#000; }
+        .al-media-box iframe{ width:100%; height:100%; display:block; background:#000; }
 
         /* ── Media Toggle ── */
         .al-media-toggle { display:flex; gap:.6rem; justify-content:center; margin-bottom:.8rem; }
@@ -863,20 +865,26 @@ export default function AlertsPage() {
                     <button className={`al-toggle-btn${mediaTab==='image'?' active':''}`} onClick={()=>setMediaTab('image')}>
                       <i className="fas fa-image"/> صورة
                     </button>
-                    <button className={`al-toggle-btn${mediaTab==='video'?' active':''}`} onClick={()=>setMediaTab('video')}>
-                      <i className="fas fa-play"/> فيديو
-                    </button>
+                    {youtubeEmbedUrl(modal.video) && (
+                      <button className={`al-toggle-btn${mediaTab==='video'?' active':''}`} onClick={()=>setMediaTab('video')}>
+                        <i className="fas fa-play"/> فيديو
+                      </button>
+                    )}
                   </div>
 
                   {/* Media */}
                   <div className="al-media-box">
-                    {mediaTab==='image' ? (
+                    {mediaTab==='image' || !youtubeEmbedUrl(modal.video) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={modal.imgs?.[0] ?? '/caf.png'} alt={modal.name} />
                     ) : (
-                      <video controls autoPlay id="al-modal-vid">
-                        <source src={modal.video ?? 'https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4'} type="video/mp4"/>
-                      </video>
+                      <iframe
+                        src={youtubeEmbedUrl(modal.video, { autoplay: true })!}
+                        title={modal.name}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                      />
                     )}
                   </div>
 
@@ -911,7 +919,7 @@ export default function AlertsPage() {
             <div className="al-footer-col">
               <h4>روابط سريعة</h4>
               <ul>
-                <li><a href="/">الرئيسية</a></li>
+                <li><Link href="/">الرئيسية</Link></li>
                 <li><a href="#products">المنتجات</a></li>
               </ul>
             </div>

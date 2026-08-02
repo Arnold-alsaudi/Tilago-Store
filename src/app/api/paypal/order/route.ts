@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // sandbox افتراضياً — للإنتاج ضع PAYPAL_API_BASE=https://api-m.paypal.com
 const PAYPAL_API_BASE = process.env.PAYPAL_API_BASE ?? 'https://api-m.sandbox.paypal.com';
@@ -23,7 +24,20 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { items } = await req.json();
-  const total = items.reduce((s: number, i: any) => s + i.product.price * i.quantity, 0);
+  if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
+
+  // السعر بييجي من قاعدة البيانات دايماً — نتجاهل أي سعر جاي من العميل
+  const ids = items.map((i: any) => String(i?.product?.id));
+  const products = await prisma.product.findMany({ where: { id: { in: ids }, active: true } });
+  const byId = new Map(products.map(p => [p.id, p]));
+
+  let total = 0;
+  for (const i of items) {
+    const product = byId.get(String(i?.product?.id));
+    if (!product) return NextResponse.json({ error: 'Invalid product in cart' }, { status: 400 });
+    const quantity = Math.max(1, Math.floor(Number(i?.quantity) || 1));
+    total += product.price * quantity;
+  }
 
   const token = await getPayPalToken();
 

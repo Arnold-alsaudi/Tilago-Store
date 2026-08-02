@@ -6,6 +6,7 @@ import {
   Plus, Edit2, Trash2, X, Upload, GripVertical,
   ImagePlus, Video, ChevronDown,
 } from 'lucide-react';
+import { isYouTubeUrl, youtubeThumbnail } from '@/lib/youtube';
 
 type MediaType = 'image' | 'video';
 interface MediaItem { id: string; url: string; type: MediaType; }
@@ -22,7 +23,6 @@ interface FormState {
 }
 
 const uid = () => Math.random().toString(36).slice(2);
-const isVideoUrl = (u: string) => /\.(mp4|webm|ogg|mov|avi)$/i.test(u);
 const empty = (): FormState => ({ title:'', imageUrl:'', media:[], featured:false, active:true });
 
 async function uploadFile(file: File): Promise<string> {
@@ -40,20 +40,20 @@ export default function TdmAdminClient({ packages: init }: { packages: PkgItem[]
   const [form, setForm]           = useState<FormState>(empty());
   const [showReorder, setShowReorder] = useState(false);
   const [saving, setSaving]       = useState(false);
-  const [uploading, setUploading] = useState<'cover'|'img'|'vid'|null>(null);
+  const [uploading, setUploading] = useState<'cover'|'img'|null>(null);
   const [deleting, setDeleting]   = useState<string|null>(null);
+  const [newVideoUrl, setNewVideoUrl] = useState('');
 
   const coverRef = useRef<HTMLInputElement>(null);
   const imgRef   = useRef<HTMLInputElement>(null);
-  const vidRef   = useRef<HTMLInputElement>(null);
 
-  function openAdd() { setEditId(null); setForm(empty()); setShowReorder(false); setModal(true); }
+  function openAdd() { setEditId(null); setForm(empty()); setShowReorder(false); setNewVideoUrl(''); setModal(true); }
 
   function openEdit(p: PkgItem) {
     setEditId(p.id);
-    const media: MediaItem[] = p.images.map(u => ({ id: uid(), url: u, type: isVideoUrl(u) ? 'video' : 'image' }));
+    const media: MediaItem[] = p.images.map(u => ({ id: uid(), url: u, type: isYouTubeUrl(u) ? 'video' : 'image' }));
     setForm({ title: p.title, imageUrl: p.imageUrl, media, featured: p.featured, active: p.active });
-    setShowReorder(false); setModal(true);
+    setShowReorder(false); setNewVideoUrl(''); setModal(true);
   }
 
   function closeModal() { setModal(false); setEditId(null); }
@@ -74,13 +74,11 @@ export default function TdmAdminClient({ packages: init }: { packages: PkgItem[]
     } finally { setUploading(null); e.target.value = ''; }
   }
 
-  async function pickVideos(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []); if (!files.length) return;
-    setUploading('vid');
-    try {
-      const urls = await Promise.all(files.map(uploadFile));
-      setForm(f => ({ ...f, media: [...f.media, ...urls.map(u => ({ id: uid(), url: u, type: 'video' as const }))] }));
-    } finally { setUploading(null); e.target.value = ''; }
+  function addVideoLink() {
+    const url = newVideoUrl.trim();
+    if (!url || !isYouTubeUrl(url)) return;
+    setForm(f => ({ ...f, media: [...f.media, { id: uid(), url, type: 'video' as const }] }));
+    setNewVideoUrl('');
   }
 
   function removeMedia(id: string) { setForm(f => ({ ...f, media: f.media.filter(m => m.id !== id) })); }
@@ -192,8 +190,8 @@ export default function TdmAdminClient({ packages: init }: { packages: PkgItem[]
       ) : (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))', gap:'1.2rem' }}>
           {packages.map(p => {
-            const imgC = p.images.filter(u => !isVideoUrl(u)).length;
-            const vidC = p.images.filter(u =>  isVideoUrl(u)).length;
+            const imgC = p.images.filter(u => !isYouTubeUrl(u)).length;
+            const vidC = p.images.filter(u =>  isYouTubeUrl(u)).length;
             return (
               <div key={p.id} className="ta-card">
                 {p.imageUrl
@@ -226,7 +224,6 @@ export default function TdmAdminClient({ packages: init }: { packages: PkgItem[]
       {/* Hidden inputs */}
       <input ref={coverRef} type="file" accept="image/*"          style={{display:'none'}} onChange={pickCover}/>
       <input ref={imgRef}   type="file" accept="image/*" multiple style={{display:'none'}} onChange={pickImages}/>
-      <input ref={vidRef}   type="file" accept="video/*" multiple style={{display:'none'}} onChange={pickVideos}/>
 
       {/* Modal */}
       <AnimatePresence>
@@ -275,14 +272,27 @@ export default function TdmAdminClient({ packages: init }: { packages: PkgItem[]
                   </div>
                 </div>
 
-                {/* Upload buttons */}
+                {/* إضافة صور */}
                 <div style={{ display:'flex', gap:10, marginBottom:'1rem', flexWrap:'wrap' }}>
                   <button className="ta-upload-btn ta-btn" onClick={() => imgRef.current?.click()} disabled={uploading==='img'}>
                     <ImagePlus size={14}/>{uploading==='img' ? 'جاري الرفع...' : `إضافة صور (${imgCount})`}
                   </button>
-                  <button className="ta-upload-btn ta-btn" onClick={() => vidRef.current?.click()} disabled={uploading==='vid'}>
-                    <Video size={14}/>{uploading==='vid' ? 'جاري الرفع...' : `إضافة فيديوهات (${vidCount})`}
-                  </button>
+                </div>
+
+                {/* إضافة رابط فيديو يوتيوب */}
+                <div style={{ marginBottom:'1rem' }}>
+                  <span className="ta-section-label">إضافة فيديو يوتيوب ({vidCount})</span>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <input className="ta-input" value={newVideoUrl} onChange={e => setNewVideoUrl(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addVideoLink(); } }}
+                      placeholder="https://www.youtube.com/watch?v=..." dir="ltr" style={{ flex:1 }}/>
+                    <button type="button" className="ta-upload-btn ta-btn" onClick={addVideoLink} disabled={!isYouTubeUrl(newVideoUrl)}>
+                      <Video size={14}/> أضف
+                    </button>
+                  </div>
+                  {newVideoUrl.trim() && !isYouTubeUrl(newVideoUrl) && (
+                    <p style={{ marginTop:5, fontSize:'.72rem', color:'#f87171' }}>مش رابط يوتيوب صحيح</p>
+                  )}
                 </div>
 
                 {/* Preview grid */}
@@ -294,7 +304,9 @@ export default function TdmAdminClient({ packages: init }: { packages: PkgItem[]
                         <div key={item.id} className="ta-media-item">
                           {item.type === 'image'
                             ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={item.url} alt=""/>
-                            : <div className="ta-media-item-video"><Video size={20} style={{color:'rgba(155,89,208,0.6)'}}/></div>
+                            : youtubeThumbnail(item.url)
+                              ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={youtubeThumbnail(item.url)!} alt=""/>
+                              : <div className="ta-media-item-video"><Video size={20} style={{color:'rgba(155,89,208,0.6)'}}/></div>
                           }
                           <div className="ta-media-type" style={{ background: item.type==='image' ? 'rgba(84,22,181,0.8)' : 'rgba(58,161,161,0.8)', color:'#fff' }}>
                             {item.type==='image' ? 'IMG' : 'VID'}
@@ -335,7 +347,9 @@ export default function TdmAdminClient({ packages: init }: { packages: PkgItem[]
                                     <GripVertical size={16} style={{ color:'rgba(84,22,181,0.4)', flexShrink:0 }}/>
                                     {item.type === 'image'
                                       ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={item.url} alt="" className="ta-reorder-thumb"/>
-                                      : <div style={{ width:44, height:32, borderRadius:6, background:'rgba(58,161,161,0.1)', border:'1px solid rgba(58,161,161,0.25)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Video size={14} style={{color:'rgba(58,161,161,0.7)'}}/></div>
+                                      : youtubeThumbnail(item.url)
+                                        ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={youtubeThumbnail(item.url)!} alt="" className="ta-reorder-thumb"/>
+                                        : <div style={{ width:44, height:32, borderRadius:6, background:'rgba(58,161,161,0.1)', border:'1px solid rgba(58,161,161,0.25)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Video size={14} style={{color:'rgba(58,161,161,0.7)'}}/></div>
                                     }
                                     <span style={{ fontSize:'.7rem', color:'rgba(155,89,208,0.5)', fontWeight:700 }}>#{idx+1}</span>
                                     <span className="ta-type-badge" style={{ background: item.type==='image' ? 'rgba(84,22,181,0.2)' : 'rgba(58,161,161,0.15)', color: item.type==='image' ? 'rgba(155,89,208,0.8)' : 'rgba(58,161,161,0.9)' }}>

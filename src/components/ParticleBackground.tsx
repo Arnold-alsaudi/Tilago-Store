@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ISourceOptions = any;
 
 export function ParticleBackground() {

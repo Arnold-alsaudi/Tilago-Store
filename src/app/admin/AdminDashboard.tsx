@@ -136,7 +136,7 @@ export function AdminDashboard({ stats }: Props) {
         {/* Store paused banner */}
         {storePaused && (
           <div className="mb-6 p-4 rounded-2xl text-center font-bold text-sm" style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.4)', color: '#e74c3c' }} dir="rtl">
-            ⚠️ المتجر موقوف حالياً — العملاء يشوفون: "{pauseMessage}"
+            ⚠️ المتجر موقوف حالياً — العملاء يشوفون: &quot;{pauseMessage}&quot;
           </div>
         )}
 

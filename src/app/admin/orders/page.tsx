@@ -5,7 +5,6 @@ import { AdminOrders } from './AdminOrders';
 
 export default async function AdminOrdersPage() {
   const session = await getServerSession(authOptions);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!session || (session.user as any)?.role !== 'ADMIN') redirect('/');
   return <AdminOrders />;
 }

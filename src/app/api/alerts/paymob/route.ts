@@ -4,6 +4,36 @@ import { prisma } from '@/lib/prisma';
 
 const PAYMOB_API = 'https://accept.paymob.com/v1';
 
+// السعر الحقيقي بييجي من قاعدة البيانات دايماً — أي amount جاي من العميل بيتجاهل
+async function computeTrustedAmount(
+  alertId: string,
+  cartItems: { productId: string; quantity: number }[] | undefined,
+): Promise<{ amount: number; error?: string }> {
+  if (alertId === 'cart') {
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
+      return { amount: 0, error: 'Cart items required' };
+    }
+    const ids = cartItems.map(i => String(i?.productId));
+    const products = await prisma.product.findMany({ where: { id: { in: ids }, active: true } });
+    const byId = new Map(products.map(p => [p.id, p]));
+
+    let total = 0;
+    for (const i of cartItems) {
+      const product = byId.get(String(i?.productId));
+      if (!product) return { amount: 0, error: 'Invalid product in cart' };
+      const quantity = Math.max(1, Math.floor(Number(i?.quantity) || 1));
+      total += product.price * quantity;
+    }
+    return { amount: total };
+  }
+
+  const product = await prisma.product.findFirst({
+    where: { OR: [{ id: alertId }, { slug: alertId }], active: true },
+  });
+  if (!product) return { amount: 0, error: 'Product not found' };
+  return { amount: product.price };
+}
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
   const { success } = await rateLimit(ip, 10, 60_000);
@@ -15,14 +45,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'الطلبات متوقفة مؤقتاً' }, { status: 503 });
   }
 
-  const { name, amount, alertId, phone } = await req.json();
-  if (!name || !amount || !alertId) {
+  const { name, alertId, phone, items: cartItems } = await req.json();
+  if (!name || !alertId) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
   // رقم موبايل العميل للتواصل — مطلوب
   const customerPhone = String(phone ?? '').trim();
   if (!customerPhone || customerPhone.replace(/\D/g, '').length < 8) {
     return NextResponse.json({ error: 'رقم الموبايل مطلوب للتواصل معك' }, { status: 400 });
+  }
+
+  // ── السعر الحقيقي من قاعدة البيانات — نتجاهل أي amount جاي من العميل ──
+  const { amount, error: amountError } = await computeTrustedAmount(String(alertId), cartItems);
+  if (amountError || amount <= 0) {
+    return NextResponse.json({ error: amountError ?? 'Invalid amount' }, { status: 400 });
   }
 
   const secretKey = process.env.PAYMOB_SECRET_KEY!;

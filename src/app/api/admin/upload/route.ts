@@ -4,11 +4,9 @@ import { cloudinary } from '@/lib/cloudinary';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
-const ALLOWED_MIME = [
-  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-  'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
-];
-const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.mp4', '.webm', '.ogg', '.mov'];
+// الفيديوهات بقت روابط يوتيوب — الرفع هنا للصور بس
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,14 +29,13 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const isVideo = file.type.startsWith('video/');
 
     // ── Cloudinary (يدوم على serverless) ──────────────────────
     if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
       const dataUri = `data:${file.type};base64,${buffer.toString('base64')}`;
       const result = await cloudinary.uploader.upload(dataUri, {
-        folder: isVideo ? 'tilago/videos' : 'tilago',
-        resource_type: isVideo ? 'video' : 'image',
+        folder: 'tilago',
+        resource_type: 'image',
       });
       return NextResponse.json({ url: result.secure_url });
     }

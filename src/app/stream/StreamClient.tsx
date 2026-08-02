@@ -1,7 +1,8 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { isYouTubeUrl, youtubeEmbedUrl } from '@/lib/youtube';
 
 export interface StreamPkg {
   id: string;
@@ -13,19 +14,19 @@ export interface StreamPkg {
 }
 
 const CONTACTS = [
-  { icon:'fab fa-whatsapp', label:'ظˆط§طھط³ط§ط¨',      sub:'ط§ط·ظ„ط¨ ط§ظ„ط¢ظ† ظ…ط¨ط§ط´ط±ط©ظ‹',       href:'https://wa.me/1234567890',       c:'#25D366' },
-  { icon:'fab fa-telegram', label:'طھظٹظ„ظٹط¬ط±ط§ظ…',    sub:'طھظˆط§طµظ„ ظ…ط¹ظ†ط§ ط¹ظ„ظ‰ طھظٹظ„ظٹط¬ط±ط§ظ…',  href:'https://t.me/yourchannel',       c:'#0088cc' },
-  { icon:'fab fa-discord',  label:'ط¯ظٹط³ظƒظˆط±ط¯',     sub:'ط§ظ†ط¶ظ… ظ„ط³ظٹط±ظپط± ط§ظ„ط¯ط¹ظ…',        href:'https://discord.gg/yourserver',  c:'#5865F2' },
-  { icon:'fas fa-headset',  label:'ط§ظ„ط¯ط¹ظ… ط§ظ„ظپظ†ظٹ', sub:'ظ†ط±ط¯ ط®ظ„ط§ظ„ 24 ط³ط§ط¹ط©',         href:'mailto:support@tilago.com',      c:'#9B59D0' },
+  { icon:'fab fa-whatsapp', label:'واتساب',      sub:'اطلب الآن مباشرةً',       href:'https://wa.me/1234567890',       c:'#25D366' },
+  { icon:'fab fa-telegram', label:'تيليجرام',    sub:'تواصل معنا على تيليجرام',  href:'https://t.me/yourchannel',       c:'#0088cc' },
+  { icon:'fab fa-discord',  label:'ديسكورد',     sub:'انضم لسيرفر الدعم',        href:'https://discord.gg/yourserver',  c:'#5865F2' },
+  { icon:'fas fa-headset',  label:'الدعم الفني', sub:'نرد خلال 24 ساعة',         href:'mailto:support@tilago.com',      c:'#9B59D0' },
 ];
 
 const TICKER_WORDS = ['Stream Pack','Logo','Overlay','Facecam Frame','Alert','Starting Screen','Ending Screen','Intro Video'];
 
 const FEATURES = [
-  { icon:'fas fa-layer-group', title:'ط¨ط§ظƒط¯ط¬ ظ…طھظƒط§ظ…ظ„',  desc:'ظƒظ„ ظ…ط§ طھط­طھط§ط¬ظ‡ ظ„ظ‚ظ†ط§طھظƒ â€” ط£ظˆظپط±ظ„ط§ظٹطŒ ظٹط±طھط§طھطŒ ط´ط§ط´ط§طھ ط¨ط¯ط، ظˆط¥ظ†ظ‡ط§ط، ظپظٹ ظ…ظƒط§ظ† ظˆط§ط­ط¯.' },
-  { icon:'fas fa-bolt',        title:'طھط³ظ„ظٹظ… ط³ط±ظٹط¹',    desc:'طھط³طھظ„ظ… ط§ظ„ط¨ط§ظƒط¯ط¬ ظƒط§ظ…ظ„ط§ظ‹ ط®ظ„ط§ظ„ 24 ط³ط§ط¹ط© ظ…ظ† ظˆظ‚طھ ط§ظ„ط·ظ„ط¨.' },
-  { icon:'fas fa-sliders-h',   title:'طھط®طµظٹطµ ظƒط§ظ…ظ„',   desc:'ط£ط¶ظپ ط§ط³ظ…ظƒ ظˆط´ط¹ط§ط±ظƒ ظˆط£ظ„ظˆط§ظ†ظƒ ط§ظ„ظ…ظپط¶ظ„ط© ط¹ظ„ظ‰ ط£ظٹ طھطµظ…ظٹظ… طھط®طھط§ط±ظ‡.' },
-  { icon:'fas fa-headset',     title:'ط¯ط¹ظ… ظ…ط³طھظ…ط±',    desc:'ظپط±ظٹظ‚ظ†ط§ ظ…طھط§ط­ ط¯ط§ط¦ظ…ط§ظ‹ ظ„ظ…ط³ط§ط¹ط¯طھظƒ ظپظٹ ط§ظ„ط¥ط¹ط¯ط§ط¯ ط¹ظ„ظ‰ OBS ظˆStreamlabs.' },
+  { icon:'fas fa-layer-group', title:'باكدج متكامل',  desc:'كل ما تحتاجه لقناتك — أوفرلاي، يرتات، شاشات بدء وإنهاء في مكان واحد.' },
+  { icon:'fas fa-bolt',        title:'تسليم سريع',    desc:'تستلم الباكدج كاملاً خلال 24 ساعة من وقت الطلب.' },
+  { icon:'fas fa-sliders-h',   title:'تخصيص كامل',   desc:'أضف اسمك وشعارك وألوانك المفضلة على أي تصميم تختاره.' },
+  { icon:'fas fa-headset',     title:'دعم مستمر',    desc:'فريقنا متاح دائماً لمساعدتك في الإعداد على OBS وStreamlabs.' },
 ];
 
 export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
@@ -42,7 +43,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
           color:#d0cce8; font-family:'29LtBukra','Montserrat',sans-serif;
         }
 
-        /* â”€â”€ Hero â”€â”€ */
+        /* ── Hero ── */
         .sp-hero {
           display:flex; flex-wrap:wrap; align-items:center;
           justify-content:space-around; padding:4rem 5%; gap:2rem;
@@ -101,7 +102,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
           .sp-hero-cta { margin-inline:auto; }
         }
 
-        /* â”€â”€ Ticker â”€â”€ */
+        /* ── Ticker ── */
         .sp-ticker {
           margin:22px 0 0; height:38px; overflow:hidden; position:relative;
           border-top:1px solid rgba(84,22,181,0.12); border-bottom:1px solid rgba(84,22,181,0.12);
@@ -125,7 +126,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-ticker-item i { color:rgba(84,22,181,0.5); font-size:.55rem; }
         .sp-ticker-dot { color:rgba(84,22,181,0.25); margin:0 4px; }
 
-        /* â”€â”€ Nav â”€â”€ */
+        /* ── Nav ── */
         .sp-nav { max-width:1100px; margin:0 auto; padding:28px 24px 36px; }
         .sp-nav-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
         @media(max-width:640px){ .sp-nav-row { grid-template-columns:repeat(2,1fr); } }
@@ -158,7 +159,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
           color:#9B59D0; transform:scale(1.08);
         }
 
-        /* â”€â”€ Stats â”€â”€ */
+        /* ── Stats ── */
         .sp-stats {
           display:flex; justify-content:center; flex-wrap:wrap; gap:0;
           background:rgba(15,8,59,0.6);
@@ -179,7 +180,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
           .sp-stat-num { font-size:1.5rem; }
         }
 
-        /* â”€â”€ Section Head â”€â”€ */
+        /* ── Section Head ── */
         .sp-head { text-align:center; padding:40px 16px 36px; position:relative; }
         .sp-head-tag {
           display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:4px;
@@ -194,13 +195,13 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-head h2 span { color:#9B59D0; }
         .sp-head p { font-size:.9rem; color:rgba(170,160,205,0.38); max-width:400px; margin:0 auto; line-height:1.7; }
 
-        /* â”€â”€ Products Grid â”€â”€ */
+        /* ── Products Grid ── */
         .sp-products {
           padding:0 5% 4rem;
           display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem;
         }
 
-        /* â”€â”€ Card â”€â”€ */
+        /* ── Card ── */
         .sp-card {
           position:relative; border-radius:14px; overflow:hidden;
           background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.2);
@@ -238,7 +239,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-empty i { font-size:3rem; margin-bottom:16px; display:block; opacity:.3; }
         .sp-empty p { font-size:.9rem; }
 
-        /* â”€â”€ Features â”€â”€ */
+        /* ── Features ── */
         .sp-features {
           padding:3rem 5%; display:grid;
           grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.2rem;
@@ -259,7 +260,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-feature-title { font-weight:700; color:#e8e4f8; margin-bottom:.5rem; font-size:1rem; }
         .sp-feature-desc  { color:rgba(160,150,190,0.65); font-size:.82rem; line-height:1.6; }
 
-        /* â”€â”€ Contact Buttons â”€â”€ */
+        /* ── Contact Buttons ── */
         .sp-contact-btns { display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; padding:2rem 5%; }
         .sp-contact-btn {
           display:flex; align-items:center; gap:10px;
@@ -274,11 +275,11 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-contact-btn-sub   { font-size:.68rem; color:rgba(180,170,210,0.5); font-weight:400; }
         .sp-contact-btn:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.14); transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.2); }
 
-        /* â”€â”€ Drawer backdrop â”€â”€ */
+        /* ── Drawer backdrop ── */
         .sp-drawer-backdrop { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px); animation:bdFadeIn .25s ease; }
         @keyframes bdFadeIn { from{opacity:0} to{opacity:1} }
 
-        /* â”€â”€ Detail drawer â”€â”€ */
+        /* ── Detail drawer ── */
         .sp-detail {
           position:fixed; top:0; right:0; bottom:0;
           width:62%; max-width:760px; z-index:301;
@@ -323,7 +324,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
 
         /* Package video */
         .sp-pkg-video { width:100%; background:#000; line-height:0; }
-        .sp-pkg-video video { width:100%; display:block; max-height:70vh; object-fit:contain; }
+        .sp-pkg-video iframe { width:100%; display:block; max-height:70vh; }
         .sp-pkg-video-label {
           padding:10px 20px; background:rgba(84,22,181,0.08); border-bottom:1px solid rgba(84,22,181,0.12);
           font-family:'Cairo','29LtBukra',sans-serif; font-size:.75rem; font-weight:700;
@@ -337,7 +338,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-img-wrap img { width:100%; height:auto; display:block; image-rendering:-webkit-optimize-contrast; }
         .sp-img-sep { height:2px; background:linear-gradient(90deg,transparent,rgba(84,22,181,0.3),transparent); }
 
-        /* â”€â”€ Contacts panel â”€â”€ */
+        /* ── Contacts panel ── */
         .sp-contacts-panel {
           position:fixed; top:0; left:0; bottom:0; width:38%; z-index:302;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -373,7 +374,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-contact:hover .sp-contact-arrow { color:rgba(155,89,208,0.7); transform:translateX(-4px); }
         @media(max-width:768px){ .sp-contacts-panel{display:none} }
 
-        /* â”€â”€ Responsive â”€â”€ */
+        /* ── Responsive ── */
         @media(max-width:1024px){ .sp-products { grid-template-columns:repeat(2,1fr); } }
         @media(max-width:768px){
           .sp-nav-row { gap:8px; }
@@ -400,10 +401,10 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         </div>
         <div className="sp-hero-content">
           <div className="sp-hero-tag"><i className="fas fa-layer-group"/> Stream Packages</div>
-          <h2>ط£ظپط¶ظ„ ط¨ط§ظƒط¯ط¬ط§طھ <span>ط³طھط±ظٹظ…</span> ظ…ظ† Tilago</h2>
+          <h2>أفضل باكدجات <span>ستريم</span> من Tilago</h2>
           <div className="sp-hero-divider"/>
-          <p>ط¨ط§ظƒط¯ط¬ط§طھ ط¬ط§ظ‡ط²ط© ظˆظ…طµظ…ظ…ط© ط¨ط§ط­طھط±ط§ظپظٹط© ظ„ظ‚ظ†ظˆط§طھ ط§ظ„ط¨ط« ط§ظ„ظ…ط¨ط§ط´ط± â€” ط£ظˆظپط±ظ„ط§ظٹطŒ ظٹط±طھط§طھطŒ ط´ط§ط´ط§طھ ط¨ط¯ط، ظˆط¥ظ†ظ‡ط§ط،طŒ ظˆط£ظƒط«ط±. ظƒظ„ ط´ظٹط، ظ…ط®طµطµ ظ„ظƒ.</p>
-          <a href="#packages" className="sp-hero-cta">طھطµظپط­ ط§ظ„ط¢ظ† <i className="fas fa-arrow-left"/></a>
+          <p>باكدجات جاهزة ومصممة باحترافية لقنوات البث المباشر — أوفرلاي، يرتات، شاشات بدء وإنهاء، وأكثر. كل شيء مخصص لك.</p>
+          <a href="#packages" className="sp-hero-cta">تصفح الآن <i className="fas fa-arrow-left"/></a>
         </div>
       </section>
 
@@ -413,7 +414,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
           {[...TICKER_WORDS,...TICKER_WORDS].map((w,i)=>(
             <span key={i} className="sp-ticker-item">
               <i className="fas fa-layer-group"/>{w}
-              <span className="sp-ticker-dot">âœ¦</span>
+              <span className="sp-ticker-dot">✦</span>
             </span>
           ))}
         </div>
@@ -422,10 +423,10 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
       {/* Nav */}
       <nav className="sp-nav">
         <div className="sp-nav-row">
-          <Link href="/3d"     className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-cube"/></div>ط«ط±ظٹ ط¯ظٹ</Link>
-          <Link href="/video"  className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-film"/></div>ظپظٹط¯ظٹظˆ</Link>
-          <Link href="/stream" className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-video"/></div>ط³طھط±ظٹظ…</Link>
-          <Link href="/alerts" className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-bell"/></div>ط§ظ„ظٹط±طھ</Link>
+          <Link href="/3d"     className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-cube"/></div>ثري دي</Link>
+          <Link href="/video"  className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-film"/></div>فيديو</Link>
+          <Link href="/stream" className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-video"/></div>ستريم</Link>
+          <Link href="/alerts" className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-bell"/></div>اليرت</Link>
         </div>
       </nav>
 
@@ -433,10 +434,10 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
       {!active && (
         <div className="sp-stats">
           {[
-            { num: packages.length > 0 ? `+${packages.length}` : '0', label:'ط¨ط§ظƒط¯ط¬ ط¬ط§ظ‡ط²' },
-            { num:'100+',  label:'ط¹ظ†طµط± طھطµظ…ظٹظ…' },
-            { num:'24h',   label:'ظˆظ‚طھ ط§ظ„طھط³ظ„ظٹظ…' },
-            { num:'100%',  label:'ظ…ط®طµطµ ظ„ظƒ' },
+            { num: packages.length > 0 ? `+${packages.length}` : '0', label:'باكدج جاهز' },
+            { num:'100+',  label:'عنصر تصميم' },
+            { num:'24h',   label:'وقت التسليم' },
+            { num:'100%',  label:'مخصص لك' },
           ].map(s=>(
             <div key={s.label} className="sp-stat-item">
               <span className="sp-stat-num">{s.num}</span>
@@ -451,15 +452,15 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         <>
           <div className="sp-head" id="packages">
             <span className="sp-head-tag">Stream Packages</span>
-            <h2>ط¨ط§ظƒط¯ط¬ط§طھ <span>ط§ظ„ط³طھط±ظٹظ…</span></h2>
-            <p>ط§ط¶ط؛ط· ط¹ظ„ظ‰ ط£ظٹ ط¨ط§ظƒط¯ط¬ ظ„ظ…ط´ط§ظ‡ط¯ط© طھظپط§طµظٹظ„ظ‡ ظˆظƒظ„ ظ…ط§ ظٹط­طھظˆظٹظ‡</p>
+            <h2>باكدجات <span>الستريم</span></h2>
+            <p>اضغط على أي باكدج لمشاهدة تفاصيله وكل ما يحتويه</p>
           </div>
 
           <div className="sp-products">
             {packages.length === 0 ? (
               <div className="sp-empty" style={{ gridColumn:'1/-1' }}>
                 <i className="fas fa-layer-group"/>
-                <p>ظ„ط§ طھظˆط¬ط¯ ط¨ط§ظƒط¯ط¬ط§طھ ظ…طھط§ط­ط© ط­ط§ظ„ظٹط§ظ‹</p>
+                <p>لا توجد باكدجات متاحة حالياً</p>
               </div>
             ) : packages.map(pkg=>(
               <div key={pkg.id} className="sp-card" onClick={()=>setActive(pkg)}>
@@ -468,7 +469,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
                 <div className="sp-card-grad"/>
                 <div className="sp-card-count">
                   <i className="fas fa-layer-group"/>
-                  {pkg.images.length} ط¹ظ†طµط±
+                  {pkg.images.length} عنصر
                 </div>
                 <div className="sp-card-body">
                   <div className="sp-card-name">{pkg.nameAr}</div>
@@ -498,7 +499,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
                 </div>
                 <div className="sp-contact-btn-text">
                   <span className="sp-contact-btn-title">{btn.label}</span>
-                  <span className="sp-contact-btn-sub">طھظˆط§طµظ„ ظ…ط¹ظ†ط§</span>
+                  <span className="sp-contact-btn-sub">تواصل معنا</span>
                 </div>
               </a>
             ))}
@@ -516,7 +517,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
               <i className="fas fa-times"/>
             </button>
             <div className="sp-contacts-inner">
-              <div className="sp-order-label">طھظˆط§طµظ„ ظ„ظ„ط·ظ„ط¨</div>
+              <div className="sp-order-label">تواصل للطلب</div>
               <div className="sp-contacts">
                 {CONTACTS.map(b=>(
                   <a key={b.label} href={b.href} target="_blank" rel="noreferrer" className="sp-contact">
@@ -537,7 +538,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
           <div className="sp-detail">
             <div className="sp-detail-bar">
               <div className="sp-detail-name">{active.nameAr}</div>
-              <div className="sp-detail-cnt">{active.images.length} ط¹ظ†طµط±</div>
+              <div className="sp-detail-cnt">{active.images.length} عنصر</div>
               <button className="sp-back" onClick={()=>setActive(null)}>
                 <i className="fas fa-times"/>
               </button>
@@ -556,10 +557,12 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
               </div>
             </div>
 
-            {active.video && (
+            {youtubeEmbedUrl(active.video) && (
               <div className="sp-pkg-video">
-                <div className="sp-pkg-video-label"><i className="fas fa-play-circle"/> ظ…ط¹ط§ظٹظ†ط© ط§ظ„ط¨ط§ظƒط¯ط¬</div>
-                <video controls muted loop playsInline preload="metadata" src={active.video}/>
+                <div className="sp-pkg-video-label"><i className="fas fa-play-circle"/> معاينة الباكدج</div>
+                <iframe src={youtubeEmbedUrl(active.video, { loop: true })!} title={active.nameAr}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen style={{ width:'100%', aspectRatio:'16/9', display:'block', border:'none' }}/>
               </div>
             )}
 
@@ -568,8 +571,14 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
                 <div key={i}>
                   {i > 0 && <div className="sp-img-sep"/>}
                   <div className="sp-img-wrap">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt={`${active.nameAr} ${i+1}`}/>
+                    {isYouTubeUrl(src) ? (
+                      <iframe src={youtubeEmbedUrl(src)!} title={`${active.nameAr} ${i+1}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen style={{ width:'100%', aspectRatio:'16/9', display:'block', border:'none' }}/>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={src} alt={`${active.nameAr} ${i+1}`}/>
+                    )}
                   </div>
                 </div>
               ))}

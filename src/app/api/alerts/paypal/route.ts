@@ -4,8 +4,8 @@ import { rateLimit } from '@/lib/rateLimit';
 import { prisma } from '@/lib/prisma';
 
 const schema = z.object({
-  name:   z.string().min(1).max(200),
-  amount: z.number().positive().max(100_000),
+  name:    z.string().min(1).max(200),
+  alertId: z.string().min(1).max(100),
 });
 
 // sandbox افتراضياً — للإنتاج ضع PAYPAL_API_BASE=https://api-m.paypal.com
@@ -38,7 +38,14 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
 
-  const { name, amount } = parsed.data;
+  const { name, alertId } = parsed.data;
+
+  // السعر الحقيقي من قاعدة البيانات — نتجاهل أي amount جاي من العميل
+  const product = await prisma.product.findFirst({
+    where: { OR: [{ id: alertId }, { slug: alertId }], active: true },
+  });
+  if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+  const amount = product.price;
 
   try {
     const token = await getPayPalToken();

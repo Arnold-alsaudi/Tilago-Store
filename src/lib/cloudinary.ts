@@ -9,17 +9,11 @@ cloudinary.config({
 
 export { cloudinary };
 
+// الفيديوهات بقت روابط يوتيوب — Cloudinary دلوقتي للصور بس
 export async function uploadImage(file: string, folder: string = 'tilago') {
   return cloudinary.uploader.upload(file, {
     folder,
     resource_type: 'image',
     transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-  });
-}
-
-export async function uploadVideo(file: string, folder: string = 'tilago/videos') {
-  return cloudinary.uploader.upload(file, {
-    folder,
-    resource_type: 'video',
   });
 }

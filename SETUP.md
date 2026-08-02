@@ -4,7 +4,7 @@
 - Node.js 18+ installed (https://nodejs.org)
 - Git
 - A Supabase account (free tier works)
-- Accounts for: Stripe, PayPal Developer, Cloudinary, OpenAI, Resend
+- Accounts for: Stripe, PayPal Developer, Cloudinary, Resend
 
 ---
 
@@ -28,7 +28,6 @@ copy .env.example .env.local
 - **Stripe**: dashboard.stripe.com → API Keys → copy Secret + Publishable keys
 - **PayPal**: developer.paypal.com → My Apps → Create App → copy Client ID + Secret
 - **Cloudinary**: cloudinary.com → Dashboard → copy Cloud name, API Key, API Secret
-- **OpenAI**: platform.openai.com → API Keys → create key
 - **Google OAuth**: console.cloud.google.com → APIs → OAuth 2.0 Client ID
 - **Resend**: resend.com → API Keys → create key
 

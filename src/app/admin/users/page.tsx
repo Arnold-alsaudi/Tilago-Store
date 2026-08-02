@@ -6,7 +6,6 @@ import { AdminUsers } from './AdminUsers';
 
 export default async function AdminUsersPage() {
   const session = await getServerSession(authOptions);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!session || (session.user as any)?.role !== 'ADMIN') redirect('/');
 
   let users: any[] = [];
@@ -23,7 +22,6 @@ export default async function AdminUsersPage() {
   return (
     <AdminUsers
       users={JSON.parse(JSON.stringify(users))}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       currentUserId={(session.user as any)?.id ?? ''}
     />
   );

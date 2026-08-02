@@ -12,8 +12,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const secret = new URL(req.url).searchParams.get('secret');
-  if (secret !== process.env.ADMIN_SECRET && !await isRequestAdmin(req)) {
+  if (!await isRequestAdmin(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

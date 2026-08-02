@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { AnimatePresence, motion, Reorder } from 'framer-motion';
 import { Plus, Edit2, Trash2, X, Upload, Star, Layers, GripVertical, ImagePlus } from 'lucide-react';
 import Image from 'next/image';
+import { youtubeThumbnail } from '@/lib/youtube';
 
 interface FormState {
   title: string;
@@ -30,19 +31,17 @@ export function AdminStream({ packages: init }: { packages: any[] }) {
   const [error, setError] = useState('');
 
   const [uploadingCover,   setUploadingCover]   = useState(false);
-  const [uploadingVid,     setUploadingVid]      = useState(false);
   const [uploadingPreview, setUploadingPreview]  = useState(false);
 
   const coverRef   = useRef<HTMLInputElement>(null);
-  const vidRef     = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLInputElement>(null);
 
   const [newImgUrl, setNewImgUrl] = useState('');
 
-  /* ── Upload ── */
+  /* ── Upload (صور بس — الفيديو بقى رابط يوتيوب) ── */
   const upload = async (
     file: File,
-    field: 'imageUrl' | 'videoUrl' | '__preview',
+    field: 'imageUrl' | '__preview',
     setUploading: (v: boolean) => void,
   ) => {
     setUploading(true);
@@ -345,27 +344,23 @@ export function AdminStream({ packages: init }: { packages: any[] }) {
                   </div>
                 </Field>
 
-                {/* ── Video ── */}
-                <Field label="فيديو معاينة (اختياري)">
-                  <div style={{ display:'flex', gap:8 }}>
-                    <input value={form.videoUrl} onChange={e=>setForm(f=>({...f,videoUrl:e.target.value}))}
-                      placeholder="رابط الفيديو أو ارفع" style={{ ...inputStyle, flex:1 }}/>
-                    <button type="button" onClick={()=>vidRef.current?.click()} disabled={uploadingVid} style={uploadBtnStyle}>
-                      <Upload size={13}/> {uploadingVid ? '...' : 'رفع'}
-                    </button>
-                    <input ref={vidRef} type="file" accept="video/*" style={{ display:'none' }}
-                      onChange={e=>e.target.files?.[0] && upload(e.target.files[0],'videoUrl',setUploadingVid)}/>
-                  </div>
+                {/* ── فيديو يوتيوب ── */}
+                <Field label="فيديو معاينة يوتيوب (اختياري)">
+                  <input value={form.videoUrl} onChange={e=>setForm(f=>({...f,videoUrl:e.target.value}))}
+                    placeholder="https://www.youtube.com/watch?v=..." dir="ltr" style={inputStyle}/>
                   {form.videoUrl && (
-                    <div style={{ marginTop:5, display:'flex', alignItems:'center', gap:8 }}>
-                      <p style={{ fontSize:'.7rem', color:'#4ade80', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
-                        ✓ {form.videoUrl.split('/').pop()}
-                      </p>
-                      <button type="button" onClick={()=>setForm(f=>({...f,videoUrl:''}))}
-                        style={{ fontSize:'.72rem', color:'#f87171', background:'none', border:'none', cursor:'pointer', flexShrink:0 }}>
-                        × حذف
-                      </button>
-                    </div>
+                    youtubeThumbnail(form.videoUrl) ? (
+                      <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:8 }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={youtubeThumbnail(form.videoUrl)!} alt="" style={{ height:48, borderRadius:8, objectFit:'cover' }}/>
+                        <button type="button" onClick={()=>setForm(f=>({...f,videoUrl:''}))}
+                          style={{ fontSize:'.72rem', color:'#f87171', background:'none', border:'none', cursor:'pointer', flexShrink:0 }}>
+                          × حذف
+                        </button>
+                      </div>
+                    ) : (
+                      <p style={{ marginTop:5, fontSize:'.72rem', color:'#f87171' }}>مش رابط يوتيوب صحيح</p>
+                    )
                   )}
                 </Field>
 
