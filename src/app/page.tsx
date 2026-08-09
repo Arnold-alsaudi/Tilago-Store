@@ -114,9 +114,14 @@ function WorksSection({ items }: { items: HomeWork[] }) {
   }
 
   // تقليب للعمل السابق/التالي مع نفس أنيميشن الـ fade
+  // نستخدم تحديث دالي عشان ما نعتمدش على قيمة active قديمة (stale closure)
   function step(dir: number) {
     if (items.length < 2) return;
-    pick((active + dir + items.length) % items.length);
+    setFading(true);
+    setTimeout(() => {
+      setActive(prev => (prev + dir + items.length) % items.length);
+      setFading(false);
+    }, 260);
   }
 
   const item = items[active];
@@ -225,18 +230,18 @@ function WorksSection({ items }: { items: HomeWork[] }) {
 
         .wsc-stage { position:relative; width:90%; }
 
-        /* Prev / Next nav buttons — يقصّ السهم من الصورة الأصلية بالـ background + mix-blend-mode:screen لإخفاء الأسود */
+        /* Prev / Next nav buttons — صور شفافة مقصوصة، جوه حواف الصورة */
         .wsc-nav {
           position:absolute; top:50%; transform:translateY(-50%);
-          z-index:6; width:44px; height:96px; padding:0;
-          border:none; cursor:pointer;
-          background-repeat:no-repeat; background-size:342px 192px;
-          mix-blend-mode:screen;
-          transition:transform .25s cubic-bezier(.25,.8,.25,1);
+          z-index:6; width:clamp(30px,3.4vw,46px); padding:0;
+          background:none; border:none; cursor:pointer; line-height:0;
+          filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));
+          transition:transform .25s cubic-bezier(.25,.8,.25,1), filter .25s;
         }
-        .wsc-nav-prev { left:-22px;  background-image:url(/works-prev.png); background-position:-149px -54px; }
-        .wsc-nav-next { right:-22px; background-image:url(/works-next.png); background-position:-186px -54px; }
-        .wsc-nav:hover  { transform:translateY(-50%) scale(1.15); }
+        .wsc-nav img { width:100%; height:auto; display:block; }
+        .wsc-nav-prev { left:14px; }
+        .wsc-nav-next { right:14px; }
+        .wsc-nav:hover  { transform:translateY(-50%) scale(1.12); filter:drop-shadow(0 6px 16px rgba(84,22,181,.55)); }
         .wsc-nav:active { transform:translateY(-50%) scale(.94); }
 
         .wsc-frame {
@@ -277,9 +282,8 @@ function WorksSection({ items }: { items: HomeWork[] }) {
           .wsc-frame:hover { transform:scale(1.01); }
           .wsc-frame img { height:220px; }
           .wsc-thumbs { max-width:100%; }
-          .wsc-nav { width:33px; height:68px; background-size:241px 135px; }
-          .wsc-nav-prev { left:4px;  background-position:-104px -38px; }
-          .wsc-nav-next { right:4px; background-position:-130px -38px; }
+          .wsc-nav-prev { left:8px; }
+          .wsc-nav-next { right:8px; }
         }
         @media(max-width:480px){
           .wsc-frame img { height:175px; }
@@ -317,14 +321,20 @@ function WorksSection({ items }: { items: HomeWork[] }) {
         {/* Right */}
         <div className={`wsc-right${arrived?' in':''}`}>
           <div className="wsc-stage">
-            <button type="button" className="wsc-nav wsc-nav-prev" onClick={()=>step(-1)} aria-label="السابق" />
+            <button type="button" className="wsc-nav wsc-nav-prev" onClick={()=>step(-1)} aria-label="السابق">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/works-prev.png" alt=""/>
+            </button>
             <div className={`wsc-frame${fading?' fade':''}`}>
               <div className="wsc-neon"/>
               <div className="wsc-edge"/>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={item.img} alt={item.title}/>
             </div>
-            <button type="button" className="wsc-nav wsc-nav-next" onClick={()=>step(1)} aria-label="التالي" />
+            <button type="button" className="wsc-nav wsc-nav-next" onClick={()=>step(1)} aria-label="التالي">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/works-next.png" alt=""/>
+            </button>
           </div>
         </div>
       </div>
