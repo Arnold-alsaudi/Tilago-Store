@@ -145,7 +145,7 @@ function WorksSection({ items }: { items: HomeWork[] }) {
         }
 
         .wsc-inner {
-          max-width: 900px; margin: 0 auto;
+          max-width: 1300px; margin: 0 auto;
           display: flex; align-items: center; gap: 0;
           direction: rtl; min-height: 420px; position: relative; z-index:1;
         }
@@ -221,14 +221,14 @@ function WorksSection({ items }: { items: HomeWork[] }) {
 
         /* ── Right image ── */
         .wsc-right {
-          flex:1; display:flex; align-items:center; justify-content:flex-end; margin-left:-120px;
+          flex:1; display:flex; align-items:center; justify-content:flex-end; margin-left:0;
           overflow:visible; perspective:1200px;
           opacity:0; transform:translateX(-30px);
           transition:opacity .8s ease .1s, transform .8s cubic-bezier(.25,.8,.25,1) .1s;
         }
         .wsc-right.in { opacity:1; transform:none; }
 
-        .wsc-stage { position:relative; width:90%; }
+        .wsc-stage { position:relative; width:100%; }
 
         /* Prev / Next nav buttons — صور شفافة مقصوصة، جوه حواف الصورة */
         .wsc-nav {
