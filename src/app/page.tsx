@@ -244,20 +244,22 @@ function WorksSection({ items }: { items: HomeWork[] }) {
         .wsc-nav:hover  { transform:translateY(-50%) scale(1.12); filter:drop-shadow(0 6px 16px rgba(84,22,181,.55)); }
         .wsc-nav:active { transform:translateY(-50%) scale(.94); }
 
+        /* الإطار بقى الشكل المخصص (works-frame.png) كـ mask يقصّ صورة العرض على شكله */
         .wsc-frame {
-          position:relative; border-radius:20px; overflow:hidden;
-          border:1px solid rgba(155,89,208,.28);
-          box-shadow: 0 24px 60px rgba(0,0,0,.65), 0 0 0 1px rgba(84,22,181,.15);
-          width:100%; margin:-30px 0;
-          transition:opacity .28s, transform .45s cubic-bezier(.25,.8,.25,1), box-shadow .35s;
+          position:relative; width:100%;
+          aspect-ratio:666 / 375;
+          -webkit-mask:url(/works-frame.png) center / 100% 100% no-repeat;
+                  mask:url(/works-frame.png) center / 100% 100% no-repeat;
+          filter:drop-shadow(0 22px 40px rgba(0,0,0,.5));
+          transition:opacity .28s, transform .45s cubic-bezier(.25,.8,.25,1), filter .35s;
         }
         .wsc-frame:hover {
-          transform: scale(1.015);
-          box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(155,89,208,.3), 0 0 40px rgba(84,22,181,.12);
+          transform: scale(1.02);
+          filter:drop-shadow(0 28px 52px rgba(84,22,181,.4));
         }
         .wsc-frame.fade { opacity:0; transform: scale(.97) translateY(8px); }
         .wsc-frame img {
-          width:100%; height:460px; object-fit:cover; object-position:center top; display:block;
+          width:100%; height:100%; object-fit:cover; object-position:center top; display:block;
           image-rendering:-webkit-optimize-contrast;
         }
         /* left edge blend */
@@ -278,15 +280,13 @@ function WorksSection({ items }: { items: HomeWork[] }) {
           .wsc-left { flex:none; padding:0; width:100%; opacity:1; transform:none; }
           .wsc-right { width:100%; opacity:1; transform:none; justify-content:center; margin-left:0; }
           .wsc-stage { width:100%; }
-          .wsc-frame { width:100%; margin:-12px 0; transform:none; }
+          .wsc-frame { width:100%; transform:none; }
           .wsc-frame:hover { transform:scale(1.01); }
-          .wsc-frame img { height:220px; }
           .wsc-thumbs { max-width:100%; }
           .wsc-nav-prev { left:8px; }
           .wsc-nav-next { right:8px; }
         }
         @media(max-width:480px){
-          .wsc-frame img { height:175px; }
           .wsc-thumb { width:44px; height:32px; }
         }
       `}</style>
@@ -326,8 +326,6 @@ function WorksSection({ items }: { items: HomeWork[] }) {
               <img src="/works-prev.png" alt=""/>
             </button>
             <div className={`wsc-frame${fading?' fade':''}`}>
-              <div className="wsc-neon"/>
-              <div className="wsc-edge"/>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={item.img} alt={item.title}/>
             </div>
