@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { DEFAULT_HOME_CONTENT, type HomeContent, type HomeWork } from '@/lib/homeContent';
+import { DEFAULT_HOME_CONTENT, type HomeContent } from '@/lib/homeContent';
 
 /* ─── Gallery Data ─── */
 const GALLERIES = {
@@ -84,259 +84,6 @@ function GalleryCard({ id, data }: { id: string; data: typeof GALLERIES.left }) 
       <div className="gallery-title">{data.title}</div>
       <Link href={data.link} className="shop-now-btn">Shop Now</Link>
     </div>
-  );
-}
-
-/* ─── Works Section ─── */
-function WorksSection({ items }: { items: HomeWork[] }) {
-  const secRef   = useRef<HTMLElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [arrived, setArrived] = useState(false);
-  const [active,  setActive]  = useState(0);
-  const [fading,  setFading]  = useState(false);
-  const [hovered, setHovered] = useState<number|null>(null);
-
-  useEffect(() => {
-    const sec = secRef.current;
-    if (!sec) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setArrived(true); obs.disconnect(); } },
-      { threshold: 0.08 }
-    );
-    obs.observe(sec);
-    return () => obs.disconnect();
-  }, []);
-
-  function pick(i: number) {
-    if (i === active) return;
-    setFading(true);
-    setTimeout(() => { setActive(i); setFading(false); }, 260);
-  }
-
-  // تقليب للعمل السابق/التالي مع نفس أنيميشن الـ fade
-  // نستخدم تحديث دالي عشان ما نعتمدش على قيمة active قديمة (stale closure)
-  function step(dir: number) {
-    if (items.length < 2) return;
-    setFading(true);
-    setTimeout(() => {
-      setActive(prev => (prev + dir + items.length) % items.length);
-      setFading(false);
-    }, 260);
-  }
-
-  const item = items[active];
-
-  return (
-    <section className="wsc-sec" ref={secRef}>
-      <style>{`
-        /* ══ Works Showcase ══ */
-        .wsc-sec {
-          padding: 70px 48px;
-          position: relative; overflow: hidden;
-          border-top: 1px solid rgba(84,22,181,.12);
-          border-bottom: 1px solid rgba(84,22,181,.12);
-          background: linear-gradient(160deg, #0b0322 0%, #0f0535 50%, #0b0322 100%);
-        }
-        /* ambient glow */
-        .wsc-glow {
-          position:absolute; width:500px; height:500px; border-radius:50%;
-          background:radial-gradient(circle,rgba(84,22,181,.13) 0%,transparent 70%);
-          right:-80px; top:50%; transform:translateY(-50%); pointer-events:none;
-        }
-
-        .wsc-inner {
-          max-width: 1300px; margin: 0 auto;
-          display: flex; align-items: center; gap: 0;
-          direction: rtl; min-height: 420px; position: relative; z-index:1;
-        }
-
-        /* ── Left panel ── */
-        .wsc-left {
-          flex: 0 0 260px; display: flex; flex-direction: column;
-          justify-content: center; padding: 40px 0; gap: 0;
-          opacity: 0; transform: translateX(40px);
-          transition: opacity .8s ease, transform .8s cubic-bezier(.25,.8,.25,1);
-        }
-        .wsc-left.in { opacity:1; transform:none; }
-
-        .wsc-sup {
-          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.58rem; font-weight:700; letter-spacing:4px;
-          text-transform:uppercase; color:rgba(155,89,208,.6); margin-bottom:10px;
-        }
-        .wsc-title {
-          font-family:'Cairo','29LtBukra','Montserrat'; font-size:clamp(1.8rem,3vw,2.5rem);
-          font-weight:900; color:#f0ecff; line-height:1.15; margin-bottom:8px;
-        }
-        .wsc-title em {
-          font-style:normal;
-          background:linear-gradient(90deg,#9B59D0,#c084f5,#7F3AA1);
-          -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-        }
-        .wsc-sub {
-          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.82rem;
-          color:rgba(170,160,205,.38); line-height:1.7; max-width:210px;
-          margin-bottom:32px;
-        }
-
-        /* Active item name */
-        .wsc-active-name {
-          font-family:'Cairo','29LtBukra','Montserrat'; font-size:1rem; font-weight:800;
-          color:#ede8ff; margin-bottom:6px;
-          transition:opacity .26s, transform .26s;
-        }
-        .wsc-active-name.fade { opacity:0; transform:translateY(6px); }
-        .wsc-active-tag {
-          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.58rem; font-weight:700;
-          letter-spacing:3px; text-transform:uppercase;
-          color:rgba(155,89,208,.6); margin-bottom:28px;
-          transition:opacity .26s;
-        }
-        .wsc-active-tag.fade { opacity:0; }
-
-        /* Thumbnails */
-        .wsc-thumbs {
-          display:flex; gap:10px; flex-wrap:wrap; max-width:240px;
-        }
-        .wsc-thumb {
-          width:52px; height:38px; border-radius:8px; overflow:hidden;
-          cursor:pointer; border:2px solid rgba(255,255,255,.06);
-          transition:all .25s; flex-shrink:0;
-          opacity:.5;
-        }
-        .wsc-thumb img { width:100%; height:100%; object-fit:cover; }
-        .wsc-thumb:hover { opacity:.8; border-color:rgba(155,89,208,.4); }
-        .wsc-thumb.active {
-          opacity:1; border-color:#7F3AA1;
-          box-shadow:0 0 10px rgba(127,58,161,.5);
-        }
-
-        /* Explore link */
-        .wsc-link {
-          display:inline-flex; align-items:center; gap:8px; margin-top:24px;
-          font-family:'Cairo','29LtBukra','Montserrat'; font-size:.8rem; font-weight:700;
-          color:rgba(180,165,215,.45); text-decoration:none;
-          transition:color .25s, gap .25s;
-        }
-        .wsc-link:hover { color:#c8b8f0; gap:12px; }
-
-        /* ── Right image ── */
-        .wsc-right {
-          flex:1; display:flex; align-items:center; justify-content:flex-end; margin-left:0;
-          overflow:visible; perspective:1200px;
-          opacity:0; transform:translateX(-30px);
-          transition:opacity .8s ease .1s, transform .8s cubic-bezier(.25,.8,.25,1) .1s;
-        }
-        .wsc-right.in { opacity:1; transform:none; }
-
-        .wsc-stage { position:relative; width:100%; }
-
-        /* Prev / Next nav buttons — صور شفافة مقصوصة، جوه حواف الصورة */
-        .wsc-nav {
-          position:absolute; top:50%; transform:translateY(-50%);
-          z-index:6; width:clamp(30px,3.4vw,46px); padding:0;
-          background:none; border:none; cursor:pointer; line-height:0;
-          filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));
-          transition:transform .25s cubic-bezier(.25,.8,.25,1), filter .25s;
-        }
-        .wsc-nav img { width:100%; height:auto; display:block; }
-        .wsc-nav-prev { left:14px; }
-        .wsc-nav-next { right:14px; }
-        .wsc-nav:hover  { transform:translateY(-50%) scale(1.12); filter:drop-shadow(0 6px 16px rgba(84,22,181,.55)); }
-        .wsc-nav:active { transform:translateY(-50%) scale(.94); }
-
-        /* الإطار بقى الشكل المخصص (works-frame.png) كـ mask يقصّ صورة العرض على شكله */
-        .wsc-frame {
-          position:relative; width:100%;
-          aspect-ratio:666 / 375;
-          -webkit-mask:url(/works-frame.png) center / 100% 100% no-repeat;
-                  mask:url(/works-frame.png) center / 100% 100% no-repeat;
-          filter:drop-shadow(0 22px 40px rgba(0,0,0,.5));
-          transition:opacity .28s, transform .45s cubic-bezier(.25,.8,.25,1), filter .35s;
-        }
-        .wsc-frame:hover {
-          transform: scale(1.02);
-          filter:drop-shadow(0 28px 52px rgba(84,22,181,.4));
-        }
-        .wsc-frame.fade { opacity:0; transform: scale(.97) translateY(8px); }
-        .wsc-frame img {
-          width:100%; height:100%; object-fit:cover; object-position:center top; display:block;
-          image-rendering:-webkit-optimize-contrast;
-        }
-        /* left edge blend */
-        .wsc-edge {
-          position:absolute; top:0; left:0; bottom:0; width:65px; z-index:1;
-          background:linear-gradient(270deg,rgba(11,3,34,.85),transparent);
-          pointer-events:none;
-        }
-        /* top neon line */
-        .wsc-neon {
-          position:absolute; top:0; left:0; right:0; height:1px; z-index:2;
-          background:linear-gradient(90deg,transparent,rgba(155,89,208,.6) 50%,transparent);
-        }
-
-        @media(max-width:900px){
-          .wsc-sec { padding:40px 20px 0; }
-          .wsc-inner { flex-direction:column; min-height:auto; gap:24px; padding-bottom:32px; }
-          .wsc-left { flex:none; padding:0; width:100%; opacity:1; transform:none; }
-          .wsc-right { width:100%; opacity:1; transform:none; justify-content:center; margin-left:0; }
-          .wsc-stage { width:100%; }
-          .wsc-frame { width:100%; transform:none; }
-          .wsc-frame:hover { transform:scale(1.01); }
-          .wsc-thumbs { max-width:100%; }
-          .wsc-nav-prev { left:8px; }
-          .wsc-nav-next { right:8px; }
-        }
-        @media(max-width:480px){
-          .wsc-thumb { width:44px; height:32px; }
-        }
-      `}</style>
-
-      <div className="wsc-glow"/>
-
-      <div className="wsc-inner">
-        {/* Left */}
-        <div className={`wsc-left${arrived?' in':''}`}>
-          <div className="wsc-sup">أعمالنا</div>
-          <div className="wsc-title">من <em>أفضل</em><br/>أعمالنا</div>
-          <div className="wsc-sub">تصاميم حصرية لترفع مستوى قناتك وتميزك عن الجميع</div>
-
-          <div className={`wsc-active-name${fading?' fade':''}`}>{item.title}</div>
-          <div className={`wsc-active-tag${fading?' fade':''}`}>{item.tag}</div>
-
-          {/* Thumbnails */}
-          <div className="wsc-thumbs">
-            {items.map((w,i)=>(
-              <div key={i} className={`wsc-thumb${active===i?' active':''}`} onClick={()=>pick(i)}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={w.img} alt={w.title}/>
-              </div>
-            ))}
-          </div>
-
-          <Link href={item.href} className="wsc-link">
-            استعرض الأعمال <i className="fas fa-arrow-left"/>
-          </Link>
-        </div>
-
-        {/* Right */}
-        <div className={`wsc-right${arrived?' in':''}`}>
-          <div className="wsc-stage">
-            <button type="button" className="wsc-nav wsc-nav-prev" onClick={()=>step(-1)} aria-label="السابق">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/works-prev.png" alt=""/>
-            </button>
-            <div className={`wsc-frame${fading?' fade':''}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.img} alt={item.title}/>
-            </div>
-            <button type="button" className="wsc-nav wsc-nav-next" onClick={()=>step(1)} aria-label="التالي">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/works-next.png" alt=""/>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -525,6 +272,90 @@ function ShowcaseSection() {
   );
 }
 
+/* ─── Feature Showcase (3 كروت + خلفية فيديو متحركة) ─── */
+const FSC_CARDS = [
+  { img: '/photo/alert-special.png', title: '3D',    desc: 'اليرتات جاهزة ومصمّمة باحترافية ترفع تفاعل مشاهديك وتخلّي قناتك مميّزة عن الجميع.' },
+  { img: '/photo/venom-1.png',       title: 'Stream',   desc: 'أوفرلاي وشاشات بدء وإنهاء ويرتات — كل ما يحتاجه بثّك في باقة واحدة متكاملة.' },
+  { img: '/photo/alert-special.png', title: 'Alert', desc: 'شعارات وإنتروهات ومشاهد ثلاثية الأبعاد سينمائية تمنح قناتك بُعداً احترافياً مبهراً.' },
+];
+
+function FeatureShowcase() {
+  return (
+    <section className="fsc-sec" dir="rtl">
+      <style>{`
+        .fsc-sec{position:relative;overflow:hidden;padding:clamp(34px,3.6vw,56px) 5% clamp(60px,7vw,104px);
+          background:linear-gradient(160deg,#0b0322 0%,#0f0535 50%,#0b0322 100%);}
+        /* خلفية فيديو متحركة — autoplay/loop/muted، من غير أي تحكم */
+        .fsc-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+             opacity:.30;pointer-events:none;z-index:0;filter:saturate(1.15);}
+        .fsc-overlay{position:absolute;inset:0;z-index:1;pointer-events:none;
+              background:
+            linear-gradient(180deg,#0b0322 0%,rgba(11,3,34,0) 15%,rgba(11,3,34,0) 85%,#0b0322 100%),
+            linear-gradient(180deg,rgba(12,5,22,.7),rgba(12,5,22,.9));}
+
+        .fsc-inner{position:relative;z-index:2;max-width:1320px;margin:0 auto;text-align:center;}
+        .fsc-sup{display:inline-flex;align-items:center;gap:14px;font-family:'Oxanium',sans-serif;
+          font-size:.8rem;font-weight:800;letter-spacing:6px;text-transform:uppercase;margin-bottom:18px;color:rgba(196,160,224,.8);}
+        .fsc-sup::before,.fsc-sup::after{content:'';width:36px;height:1px;background:rgba(155,89,208,.45);}
+        .fsc-sup b{background:linear-gradient(90deg,#c084f5,#9B59D0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+        .fsc-title{font-family:'Oxanium','29LtBukra',sans-serif;font-weight:900;font-style:italic;
+          text-transform:uppercase;color:#f0ecff;
+          font-size:clamp(2.2rem,5.2vw,4.1rem);line-height:1.04;margin:0 0 16px;letter-spacing:1px;}
+        .fsc-sub{font-family:'Cairo','29LtBukra',sans-serif;font-size:clamp(.9rem,1.4vw,1.05rem);
+          color:rgba(180,168,215,.55);max-width:560px;margin:0 auto;line-height:1.9;}
+
+        .fsc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:clamp(52px,7.5vw,116px);}
+        /* من غير بوكس — صورة + كلام مباشرةً على الخلفية (زي المرجع)، من غير رفع عند الـ hover */
+        .fsc-card{position:relative;--lift:0px;text-align:center;
+          transform:translateY(var(--lift));
+          transition:transform .38s cubic-bezier(.25,.8,.25,1);}
+        .fsc-card:nth-child(2){--lift:-40px;}
+        .fsc-card-media{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:10px;background:rgba(84,22,181,.12);
+          box-shadow:0 22px 46px rgba(0,0,0,.5),0 6px 16px rgba(0,0,0,.35);transition:box-shadow .35s ease;}
+        .fsc-card-media img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:-webkit-optimize-contrast;}
+        /* hover نضيف: يطلع لفوق شوية + نيون بنفسجي بسيط جداً */
+        .fsc-card:hover{transform:translateY(calc(var(--lift) - 8px));}
+        .fsc-card:hover .fsc-card-media{box-shadow:0 24px 50px rgba(0,0,0,.5),0 0 18px rgba(140,84,255,.35);}
+        .fsc-card-media::after{content:'';position:absolute;inset:0;pointer-events:none;
+          background:linear-gradient(150deg,rgba(127,58,161,.16),rgba(84,22,181,.05) 55%,transparent);mix-blend-mode:soft-light;}
+        .fsc-card-title{font-family:'Oxanium','29LtBukra',sans-serif;font-weight:800;font-style:italic;
+          text-transform:uppercase;letter-spacing:2px;
+          font-size:clamp(1.2rem,1.8vw,1.55rem);color:#f0ecff;margin:22px 0 12px;padding:0 20px;}
+        .fsc-card-desc{font-family:'Cairo','29LtBukra',sans-serif;font-size:.9rem;line-height:1.9;
+          color:rgba(180,168,215,.62);padding:0 26px;margin:0;}
+
+        @media(max-width:960px){ .fsc-grid{grid-template-columns:repeat(2,1fr);gap:20px;} .fsc-card:nth-child(2){--lift:0px;} }
+        @media(max-width:620px){ .fsc-grid{grid-template-columns:1fr;} .fsc-sec{padding:56px 20px;} }
+      `}</style>
+
+      {/* خلفية فيديو متحركة */}
+      <video className="fsc-video" autoPlay loop muted playsInline preload="auto" aria-hidden="true">
+        <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4" type="video/mp4"/>
+      </video>
+      <div className="fsc-overlay"/>
+
+      <div className="fsc-inner">
+        <div className="fsc-sup"><b>TILAGO</b></div>
+        <h2 className="fsc-title">Welcome To Tilago</h2>
+        <p className="fsc-sub">تصاميم حصرية بلمسة سينمائية تخلّي قناتك تتميّز عن الجميع</p>
+
+        <div className="fsc-grid">
+          {FSC_CARDS.map((c)=>(
+            <div key={c.title} className="fsc-card">
+              <div className="fsc-card-media">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={c.img} alt={c.title}/>
+              </div>
+              <h3 className="fsc-card-title">{c.title}</h3>
+              <p className="fsc-card-desc">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── Page ─── */
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
@@ -683,9 +514,8 @@ export default function HomePage() {
         );
       })()}
 
-
-      {/* Works */}
-      <WorksSection items={content.works}/>
+      {/* Feature Showcase — 3 كروت بخلفية فيديو متحركة (مكان القسم القديم) */}
+      <FeatureShowcase />
 
       {/* Why Us / Image Grid */}
       <section className="wt-sec" id="about">
