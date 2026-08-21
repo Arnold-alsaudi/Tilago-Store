@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { DollarSign, ShoppingBag, Users, Package, Download, FileSpreadsheet, Power } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DashboardStats } from '@/types';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, formatPriceAscii } from '@/lib/utils';
 
 interface Props { stats: DashboardStats; }
 
@@ -63,7 +63,7 @@ export function AdminDashboard({ stats }: Props) {
       startY: 50,
       head: [['Metric', 'Value']],
       body: [
-        ['Total Revenue', formatPrice(stats.totalRevenue)],
+        ['Total Revenue', formatPriceAscii(stats.totalRevenue)],
         ['Total Orders', stats.totalOrders.toString()],
         ['Total Users', stats.totalUsers.toString()],
         ['Total Products', stats.totalProducts.toString()],

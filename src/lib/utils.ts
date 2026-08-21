@@ -16,6 +16,16 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
+// نسخة ASCII بأرقام لاتينية ورمز عملة نصي (EGP) — للأماكن اللي مابتدعمش الخطوط
+// العربية زي PDF المولّد بـ jsPDF (خطه الافتراضي بيطلع الأرقام العربية garbage)
+export function formatPriceAscii(price: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: CURRENCY,
+    maximumFractionDigits: 2,
+  }).format(price);
+}
+
 export function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
