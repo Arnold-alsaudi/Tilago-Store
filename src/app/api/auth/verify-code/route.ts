@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rateLimit';
+import { getClientIp } from '@/lib/getClientIp';
 import { secureHash } from '@/lib/crypto';
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = getClientIp(req);
   const { success } = await rateLimit(ip, 10, 60_000);
   if (!success) return NextResponse.json({ error: 'محاولات كثيرة، انتظر قليلاً' }, { status: 429 });
 

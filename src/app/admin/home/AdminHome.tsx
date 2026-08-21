@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Upload, Plus, Trash2, Save, Check, Star } from 'lucide-react';
-import { DEFAULT_HOME_CONTENT, type HomeContent, type HomeWork, type HomeStat, type HomeGalleryItem } from '@/lib/homeContent';
+import { DEFAULT_HOME_CONTENT, type HomeContent, type HomeFeature, type HomeStat, type HomeGalleryItem } from '@/lib/homeContent';
 
 export function AdminHome({ initial }: { initial: HomeContent }) {
   const [content, setContent] = useState<HomeContent>(initial);
@@ -29,12 +29,12 @@ export function AdminHome({ initial }: { initial: HomeContent }) {
     }
   };
 
-  const setWork = (i: number, patch: Partial<HomeWork>) =>
-    setContent(c => ({ ...c, works: c.works.map((w, idx) => idx === i ? { ...w, ...patch } : w) }));
-  const addWork = () =>
-    setContent(c => ({ ...c, works: [...c.works, { img: '', title: '', tag: '', href: '/stream' }] }));
-  const removeWork = (i: number) =>
-    setContent(c => ({ ...c, works: c.works.filter((_, idx) => idx !== i) }));
+  const setFeat = (i: number, patch: Partial<HomeFeature>) =>
+    setContent(c => ({ ...c, features: c.features.map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+  const addFeat = () =>
+    setContent(c => ({ ...c, features: [...c.features, { img: '', title: '', desc: '' }] }));
+  const removeFeat = (i: number) =>
+    setContent(c => ({ ...c, features: c.features.filter((_, idx) => idx !== i) }));
 
   const setGal = (i: number, patch: Partial<HomeGalleryItem>) =>
     setContent(c => ({ ...c, gallery: c.gallery.map((g, idx) => idx === i ? { ...g, ...patch } : g) }));
@@ -125,38 +125,52 @@ export function AdminHome({ initial }: { initial: HomeContent }) {
           </div>
         </section>
 
-        {/* ── معرض الأعمال ── */}
+        {/* ── قسم "Welcome To Tilago" — العنوان + الكروت ── */}
         <section className="glass-card rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-lg" style={{ color: '#F0E6FF' }}>🎯 معرض الأعمال</h2>
-            <button onClick={addWork} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
+            <h2 className="font-bold text-lg" style={{ color: '#F0E6FF' }}>✨ قسم الترحيب (Welcome To Tilago)</h2>
+            <button onClick={addFeat} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
               style={{ background: 'rgba(84,22,181,0.2)', color: '#c4a0e0', border: '1px solid rgba(84,22,181,0.4)' }}>
-              <Plus size={14} /> إضافة عمل
+              <Plus size={14} /> إضافة كارت
             </button>
           </div>
+
+          {/* عنوان القسم ووصفه */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+            <div>
+              <label style={label}>عنوان القسم</label>
+              <input style={inputStyle} value={content.featuresTitle}
+                onChange={e => setContent(c => ({ ...c, featuresTitle: e.target.value }))} placeholder="Welcome To Tilago" />
+            </div>
+            <div>
+              <label style={label}>الوصف تحت العنوان</label>
+              <input style={inputStyle} value={content.featuresSubtitle}
+                onChange={e => setContent(c => ({ ...c, featuresSubtitle: e.target.value }))} placeholder="تصاميم حصرية بلمسة سينمائية..." />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-4">
-            {content.works.map((w, i) => (
+            {content.features.map((f, i) => (
               <div key={i} className="flex gap-4 flex-wrap items-start p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <div>
-                  {w.img
+                  {f.img
                     // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={w.img} alt="" style={{ width: 90, height: 64, objectFit: 'cover', borderRadius: 8 }} />
+                    ? <img src={f.img} alt="" style={{ width: 90, height: 64, objectFit: 'cover', borderRadius: 8 }} />
                     : <div style={{ width: 90, height: 64, borderRadius: 8, background: 'rgba(0,0,0,0.3)' }} />}
                   <label className="flex items-center justify-center gap-1 mt-2 px-2 py-1 rounded-lg text-[11px] cursor-pointer"
                     style={{ background: 'rgba(84,22,181,0.2)', color: '#c4a0e0', border: '1px solid rgba(84,22,181,0.4)' }}>
-                    <Upload size={12} /> {uploading === `w${i}` ? '...' : 'صورة'}
+                    <Upload size={12} /> {uploading === `f${i}` ? '...' : 'صورة'}
                     <input type="file" accept="image/*" hidden onChange={async e => {
-                      const f = e.target.files?.[0]; if (!f) return;
-                      const url = await upload(f, `w${i}`); if (url) setWork(i, { img: url });
+                      const file = e.target.files?.[0]; if (!file) return;
+                      const url = await upload(file, `f${i}`); if (url) setFeat(i, { img: url });
                     }} />
                   </label>
                 </div>
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2" style={{ minWidth: 240 }}>
-                  <div><label style={label}>العنوان</label><input style={inputStyle} value={w.title} onChange={e => setWork(i, { title: e.target.value })} /></div>
-                  <div><label style={label}>التصنيف</label><input style={inputStyle} value={w.tag} onChange={e => setWork(i, { tag: e.target.value })} /></div>
-                  <div><label style={label}>الرابط</label><input style={inputStyle} value={w.href} onChange={e => setWork(i, { href: e.target.value })} placeholder="/stream" /></div>
+                <div className="flex-1 grid grid-cols-1 gap-2" style={{ minWidth: 240 }}>
+                  <div><label style={label}>العنوان</label><input style={inputStyle} value={f.title} onChange={e => setFeat(i, { title: e.target.value })} placeholder="Stream" /></div>
+                  <div><label style={label}>الوصف</label><textarea style={{ ...inputStyle, minHeight: 64, resize: 'vertical' }} value={f.desc} onChange={e => setFeat(i, { desc: e.target.value })} /></div>
                 </div>
-                <button onClick={() => removeWork(i)} className="p-2 rounded-lg" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.35)' }}>
+                <button onClick={() => removeFeat(i)} className="p-2 rounded-lg" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.35)' }}>
                   <Trash2 size={14} />
                 </button>
               </div>

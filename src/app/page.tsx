@@ -1,285 +1,11 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { DEFAULT_HOME_CONTENT, type HomeContent } from '@/lib/homeContent';
-
-/* ─── Gallery Data ─── */
-const GALLERIES = {
-  left: {
-    title: 'Gaming Alerts',
-    link: '/alerts',
-    slides: [
-      { src: '/caf.png', alt: 'Gaming Alert 1' },
-      { src: '/images.png', alt: 'Gaming Alert 2' },
-      { src: '/photo/تكبيس.png', alt: 'Gaming Alert 3' },
-    ],
-  },
-  right: {
-    title: 'Esports Designs',
-    link: '/stream',
-    slides: [
-      { src: 'https://images.unsplash.com/photo-1511882150382-421056c89033?w=600', alt: 'Esports 1' },
-      { src: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600', alt: 'Esports 2' },
-      { src: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600', alt: 'Esports 3' },
-    ],
-  },
-};
-
-const FEATURED = [
-  { badge: 'NEW',  img: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600', title: 'Stream Alerts Pack',   desc: 'Professional animated alerts for your streaming setup', link: '/alerts' },
-  { badge: 'HOT',  img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600', title: 'Gaming Logo Design',   desc: 'Custom esports logos with neon effects',              link: '/alerts' },
-  { badge: '',     img: 'https://images.unsplash.com/photo-1493711662062-fa541f7f3d24?w=600', title: 'Discord Themes',      desc: 'Premium Discord server templates and bots',           link: '/stream' },
-  { badge: 'SALE', img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600', title: 'Website Templates',  desc: 'Modern responsive designs for gamers',                link: '/package' },
-];
-
-/* ─── Gallery Hook ─── */
-function useGallery(total: number, autoMs = 5000) {
-  const [current, setCurrent] = useState(0);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const go = (idx: number) => setCurrent((idx + total) % total);
-
-  useEffect(() => {
-    timer.current = setInterval(() => setCurrent(c => (c + 1) % total), autoMs);
-    return () => { if (timer.current) clearInterval(timer.current); };
-  }, [total, autoMs]);
-
-  return { current, go };
-}
-
-/* ─── Gallery Card ─── */
-function GalleryCard({ id, data }: { id: string; data: typeof GALLERIES.left }) {
-  const { current, go } = useGallery(data.slides.length);
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      className={`gallery-container${hovered ? ' hovered' : ''}`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="gallery-slides">
-        {data.slides.map((s, i) => (
-          <div key={i} className={`gallery-slide${i === current ? ' active' : ''}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={s.src} alt={s.alt} />
-          </div>
-        ))}
-      </div>
-
-      <button className="gallery-nav prev" onClick={() => go(current - 1)}>
-        <i className="fas fa-chevron-left" />
-      </button>
-      <button className="gallery-nav next" onClick={() => go(current + 1)}>
-        <i className="fas fa-chevron-right" />
-      </button>
-
-      <div className="gallery-dots">
-        {data.slides.map((_, i) => (
-          <div key={i} className={`dot${i === current ? ' active' : ''}`} onClick={() => go(i)} />
-        ))}
-      </div>
-
-      <div className="gallery-title">{data.title}</div>
-      <Link href={data.link} className="shop-now-btn">Shop Now</Link>
-    </div>
-  );
-}
-
-/* ─── Showcase Section ─── */
-const SHOWCASE_ITEMS = [
-  { id:'stream', label:'باكدج ستريم', img:'/photo/venom-1.png',       href:'/stream' },
-  { id:'alerts', label:'يرتات',       img:'/photo/alert-special.png', href:'/alerts' },
-  { id:'overlay',label:'أوفرلاي',     img:'/photo/venom-5.png',       href:'/stream' },
-  { id:'3d',     label:'ثري دي',      img:'/023.png',                 href:'/3d'     },
-];
-
-function ShowcaseSection() {
-  const [active, setActive] = useState(0);
-  const [fading, setFading] = useState(false);
-
-  function switchTo(i: number) {
-    if (i === active) return;
-    setFading(true);
-    setTimeout(() => { setActive(i); setFading(false); }, 280);
-  }
-
-  const item = SHOWCASE_ITEMS[active];
-
-  return (
-    <section className="sc-wrap">
-      <style>{`
-        .sc-wrap{
-          position:relative;
-          overflow:hidden;
-          background:linear-gradient(160deg,#0b0322 0%,#130840 50%,#0b0322 100%);
-          border-top:1px solid rgba(84,22,181,0.15);
-          border-bottom:1px solid rgba(84,22,181,0.15);
-          padding:0 48px;
-        }
-
-        /* Decorative blobs */
-        .sc-blob1,.sc-blob2{position:absolute;border-radius:50%;pointer-events:none}
-        .sc-blob1{
-          width:400px;height:400px;
-          background:radial-gradient(circle,rgba(127,58,161,0.14),transparent 70%);
-          right:-80px;top:50%;transform:translateY(-50%);
-        }
-        .sc-blob2{
-          width:200px;height:200px;
-          background:radial-gradient(circle,rgba(84,22,181,0.1),transparent 70%);
-          left:100px;bottom:-60px;
-        }
-
-        .sc-inner{
-          max-width:1300px;margin:0 auto;
-          display:flex;align-items:center;
-          min-height:440px;position:relative;z-index:1;
-          direction:rtl;gap:32px;
-        }
-
-        /* ── Left panel ── */
-        .sc-left{
-          flex:0 0 180px;
-          display:flex;flex-direction:column;
-          justify-content:center;gap:28px;
-          padding:48px 0;
-        }
-
-        .sc-label{
-          font-family:'Cairo','29LtBukra','Montserrat',sans-serif;
-          font-size:clamp(1.1rem,2vw,1.5rem);
-          font-weight:900;color:#ede8ff;
-          transition:opacity .3s,transform .3s;
-          line-height:1.3;
-        }
-        .sc-label.fading{opacity:0;transform:translateY(6px)}
-
-        /* Dot nav */
-        .sc-dots{display:flex;flex-direction:column;gap:10px}
-        .sc-dot{
-          width:8px;height:8px;border-radius:50%;cursor:pointer;
-          background:rgba(155,89,208,0.25);
-          border:1px solid rgba(155,89,208,0.2);
-          transition:all .3s;
-        }
-        .sc-dot:hover{background:rgba(155,89,208,0.5)}
-        .sc-dot.active{
-          background:#7F3AA1;
-          box-shadow:0 0 10px rgba(127,58,161,0.6);
-          width:8px;height:24px;border-radius:4px;
-        }
-
-        /* Explore link */
-        .sc-link{
-          display:inline-flex;align-items:center;gap:8px;
-          font-family:'Cairo','29LtBukra','Montserrat';font-size:.82rem;font-weight:700;
-          color:rgba(180,165,215,0.55);text-decoration:none;
-          transition:color .25s,gap .25s;
-        }
-        .sc-link:hover{color:#c8b8f0;gap:12px}
-        .sc-link i{font-size:.75rem}
-
-        /* ── Right image ── */
-        .sc-img-wrap{
-          flex:1;
-          display:flex;align-items:center;justify-content:flex-end;
-          overflow:visible;
-          perspective:1200px;
-        }
-        .sc-img-frame{
-          position:relative;
-          border-radius:18px;overflow:hidden;
-          border:1px solid rgba(155,89,208,0.28);
-          box-shadow:
-            -20px 28px 70px rgba(0,0,0,0.65),
-            -6px 8px 24px rgba(84,22,181,0.2);
-          width:78%;
-          margin-top:-50px;
-          margin-bottom:-50px;
-          transform:perspective(1200px) rotateY(-7deg) rotateX(-2deg);
-          transition:opacity .3s, transform .5s cubic-bezier(.25,.8,.25,1);
-        }
-        .sc-img-frame:hover{
-          transform:perspective(1200px) rotateY(-3deg) rotateX(-1deg) scale(1.02);
-          box-shadow:
-            -28px 36px 90px rgba(0,0,0,0.7),
-            -8px 12px 32px rgba(84,22,181,0.28);
-        }
-        .sc-img-frame.fading{
-          opacity:0;
-          transform:perspective(1200px) rotateY(14deg) rotateX(-2deg) scale(0.97);
-        }
-        .sc-img-frame img{
-          width:100%;height:400px;
-          object-fit:cover;object-position:center top;
-          display:block;
-          image-rendering:-webkit-optimize-contrast;
-        }
-        /* Blend left edge into background */
-        .sc-img-fade-left{
-          position:absolute;top:0;left:0;bottom:0;width:70px;
-          background:linear-gradient(270deg,rgba(11,3,34,0.85),transparent);
-          pointer-events:none;z-index:1;
-        }
-
-        @media(max-width:900px){
-          .sc-wrap{padding:36px 20px 0}
-          .sc-inner{flex-direction:column;min-height:auto;gap:20px;padding-bottom:28px;direction:rtl}
-          .sc-left{flex:none;padding:0;width:100%;flex-direction:row;align-items:center;justify-content:space-between;gap:16px}
-          .sc-dots{flex-direction:row}
-          .sc-dot.active{width:24px;height:8px;border-radius:4px}
-          .sc-img-wrap{width:100%;justify-content:center}
-          .sc-img-frame{width:100%;margin:-16px 0;transform:none}
-          .sc-img-frame:hover{transform:scale(1.01)}
-          .sc-img-frame img{height:220px}
-        }
-        @media(max-width:480px){
-          .sc-img-frame img{height:170px}
-          .sc-img-frame{border-radius:12px}
-        }
-      `}</style>
-
-      {/* Decorative blobs */}
-      <div className="sc-blob1"/>
-      <div className="sc-blob2"/>
-
-      <div className="sc-inner">
-        {/* Left */}
-        <div className="sc-left">
-          <div className={`sc-label${fading?' fading':''}`}>{item.label}</div>
-          <div className="sc-dots">
-            {SHOWCASE_ITEMS.map((_,i)=>(
-              <div key={i} className={`sc-dot${active===i?' active':''}`} onClick={()=>switchTo(i)}/>
-            ))}
-          </div>
-          <a href={item.href} className="sc-link">
-            استعرض الأعمال <i className="fas fa-arrow-left"/>
-          </a>
-        </div>
-
-        {/* Right — 3D overflowing image */}
-        <div className="sc-img-wrap">
-          <div className={`sc-img-frame${fading?' fading':''}`}>
-            <div className="sc-img-fade-left"/>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={item.img} alt={item.label}/>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+import { DEFAULT_HOME_CONTENT, type HomeContent, type HomeFeature } from '@/lib/homeContent';
 
 /* ─── Feature Showcase (3 كروت + خلفية فيديو متحركة) ─── */
-const FSC_CARDS = [
-  { img: '/photo/alert-special.png', title: '3D',    desc: 'اليرتات جاهزة ومصمّمة باحترافية ترفع تفاعل مشاهديك وتخلّي قناتك مميّزة عن الجميع.' },
-  { img: '/photo/venom-1.png',       title: 'Stream',   desc: 'أوفرلاي وشاشات بدء وإنهاء ويرتات — كل ما يحتاجه بثّك في باقة واحدة متكاملة.' },
-  { img: '/photo/alert-special.png', title: 'Alert', desc: 'شعارات وإنتروهات ومشاهد ثلاثية الأبعاد سينمائية تمنح قناتك بُعداً احترافياً مبهراً.' },
-];
-
-function FeatureShowcase() {
+function FeatureShowcase({ features, title, subtitle }: { features: HomeFeature[]; title: string; subtitle: string }) {
   return (
     <section className="fsc-sec" dir="rtl">
       <style>{`
@@ -336,11 +62,11 @@ function FeatureShowcase() {
 
       <div className="fsc-inner">
         <div className="fsc-sup"><b>TILAGO</b></div>
-        <h2 className="fsc-title">Welcome To Tilago</h2>
-        <p className="fsc-sub">تصاميم حصرية بلمسة سينمائية تخلّي قناتك تتميّز عن الجميع</p>
+        <h2 className="fsc-title">{title}</h2>
+        <p className="fsc-sub">{subtitle}</p>
 
         <div className="fsc-grid">
-          {FSC_CARDS.map((c)=>(
+          {features.map((c)=>(
             <div key={c.title} className="fsc-card">
               <div className="fsc-card-media">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -515,7 +241,11 @@ export default function HomePage() {
       })()}
 
       {/* Feature Showcase — 3 كروت بخلفية فيديو متحركة (مكان القسم القديم) */}
-      <FeatureShowcase />
+      <FeatureShowcase
+        features={content.features}
+        title={content.featuresTitle}
+        subtitle={content.featuresSubtitle}
+      />
 
       {/* Why Us / Image Grid */}
       <section className="wt-sec" id="about">
@@ -843,96 +573,6 @@ export default function HomePage() {
         @keyframes platBwd {
           from { transform: translateX(-33.333%); }
           to   { transform: translateX(0); }
-        }
-
-        /* ── Gallery Section (UNUSED - kept for ref) ── */
-        .gallery-section {
-          padding: 60px 40px;
-          display: grid; grid-template-columns: 1fr 1fr;
-          gap: 30px; max-width: 1600px; margin: 0 auto; width: 100%;
-        }
-        .gallery-container {
-          position: relative; border-radius: 24px; overflow: hidden;
-          box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-          background: rgba(15,8,59,0.4);
-          border: 2px solid rgba(84,22,181,0.35);
-          transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-          min-height: 550px;
-        }
-        .gallery-container.hovered {
-          transform: translateY(-8px);
-          border-color: #7F3AA1;
-          box-shadow: 0 14px 40px rgba(84,22,181,0.3);
-        }
-        .gallery-slides { position: relative; width: 100%; height: 100%; overflow: hidden; }
-        .gallery-slide {
-          position: absolute; top: 0; left: 0;
-          width: 100%; height: 100%;
-          opacity: 0; transition: opacity 1s cubic-bezier(0.4,0,0.2,1);
-        }
-        .gallery-slide.active { opacity: 1; }
-        .gallery-slide img {
-          width: 100%; height: 100%; object-fit: cover;
-          filter: brightness(0.75) saturate(1.1);
-          transition: transform 0.8s ease;
-        }
-        .gallery-container.hovered .gallery-slide img {
-          transform: scale(1.06);
-          filter: brightness(0.85) saturate(1.15);
-        }
-        .gallery-nav {
-          position: absolute; top: 50%; transform: translateY(-50%);
-          background: #0F083B; border: 1px solid #5416B5;
-          color: #fff; width: 50px; height: 50px; border-radius: 50%;
-          cursor: pointer; display: flex; align-items: center; justify-content: center;
-          font-size: 1.2rem; z-index: 10;
-          transition: all 0.3s; opacity: 0;
-        }
-        .gallery-container.hovered .gallery-nav { opacity: 1; }
-        .gallery-nav:hover { background: #5416B5; transform: translateY(-50%) scale(1.1); }
-        .gallery-nav.prev { left: 20px; }
-        .gallery-nav.next { right: 20px; }
-        .gallery-dots {
-          position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-          display: flex; gap: 10px; z-index: 10;
-          padding: 8px 16px; background: rgba(12,5,22,0.85);
-          border-radius: 30px;
-          border: 1px solid rgba(84,22,181,0.3);
-        }
-        .dot {
-          width: 12px; height: 12px; border-radius: 50%;
-          background: rgba(255,255,255,0.2); border: 2px solid #5416B5;
-          cursor: pointer; transition: all 0.3s;
-        }
-        .dot.active {
-          background: #7F3AA1;
-          transform: scale(1.3);
-        }
-        .gallery-title {
-          position: absolute; bottom: 0; left: 0; right: 0;
-          padding: 40px 30px 30px;
-          background: linear-gradient(to top, rgba(12,5,22,0.95), transparent);
-          font-family:'Oxanium', sans-serif; font-size: 1.8rem; font-weight: 700;
-          color: #c4a0e0;
-          opacity: 0; transform: translateY(30px); transition: all 0.4s; z-index: 5;
-        }
-        .gallery-container.hovered .gallery-title { opacity: 1; transform: translateY(0); }
-        .shop-now-btn {
-          position: absolute; bottom: 30px; left: 50%;
-          transform: translateX(-50%) translateY(20px);
-          background: linear-gradient(135deg,#5416B5,#7F3AA1);
-          color: #fff; padding: 13px 32px; border-radius: 30px;
-          font-family:'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 700;
-          text-decoration: none; text-transform: uppercase; letter-spacing: 2px;
-          box-shadow: 0 4px 18px rgba(84,22,181,0.4);
-          opacity: 0; z-index: 10; transition: all 0.4s;
-          border: 1px solid rgba(127,58,161,0.5);
-        }
-        .gallery-container.hovered .shop-now-btn { opacity: 1; transform: translateX(-50%) translateY(0); }
-        .shop-now-btn:hover {
-          transform: translateX(-50%) translateY(-3px);
-          background: linear-gradient(135deg,#7F3AA1,#5416B5);
-          box-shadow: 0 8px 24px rgba(84,22,181,0.5);
         }
 
         /* ── Services ── */
@@ -1351,7 +991,6 @@ export default function HomePage() {
         /* ── Responsive ── */
         @media (max-width: 1024px) {
           .hero-container { border-radius: 20px; }
-          .gallery-section { grid-template-columns: 1fr; padding: 40px 20px; }
           .services-grid { grid-template-columns: repeat(2,1fr); }
           .why-grid { grid-template-columns: repeat(2,1fr); }
         }

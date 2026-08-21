@@ -5,8 +5,9 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
 // الفيديوهات بقت روابط يوتيوب — الرفع هنا للصور بس
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+// ملاحظة: SVG اتشال عمداً — ممكن يحتوي جافاسكربت (XSS)، ومش محتاجينه لصور المنتجات
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
 export async function POST(req: NextRequest) {
   try {

@@ -1,27 +1,29 @@
 // محتوى الصفحة الرئيسية القابل للتعديل من لوحة الأدمن
 // يُخزَّن في SiteSetting تحت المفتاح "homeContent" — ولو مش موجود نستخدم الافتراضي
 
-export interface HomeWork { img: string; title: string; tag: string; href: string; }
 export interface HomeStat { num: string; label: string; }
 // كروت شبكة "أكثر من مجرد تصميم" — featured = الكارت الكبير في النص
 export interface HomeGalleryItem { img: string; name: string; tag: string; featured?: boolean; }
+// كروت قسم "Welcome To Tilago" — صورة + عنوان + وصف
+export interface HomeFeature { img: string; title: string; desc: string; }
 
 export interface HomeContent {
   heroImage: string;
-  works: HomeWork[];
+  featuresTitle: string;
+  featuresSubtitle: string;
+  features: HomeFeature[];
   stats: HomeStat[];
   gallery: HomeGalleryItem[];
 }
 
 export const DEFAULT_HOME_CONTENT: HomeContent = {
   heroImage: '/55.png',
-  works: [
-    { tag: 'باكدج ستريم', title: 'Venom Pack',     img: '/photo/venom-1.png',       href: '/stream' },
-    { tag: 'يرتات',       title: 'Alert Designs',   img: '/photo/alert-special.png', href: '/alerts' },
-    { tag: 'أوفرلاي',    title: 'Stream Overlay',  img: '/photo/venom-5.png',       href: '/stream' },
-    { tag: 'ستريم',       title: 'Venom Pack II',   img: '/photo/venom-7.png',       href: '/stream' },
-    { tag: 'ستريم',       title: 'Pack Details',    img: '/photo/venom-9.png',       href: '/stream' },
-    { tag: 'يرتات',       title: 'Special Alerts',  img: '/photo/venom-10.png',      href: '/alerts' },
+  featuresTitle: 'Welcome To Tilago',
+  featuresSubtitle: 'تصاميم حصرية بلمسة سينمائية تخلّي قناتك تتميّز عن الجميع',
+  features: [
+    { img: '/photo/alert-special.png', title: '3D',     desc: 'اليرتات جاهزة ومصمّمة باحترافية ترفع تفاعل مشاهديك وتخلّي قناتك مميّزة عن الجميع.' },
+    { img: '/photo/venom-1.png',       title: 'Stream', desc: 'أوفرلاي وشاشات بدء وإنهاء ويرتات — كل ما يحتاجه بثّك في باقة واحدة متكاملة.' },
+    { img: '/photo/alert-special.png', title: 'Alert',  desc: 'شعارات وإنتروهات ومشاهد ثلاثية الأبعاد سينمائية تمنح قناتك بُعداً احترافياً مبهراً.' },
   ],
   stats: [
     { num: '500+', label: 'عميل راضي' },

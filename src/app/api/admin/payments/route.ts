@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isRequestAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rateLimit';
+import { getClientIp } from '@/lib/getClientIp';
 import * as XLSX from 'xlsx';
 import { Resend } from 'resend';
 
@@ -10,7 +11,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = getClientIp(req);
   const { success } = await rateLimit(ip, 20, 60_000);
   if (!success) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 

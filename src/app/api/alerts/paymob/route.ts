@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '@/lib/rateLimit';
+import { getClientIp } from '@/lib/getClientIp';
 import { prisma } from '@/lib/prisma';
 
 const PAYMOB_API = 'https://accept.paymob.com/v1';
@@ -35,7 +36,7 @@ async function computeTrustedAmount(
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = getClientIp(req);
   const { success } = await rateLimit(ip, 10, 60_000);
   if (!success) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 

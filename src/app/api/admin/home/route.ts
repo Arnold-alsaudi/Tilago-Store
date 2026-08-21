@@ -10,7 +10,9 @@ export async function POST(req: NextRequest) {
   // ندمج مع الافتراضي ونحفظ فقط الحقول المعروفة
   const content: HomeContent = {
     heroImage: typeof body.heroImage === 'string' ? body.heroImage : DEFAULT_HOME_CONTENT.heroImage,
-    works: Array.isArray(body.works) ? body.works : DEFAULT_HOME_CONTENT.works,
+    featuresTitle: typeof body.featuresTitle === 'string' ? body.featuresTitle : DEFAULT_HOME_CONTENT.featuresTitle,
+    featuresSubtitle: typeof body.featuresSubtitle === 'string' ? body.featuresSubtitle : DEFAULT_HOME_CONTENT.featuresSubtitle,
+    features: Array.isArray(body.features) ? body.features : DEFAULT_HOME_CONTENT.features,
     stats: Array.isArray(body.stats) ? body.stats : DEFAULT_HOME_CONTENT.stats,
     gallery: Array.isArray(body.gallery) ? body.gallery : DEFAULT_HOME_CONTENT.gallery,
   };

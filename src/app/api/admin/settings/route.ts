@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isRequestAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   const settings = await prisma.siteSetting.findMany();
   const map: Record<string, string> = {};
   settings.forEach(s => { map[s.key] = s.value; });

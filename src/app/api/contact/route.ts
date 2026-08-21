@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { rateLimit } from '@/lib/rateLimit';
+import { getClientIp } from '@/lib/getClientIp';
 import { z } from 'zod';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -17,7 +18,7 @@ function esc(s: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = getClientIp(req);
   const { success } = await rateLimit(ip, 5, 60_000);
   if (!success) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 

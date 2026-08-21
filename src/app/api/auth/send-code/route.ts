@@ -3,13 +3,14 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rateLimit';
+import { getClientIp } from '@/lib/getClientIp';
 import { secureHash } from '@/lib/crypto';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = getClientIp(req);
   const { success } = await rateLimit(ip, 5, 60_000);
   if (!success) return NextResponse.json({ error: 'محاولات كثيرة، انتظر قليلاً' }, { status: 429 });
 

@@ -28,7 +28,8 @@ export async function middleware(req: NextRequest) {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accept.paymob.com",
+      // 'unsafe-eval' في بيئة التطوير بس (Next.js HMR بيحتاجه) — بيتشال تلقائياً في الإنتاج
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== 'production' ? " 'unsafe-eval'" : ''} https://accept.paymob.com`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
       "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
       "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://img.youtube.com https://i.ytimg.com",

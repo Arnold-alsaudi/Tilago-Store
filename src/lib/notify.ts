@@ -24,19 +24,21 @@ export async function sendTelegram(data: PaymentNotification) {
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) return;
 
+  // parse_mode: 'HTML' مع هروب كل القيم الجاية من العميل (الاسم/المنتج...) —
+  // Markdown القديم مكانش بيهرب، فاسم مصمّم بذكاء كان يقدر يزوّر شكل الرسالة أو يحقن رابط
   const msg = [
-    '💰 *دفعة جديدة على Tilago*',
+    '💰 <b>دفعة جديدة على Tilago</b>',
     '',
-    `👤 *الاسم:* ${data.customerName}`,
-    `📧 *الإيميل:* ${data.customerEmail}`,
-    `📱 *رقم التواصل:* ${data.customerPhone || 'غير متوفر'}`,
-    `🎨 *المنتج:* ${data.productName}`,
-    `💵 *المبلغ:* ${data.amount} ${data.currency}`,
-    `💳 *طريقة الدفع:* ${data.paymentMethod}`,
-    `🔖 *الرقم المرجعي:* \`${data.referenceId}\``,
-    `🕐 *وقت الدفع:* ${data.paidAt}`,
+    `👤 <b>الاسم:</b> ${esc(data.customerName)}`,
+    `📧 <b>الإيميل:</b> ${esc(data.customerEmail)}`,
+    `📱 <b>رقم العميل:</b> ${esc(data.customerPhone || 'غير متوفر')}`,
+    `🎨 <b>المنتج:</b> ${esc(data.productName)}`,
+    `💵 <b>المبلغ:</b> ${esc(String(data.amount))} ${esc(data.currency)}`,
+    `💳 <b>طريقة الدفع:</b> ${esc(data.paymentMethod)}`,
+    `🔖 <b>الرقم المرجعي:</b> <code>${esc(data.referenceId)}</code>`,
+    `🕐 <b>وقت الدفع:</b> ${esc(data.paidAt)}`,
     '',
-    '✅ *الدفع مؤكد — يرجى التسليم خلال 24 ساعة*',
+    '✅ <b>الدفع مؤكد — يرجى التسليم خلال 24 ساعة</b>',
   ].join('\n');
 
   await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -45,7 +47,7 @@ export async function sendTelegram(data: PaymentNotification) {
     body: JSON.stringify({
       chat_id: chatId,
       text: msg,
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
     }),
   });
 }
@@ -102,7 +104,7 @@ export async function sendEmailNotification(data: PaymentNotification) {
             <td style="padding: 10px 14px; color: #111827;">${esc(data.customerEmail)}</td>
           </tr>
           <tr style="background: #f9fafb;">
-            <td style="padding: 10px 14px; font-weight: bold; color: #374151;">📱 رقم التواصل</td>
+            <td style="padding: 10px 14px; font-weight: bold; color: #374151;">📱 رقم العميل</td>
             <td style="padding: 10px 14px; color: #111827; font-weight: bold;">${esc(data.customerPhone || 'غير متوفر')}</td>
           </tr>
           <tr>
