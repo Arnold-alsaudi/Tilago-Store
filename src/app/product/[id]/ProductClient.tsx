@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
@@ -49,6 +49,13 @@ export function ProductClient({ product }: { product: PProduct }) {
   const [wished, setWished] = useState(false);
   const [shareMsg, setShareMsg] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [formErr, setFormErr] = useState('');
+  const [custName, setCustName] = useState('');
+  const [contact, setContact] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const cat = CAT[product.category] ?? { label: product.category, href: '/' };
 
@@ -81,6 +88,36 @@ export function ProductClient({ product }: { product: PProduct }) {
   const addN = (qty: number) => { for (let i = 0; i < qty; i++) addItem(cartProduct); };
   const addToCart = () => { addN(quantity); setAdded(true); setTimeout(() => setAdded(false), 1800); };
   const buyNow = () => { addN(quantity); router.push('/cart'); };
+
+  const uploadLogo = async (file: File) => {
+    setUploading(true); setFormErr('');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload/logo', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) setLogoUrl(data.url as string);
+      else setFormErr(data.error ?? 'تعذّر رفع الشعار');
+    } catch {
+      setFormErr('تعذّر رفع الشعار، حاول تاني');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const WA = '1234567890'; // رقم واتساب للطلبات — غيّره لرقمك
+  const orderWhatsapp = () => {
+    if (!contact.trim()) { setFormErr('اكتب وسيلة تواصل أولاً (مطلوبة)'); return; }
+    const lines = [
+      'طلب منتج من Tilago 🎨',
+      `المنتج: ${product.title}`,
+      `السعر: ${priceText} × ${quantity}`,
+      custName.trim() ? `الاسم/الشعار المكتوب: ${custName.trim()}` : '',
+      logoUrl ? `الشعار المرفوع: ${logoUrl}` : '',
+      `وسيلة التواصل: ${contact.trim()}`,
+    ].filter(Boolean);
+    window.open(`https://wa.me/${WA}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  };
 
   const share = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -153,6 +190,34 @@ export function ProductClient({ product }: { product: PProduct }) {
         .pd-features li{font-size:.9rem;color:rgba(200,190,225,.8);padding-inline-start:1.6rem;position:relative;line-height:1.6;}
         .pd-features li::before{content:'✦';position:absolute;right:0;top:.05rem;color:#9B59D0;font-size:.8rem;}
         .pd-warn{color:#e06a6a;font-size:.82rem;margin-bottom:1.4rem;}
+
+        /* ── Customization ── */
+        .pd-custom{background:rgba(15,8,59,0.5);border:1px solid rgba(84,22,181,.2);border-radius:16px;
+          padding:1.3rem 1.4rem;margin-bottom:1.4rem;}
+        .pd-custom h3{font-family:'Oxanium',sans-serif;font-size:1rem;font-weight:700;color:#e8e2ff;
+          margin:0 0 .4rem;display:flex;align-items:center;gap:8px;}
+        .pd-cust-lbl{display:block;font-size:.82rem;color:rgba(200,190,225,.72);font-weight:700;margin:.9rem 0 .5rem;}
+        .pd-cust-lbl .req{color:#e06a6a;}
+        .pd-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;
+          min-height:110px;border:2px dashed rgba(155,89,208,.4);border-radius:12px;padding:12px;cursor:pointer;
+          color:rgba(180,168,215,.7);font-size:.85rem;transition:all .25s;background:rgba(10,4,22,.4);}
+        .pd-drop:hover,.pd-drop.over{border-color:#7F3AA1;background:rgba(84,22,181,.12);color:#c8b8f0;}
+        .pd-drop.has{padding:8px;border-style:solid;}
+        .pd-drop i{font-size:1.5rem;color:#9B59D0;}
+        .pd-drop-preview{max-height:130px;max-width:100%;border-radius:8px;object-fit:contain;}
+        .pd-drop-clear{margin-top:8px;background:none;border:none;color:#e06a6a;font-size:.78rem;cursor:pointer;
+          display:inline-flex;align-items:center;gap:5px;font-family:'Cairo',sans-serif;}
+        .pd-drop-clear:hover{color:#ff8080;}
+        .pd-input{width:100%;padding:.7rem .9rem;border-radius:10px;border:1px solid rgba(84,22,181,.3);
+          background:rgba(0,0,0,.3);color:#f0ecff;font-size:.9rem;font-family:'Cairo',sans-serif;box-sizing:border-box;}
+        .pd-input::placeholder{color:rgba(180,168,215,.4);}
+        .pd-input:focus{outline:none;border-color:rgba(155,89,208,.6);}
+        .pd-cust-err{color:#e06a6a;font-size:.8rem;margin:.6rem 0 0;}
+        .pd-order-wa{width:100%;margin-top:1rem;display:flex;align-items:center;justify-content:center;gap:9px;
+          padding:.85rem 1rem;border:none;border-radius:12px;cursor:pointer;font-family:'Cairo',sans-serif;
+          font-size:.95rem;font-weight:800;background:linear-gradient(135deg,#1eaf52,#25D366);color:#fff;
+          box-shadow:0 6px 20px rgba(37,211,102,.3);transition:all .25s;}
+        .pd-order-wa:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(37,211,102,.45);}
 
         .pd-qty-row{display:flex;align-items:center;gap:16px;margin-bottom:1rem;}
         .pd-qty-label{font-size:.9rem;color:rgba(200,190,225,.7);font-weight:700;}
@@ -264,6 +329,49 @@ export function ProductClient({ product }: { product: PProduct }) {
                 <li>متوافق مع OBS Studio و Streamlabs</li>
                 <li>جودة عالية — يدعم الخلفية الشفافة (WebM)</li>
               </ul>
+            </div>
+
+            {/* Customization */}
+            <div className="pd-custom">
+              <h3><i className="fas fa-paint-brush" /> خصّص منتجك</h3>
+
+              <label className="pd-cust-lbl">ارفع صورة الشعار الخاص بك</label>
+              <div className={`pd-drop${dragOver ? ' over' : ''}${logoUrl ? ' has' : ''}`}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) uploadLogo(f); }}
+                onClick={() => fileRef.current?.click()}
+              >
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="pd-drop-preview" src={logoUrl} alt="الشعار" />
+                ) : uploading ? (
+                  <span><i className="fas fa-spinner fa-spin" /> جارٍ الرفع...</span>
+                ) : (
+                  <span><i className="fas fa-cloud-upload-alt" /> اسحب وأفلت الشعار هنا، أو اضغط للاستعراض</span>
+                )}
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }} />
+              </div>
+              {logoUrl && (
+                <button className="pd-drop-clear" onClick={() => setLogoUrl('')}>
+                  <i className="fas fa-times" /> إزالة الشعار
+                </button>
+              )}
+
+              <label className="pd-cust-lbl">ماعندك شعار؟ اكتب اسمك ونحطّه لك</label>
+              <input className="pd-input" value={custName} onChange={e => setCustName(e.target.value)} placeholder="مثال: Bello" />
+
+              <label className="pd-cust-lbl">وسيلة التواصل <span className="req">*</span></label>
+              <input className="pd-input" value={contact}
+                onChange={e => { setContact(e.target.value); setFormErr(''); }}
+                placeholder="تيليجرام / ديسكورد / واتساب" />
+
+              {formErr && <p className="pd-cust-err">{formErr}</p>}
+
+              <button className="pd-order-wa" onClick={orderWhatsapp}>
+                <i className="fab fa-whatsapp" /> اطلب الآن مع التخصيص
+              </button>
             </div>
 
             <p className="pd-warn">المنتج حق للمشتري فقط، ولا يُسمح بإعادة بيعه لشخص آخر.</p>

@@ -7,8 +7,8 @@ const ADMIN_ROUTES = ['/api/admin'];
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // الـ upload route يعدي مباشرة — middleware بيكسر multipart/form-data
-  if (pathname === '/api/admin/upload') {
+  // مسارات الرفع تعدي مباشرة — middleware بيكسر multipart/form-data
+  if (pathname === '/api/admin/upload' || pathname === '/api/upload/logo') {
     return NextResponse.next();
   }
 
