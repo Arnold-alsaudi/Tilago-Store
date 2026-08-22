@@ -86,8 +86,47 @@ export function ProductClient({ product }: { product: PProduct }) {
   } as Product;
 
   const addN = (qty: number) => { for (let i = 0; i < qty; i++) addItem(cartProduct); };
-  const addToCart = () => { addN(quantity); setAdded(true); setTimeout(() => setAdded(false), 1800); };
-  const buyNow = () => { addN(quantity); router.push('/cart'); };
+
+  const hasCustomization = () => !!(logoUrl || custName.trim());
+
+  // يبعت الشعار + الاسم + وسيلة التواصل للأدمن عند الشراء
+  const sendCustomization = () => {
+    if (!hasCustomization()) return;
+    fetch('/api/product/custom-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productName: product.title,
+        quantity,
+        amount: product.price * quantity,
+        currency: 'EGP',
+        name: custName.trim(),
+        contact: contact.trim(),
+        logoUrl,
+      }),
+    }).catch(() => {});
+  };
+
+  // لو العميل خصّص (شعار/اسم) لازم يكتب وسيلة تواصل عشان يوصلنا التخصيص
+  const ensureContact = () => {
+    if (hasCustomization() && !contact.trim()) {
+      setFormErr('اكتب وسيلة تواصل (رقمك) عشان يوصلنا التخصيص');
+      document.querySelector('.pd-custom')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    return true;
+  };
+
+  const addToCart = () => {
+    if (!ensureContact()) return;
+    sendCustomization();
+    addN(quantity); setAdded(true); setTimeout(() => setAdded(false), 1800);
+  };
+  const buyNow = () => {
+    if (!ensureContact()) return;
+    sendCustomization();
+    addN(quantity); router.push('/cart');
+  };
 
   const uploadLogo = async (file: File) => {
     setUploading(true); setFormErr('');

@@ -151,3 +151,63 @@ export async function notifyAllChannels(data: PaymentNotification) {
     sendEmailNotification(data),
   ]);
 }
+
+// ─── إشعار طلب مع تخصيص (شعار + رقم تواصل) عند الشراء ─────────
+export interface CustomOrderNotification {
+  productName: string;
+  quantity: number;
+  amount: number;
+  currency: string;
+  name: string;
+  contact: string;
+  logoUrl: string;
+}
+
+export async function notifyCustomOrder(d: CustomOrderNotification) {
+  const at = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
+  const jobs: Promise<unknown>[] = [];
+
+  // Telegram (HTML مع هروب كامل + معاينة رابط الشعار)
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (token && chatId) {
+    const msg = [
+      '🎨 <b>طلب مع تخصيص</b>',
+      '',
+      `🎯 <b>المنتج:</b> ${esc(d.productName)} × ${d.quantity}`,
+      `💵 <b>المبلغ:</b> ${esc(String(d.amount))} ${esc(d.currency)}`,
+      d.name ? `✍️ <b>الاسم/الشعار المكتوب:</b> ${esc(d.name)}` : '',
+      d.logoUrl ? `🖼️ <b>الشعار:</b> ${esc(d.logoUrl)}` : '',
+      `📱 <b>وسيلة التواصل:</b> ${esc(d.contact)}`,
+      `🕐 <b>الوقت:</b> ${esc(at)}`,
+      '',
+      '⏳ <i>بانتظار تأكيد الدفع</i>',
+    ].filter(Boolean).join('\n');
+    jobs.push(fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' }),
+    }));
+  }
+
+  // Email (فيه معاينة صورة الشعار)
+  jobs.push(resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL!,
+    to: 'mohammedhany01290@gmail.com',
+    subject: `🎨 طلب مع تخصيص — ${d.productName}`,
+    html: `
+      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #7c3aed; border-bottom: 2px solid #7c3aed; padding-bottom: 8px;">🎨 طلب مع تخصيص</h2>
+        <p><strong>المنتج:</strong> ${esc(d.productName)} × ${d.quantity}</p>
+        <p><strong>المبلغ:</strong> ${esc(String(d.amount))} ${esc(d.currency)}</p>
+        ${d.name ? `<p><strong>الاسم/الشعار المكتوب:</strong> ${esc(d.name)}</p>` : ''}
+        <p><strong>وسيلة التواصل:</strong> <span style="color:#16a34a;font-weight:bold;">${esc(d.contact)}</span></p>
+        ${d.logoUrl ? `<p><strong>الشعار:</strong> <a href="${esc(d.logoUrl)}">${esc(d.logoUrl)}</a></p>
+          <p><img src="${esc(d.logoUrl)}" alt="logo" style="max-width:260px;border-radius:10px;border:1px solid #ddd;"/></p>` : ''}
+        <p style="color:#6b7280;font-size:12px;">${esc(at)} — بانتظار تأكيد الدفع</p>
+      </div>
+    `,
+  }).catch(() => {}));
+
+  await Promise.allSettled(jobs);
+}
