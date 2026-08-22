@@ -282,7 +282,8 @@ export default function AlertsPage() {
           grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; text-align:center;
         }
         .al-product-card {
-          background:rgba(15,8,59,0.5); border-radius:14px; overflow:hidden;
+          background:radial-gradient(ellipse at 50% 12%, rgba(84,22,181,0.16), transparent 55%), rgba(15,8,59,0.5);
+          border-radius:14px; overflow:hidden;
           box-shadow:0 4px 16px rgba(0,0,0,0.3); transition:all .3s ease;
           border:1px solid rgba(84,22,181,0.2); cursor:pointer;
         }
@@ -291,7 +292,14 @@ export default function AlertsPage() {
           box-shadow:0 8px 24px rgba(84,22,181,0.25);
           border-color:rgba(84,22,181,0.5);
         }
-        .al-product-img { width:100%; height:180px; object-fit:cover; }
+        .al-product-img {
+          display:block; width:calc(100% - 28px); height:240px; object-fit:cover;
+          margin:14px auto 8px; border-radius:16px;
+          border:1px solid rgba(155,89,208,0.28);
+          box-shadow:0 10px 26px rgba(0,0,0,0.5);
+          transition:transform .4s cubic-bezier(.25,.8,.25,1);
+        }
+        .al-product-card:hover .al-product-img { transform:scale(1.03); }
         .al-product-title {
           padding:.5rem 1.2rem; font-size:1.1rem; font-weight:600; color:#e8e4f8; margin:.6rem auto .4rem;
           display:inline-block;
