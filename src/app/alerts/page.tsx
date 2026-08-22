@@ -384,7 +384,7 @@ export default function AlertsPage() {
           box-shadow:0 4px 14px rgba(84,22,181,0.35); transition:all .25s;
         }
         .al-btn-cart:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(84,22,181,0.5); }
-        .al-btn-cart.added { background:linear-gradient(135deg,#1e8e4f,#27ae60); box-shadow:none; }
+        .al-btn-cart.added { background:rgba(46,204,113,0.16); box-shadow:none; color:#7ef0a8; }
         .al-btn-cart i { font-size:.8rem; }
         .al-btn-preview {
           width:100%; padding:.55rem 1rem; border:1px solid rgba(84,22,181,0.5); border-radius:10px;
