@@ -147,10 +147,10 @@ export default function CartPage() {
       .cart-total .val{font-family:'Oxanium',sans-serif;font-weight:800;font-size:1.5rem;background:linear-gradient(135deg,#c084f5,#9B59D0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
       .cart-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:.9rem 1rem;border:none;border-radius:13px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.98rem;font-weight:800;transition:all .25s;}
       .cart-btn:disabled{opacity:.6;cursor:default;}
-      .cart-btn-meeza{background:linear-gradient(135deg,#5416B5,#7F3AA1);color:#fff;margin-bottom:.7rem;}
-      .cart-btn-meeza:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(84,22,181,.45);}
-      .cart-btn-paypal{background:#FFB703;color:#003087;}
-      .cart-btn-paypal:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(255,183,3,.35);}
+      .cart-btn-meeza{background:linear-gradient(135deg,#3f2072,#5a3382);color:#efe9fb;margin-bottom:.7rem;border:1px solid rgba(155,89,208,.25);}
+      .cart-btn-meeza:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(84,22,181,.3);}
+      .cart-btn-paypal{background:linear-gradient(135deg,#1b355f,#122a4d);color:#eaf1ff;border:1px solid rgba(120,160,220,.2);}
+      .cart-btn-paypal:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(27,53,95,.5);}
       .cart-clear{width:100%;margin-top:.9rem;background:none;border:none;color:rgba(180,168,215,.45);font-size:.8rem;cursor:pointer;font-family:'Cairo',sans-serif;transition:color .2s;}
       .cart-clear:hover{color:#e06a6a;}
       .cart-note{font-size:.74rem;color:rgba(180,168,215,.45);text-align:center;margin:.9rem 0 0;line-height:1.6;}
