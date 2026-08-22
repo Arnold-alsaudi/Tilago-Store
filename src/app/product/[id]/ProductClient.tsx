@@ -391,7 +391,7 @@ export function ProductClient({ product }: { product: PProduct }) {
               )}
 
               <label className="pd-cust-lbl">ماعندك شعار؟ اكتب اسمك ونحطّه لك</label>
-              <input className="pd-input" value={custName} onChange={e => setCustName(e.target.value)} placeholder="مثال: Bello" />
+              <input className="pd-input" value={custName} onChange={e => setCustName(e.target.value)} placeholder="مثال: Tilago" />
 
               <label className="pd-cust-lbl">وسيلة التواصل <span className="req">*</span></label>
               <input className="pd-input" value={contact}

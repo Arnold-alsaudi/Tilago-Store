@@ -276,7 +276,7 @@ export default function CartPage() {
                 {logoUrl && <button className="cart-drop-clear" onClick={() => setLogoUrl('')}>إزالة الشعار</button>}
 
                 <label className="cart-lbl">أو اكتب اسمك</label>
-                <input className="cart-input" value={custName} onChange={e => setCustName(e.target.value)} placeholder="مثال: Bello" />
+                <input className="cart-input" value={custName} onChange={e => setCustName(e.target.value)} placeholder="مثال: Tilago" />
 
                 <label className="cart-lbl">وسيلة التواصل <span className="req">*</span></label>
                 <input className="cart-input" value={contact} onChange={e => { setContact(e.target.value); setFormErr(''); }} placeholder="تيليجرام / ديسكورد / واتساب" />
