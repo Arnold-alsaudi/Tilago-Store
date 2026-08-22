@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Header } from '@/components/Header';
+import { StorePausedBanner } from '@/components/StorePausedBanner';
 import { SiteFooter } from '@/components/SiteFooter';
 import { PageTransition } from '@/components/PageTransition';
 import { Analytics } from '@vercel/analytics/react';
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 <Providers>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <Header />
+            <StorePausedBanner />
             <main><PageTransition>{children}</PageTransition></main>
             <SiteFooter />
           </div>
