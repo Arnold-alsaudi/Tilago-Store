@@ -36,11 +36,19 @@ export default function CartPage() {
 
   // ── منتجات مقترحة "أضفها لسلتك" ──
   const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [addedReco, setAddedReco] = useState<string | null>(null);
   useEffect(() => {
     fetch('/api/products?category=ALERTS')
       .then(r => r.json())
       .then((list: any[]) => setSuggestions(Array.isArray(list) ? list : []))
+      .catch(() => {});
+  }, []);
+
+  // حالة إيقاف المتجر — نمنع الدفع ونوضّح للعميل
+  const [storePaused, setStorePaused] = useState(false);
+  const [pauseMsg, setPauseMsg] = useState('');
+  useEffect(() => {
+    fetch('/api/settings').then(r => r.json())
+      .then(s => { setStorePaused(!!s.storePaused); setPauseMsg(s.pauseMessage || ''); })
       .catch(() => {});
   }, []);
   const cartIds = new Set(items.map(i => i.product.id));
@@ -64,8 +72,6 @@ export default function CartPage() {
       category: p.category, imageUrl: p.image, videoUrl: p.videoUrl,
       tags: p.tags, featured: false, active: true, createdAt: new Date(), updatedAt: new Date(),
     } as Product);
-    setAddedReco(p.id);
-    setTimeout(() => setAddedReco(null), 1400);
   };
 
   const uploadLogo = async (file: File) => {
@@ -122,6 +128,7 @@ export default function CartPage() {
   };
 
   const startCheckout = (method: PayMethod) => {
+    if (storePaused) { alert(pauseMsg || 'الطلبات متوقفة مؤقتاً، سنعود قريباً'); return; }
     if (!session) { router.push('/auth/signin'); return; }
     if (needing.length > 0) {
       // فيه منتجات بدون بيانات — نطلبها الأول
@@ -189,6 +196,10 @@ export default function CartPage() {
       .cart-clear{width:100%;margin-top:.9rem;background:none;border:none;color:rgba(180,168,215,.45);font-size:.8rem;cursor:pointer;font-family:'Cairo',sans-serif;transition:color .2s;}
       .cart-clear:hover{color:#e06a6a;}
       .cart-note{font-size:.74rem;color:rgba(180,168,215,.45);text-align:center;margin:.9rem 0 0;line-height:1.6;}
+      .cart-paused{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.4);border-radius:12px;padding:.9rem 1rem;
+        margin-bottom:1rem;text-align:center;display:flex;flex-direction:column;gap:4px;}
+      .cart-paused b{color:#ff8080;font-size:.95rem;}
+      .cart-paused span{color:rgba(224,176,181,.85);font-size:.8rem;line-height:1.5;}
 
       /* ── أضفها لسلتك ── */
       .cart-reco{margin-top:2rem;background:rgba(15,8,59,.5);border:1px solid rgba(84,22,181,.2);border-radius:18px;padding:1.4rem 1.6rem;}
@@ -257,9 +268,14 @@ export default function CartPage() {
         <div className="cart-grid">
           {/* Items */}
           <div className="cart-items">
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout" initial={false}>
               {items.map(({ product, quantity, customization }) => (
-                <motion.div key={product.id} layout exit={{ opacity: 0, x: 20 }} className="cart-item">
+                <motion.div key={product.id} layout
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: 20, transition: { duration: 0.22 } }}
+                  transition={{ duration: 0.32, ease: [0.25, 0.8, 0.25, 1] }}
+                  className="cart-item">
                   <div className="cart-item-img">
                     {product.imageUrl && <Image src={product.imageUrl} alt={product.title} fill className="object-cover" sizes="84px" />}
                   </div>
@@ -342,10 +358,16 @@ export default function CartPage() {
 
             {!showForm && (
               <>
-                <button className="cart-btn cart-btn-meeza" onClick={() => startCheckout('meeza')} disabled={checkingOut !== null}>
+                {storePaused && (
+                  <div className="cart-paused">
+                    <b>⏸️ الطلبات متوقفة مؤقتاً</b>
+                    <span>{pauseMsg || 'نعتذر — الطلبات متوقفة مؤقتاً، سنعود قريباً'}</span>
+                  </div>
+                )}
+                <button className="cart-btn cart-btn-meeza" onClick={() => startCheckout('meeza')} disabled={checkingOut !== null || storePaused}>
                   <CreditCard size={18} /> {checkingOut === 'meeza' ? 'جارٍ التحويل...' : 'الدفع بكارت ميزة / Visa'}
                 </button>
-                <button className="cart-btn cart-btn-paypal" onClick={() => startCheckout('paypal')} disabled={checkingOut !== null}>
+                <button className="cart-btn cart-btn-paypal" onClick={() => startCheckout('paypal')} disabled={checkingOut !== null || storePaused}>
                   💳 Pay with PayPal
                 </button>
                 <button className="cart-clear" onClick={clearCart}>إفراغ السلة</button>
@@ -360,19 +382,24 @@ export default function CartPage() {
           <div className="cart-reco">
             <h2>أضفها لسلتك</h2>
             <div className="cart-reco-list">
-              {recos.map(p => (
-                <div key={p.id} className="cart-reco-row">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="cart-reco-img" src={p.image} alt={p.title} loading="lazy" />
-                  <div className="cart-reco-info">
-                    <div className="cart-reco-name">{p.title}</div>
-                    <div className="cart-reco-price">{p.priceLabel ?? formatPrice(p.price)}</div>
-                  </div>
-                  <button className={`cart-reco-add${addedReco === p.id ? ' done' : ''}`} onClick={() => addReco(p)}>
-                    {addedReco === p.id ? '✓ أُضيف' : 'أضف للسلة'}
-                  </button>
-                </div>
-              ))}
+              <AnimatePresence mode="popLayout" initial={false}>
+                {recos.map(p => (
+                  <motion.div key={p.id} layout
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -30, transition: { duration: 0.22 } }}
+                    transition={{ duration: 0.32, ease: [0.25, 0.8, 0.25, 1] }}
+                    className="cart-reco-row">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="cart-reco-img" src={p.image} alt={p.title} loading="lazy" />
+                    <div className="cart-reco-info">
+                      <div className="cart-reco-name">{p.title}</div>
+                      <div className="cart-reco-price">{p.priceLabel ?? formatPrice(p.price)}</div>
+                    </div>
+                    <button className="cart-reco-add" onClick={() => addReco(p)}>أضف للسلة</button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         )}

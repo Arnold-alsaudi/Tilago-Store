@@ -27,22 +27,36 @@ export function AdminDashboard({ stats }: Props) {
   const toggleStore = async () => {
     setToggling(true);
     const newVal = !storePaused;
-    await fetch('/api/admin/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ storePaused: newVal, pauseMessage }),
-    });
-    setStorePaused(newVal);
-    setToggling(false);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storePaused: newVal, pauseMessage }),
+      });
+      if (!res.ok) {
+        alert(`فشل تغيير حالة المتجر (رمز ${res.status}). تأكد إنك مسجّل دخول كأدمن وحاول تاني.`);
+        return;
+      }
+      setStorePaused(newVal);
+    } catch {
+      alert('تعذّر الاتصال بالسيرفر، حاول تاني.');
+    } finally {
+      setToggling(false);
+    }
   };
 
   const saveMessage = async () => {
-    await fetch('/api/admin/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pauseMessage }),
-    });
-    setShowMsgInput(false);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pauseMessage }),
+      });
+      if (!res.ok) { alert('فشل حفظ الرسالة، حاول تاني.'); return; }
+      setShowMsgInput(false);
+    } catch {
+      alert('تعذّر الاتصال بالسيرفر، حاول تاني.');
+    }
   };
   const statCards = [
     { label: 'Total Revenue', value: formatPrice(stats.totalRevenue), icon: DollarSign, color: '#F0830B' },
