@@ -13,8 +13,12 @@ export async function POST(req: NextRequest) {
 
   // السعر والتفاصيل بتيجي من قاعدة البيانات دايماً — نتجاهل أي بيانات منتج جاية من العميل
   const ids = items.map((i: any) => String(i?.product?.id));
-  const products = await prisma.product.findMany({ where: { id: { in: ids }, active: true } });
-  const byId = new Map(products.map(p => [p.id, p]));
+  // المنتج في السلة ممكن يتخزن بالـ id أو الـ slug — ندوّر بالاتنين
+  const products = await prisma.product.findMany({
+    where: { OR: [{ id: { in: ids } }, { slug: { in: ids } }], active: true },
+  });
+  const byId = new Map<string, (typeof products)[number]>();
+  products.forEach(p => { byId.set(p.id, p); if (p.slug) byId.set(p.slug, p); });
 
   const trustedItems: { productId: string; quantity: number; price: number }[] = [];
   for (const i of items) {

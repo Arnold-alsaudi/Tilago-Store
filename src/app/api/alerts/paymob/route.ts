@@ -15,8 +15,12 @@ async function computeTrustedAmount(
       return { amount: 0, error: 'Cart items required' };
     }
     const ids = cartItems.map(i => String(i?.productId));
-    const products = await prisma.product.findMany({ where: { id: { in: ids }, active: true } });
-    const byId = new Map(products.map(p => [p.id, p]));
+    // المنتج في السلة ممكن يتخزن بالـ id أو الـ slug — ندوّر بالاتنين
+    const products = await prisma.product.findMany({
+      where: { OR: [{ id: { in: ids } }, { slug: { in: ids } }], active: true },
+    });
+    const byId = new Map<string, (typeof products)[number]>();
+    products.forEach(p => { byId.set(p.id, p); if (p.slug) byId.set(p.slug, p); });
 
     let total = 0;
     for (const i of cartItems) {
