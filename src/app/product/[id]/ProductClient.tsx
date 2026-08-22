@@ -333,7 +333,7 @@ export function ProductClient({ product }: { product: PProduct }) {
 
             {/* Customization */}
             <div className="pd-custom">
-              <h3><i className="fas fa-paint-brush" /> خصّص منتجك</h3>
+              <h3><i className="fas fa-paint-brush" />ارفع صورة للشعار الخاص بك</h3>
 
               <label className="pd-cust-lbl">ارفع صورة الشعار الخاص بك</label>
               <div className={`pd-drop${dragOver ? ' over' : ''}${logoUrl ? ' has' : ''}`}

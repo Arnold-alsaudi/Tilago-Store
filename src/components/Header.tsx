@@ -39,7 +39,6 @@ export function Header() {
         <nav>
           <ul className={menuOpen ? 'mobile-open' : ''}>
             <li><Link href="/">Home</Link></li>
-            <li><Link href="/shop">Shop</Link></li>
             <li>
               <a href="#">Page <i className="fas fa-chevron-down" /></a>
               <div className="dropdown-content">
@@ -65,7 +64,6 @@ export function Header() {
 
         {/* Icons */}
         <div className="icons">
-          <Link href="/shop" title="المتجر والبحث"><i className="fas fa-search" /></Link>
           <a href="#"><i className="fab fa-tiktok" /></a>
           <a href="#"><i className="fab fa-instagram" /></a>
 
