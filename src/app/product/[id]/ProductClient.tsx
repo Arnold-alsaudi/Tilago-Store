@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
 import { youtubeEmbedUrl, youtubeThumbnail, isYouTubeUrl } from '@/lib/youtube';
@@ -43,9 +44,11 @@ type Media = { type: 'image' | 'video'; src: string };
 
 export function ProductClient({ product }: { product: PProduct }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [added, setAdded] = useState(false);
   const [wished, setWished] = useState(false);
   const [shareMsg, setShareMsg] = useState('');
+  const [quantity, setQuantity] = useState(1);
 
   const cat = CAT[product.category] ?? { label: product.category, href: '/' };
 
@@ -60,24 +63,24 @@ export function ProductClient({ product }: { product: PProduct }) {
   const priceText = product.priceLabel ?? formatPrice(product.price);
   const rating = Math.max(0, Math.min(5, Math.round(product.rating || 5)));
 
-  const addToCart = () => {
-    addItem({
-      id: product.id,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      category: product.category as Product['category'],
-      imageUrl: product.imageUrl,
-      videoUrl: product.videoUrl,
-      tags: product.tags,
-      featured: false,
-      active: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as Product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
-  };
+  const cartProduct = {
+    id: product.id,
+    title: product.title,
+    description: product.description,
+    price: product.price,
+    category: product.category as Product['category'],
+    imageUrl: product.imageUrl,
+    videoUrl: product.videoUrl,
+    tags: product.tags,
+    featured: false,
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as Product;
+
+  const addN = (qty: number) => { for (let i = 0; i < qty; i++) addItem(cartProduct); };
+  const addToCart = () => { addN(quantity); setAdded(true); setTimeout(() => setAdded(false), 1800); };
+  const buyNow = () => { addN(quantity); router.push('/cart'); };
 
   const share = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -151,12 +154,27 @@ export function ProductClient({ product }: { product: PProduct }) {
         .pd-features li::before{content:'✦';position:absolute;right:0;top:.05rem;color:#9B59D0;font-size:.8rem;}
         .pd-warn{color:#e06a6a;font-size:.82rem;margin-bottom:1.4rem;}
 
-        .pd-actions{display:flex;gap:10px;align-items:stretch;margin-bottom:1.4rem;}
-        .pd-cart{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:.95rem 1rem;
-          border:none;border-radius:14px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:1rem;font-weight:700;
-          background:linear-gradient(135deg,#5416B5,#7F3AA1);color:#fff;box-shadow:0 6px 20px rgba(84,22,181,.4);transition:all .25s;}
-        .pd-cart:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(84,22,181,.55);}
-        .pd-cart.added{background:linear-gradient(135deg,#1e8e4f,#27ae60);box-shadow:none;}
+        .pd-qty-row{display:flex;align-items:center;gap:16px;margin-bottom:1rem;}
+        .pd-qty-label{font-size:.9rem;color:rgba(200,190,225,.7);font-weight:700;}
+        .pd-qty{display:inline-flex;align-items:center;background:rgba(10,4,22,.6);
+          border:1px solid rgba(84,22,181,.3);border-radius:12px;overflow:hidden;}
+        .pd-qty button{width:42px;height:42px;border:none;background:transparent;color:#c4a0e0;
+          font-size:1.3rem;cursor:pointer;transition:background .2s;line-height:1;}
+        .pd-qty button:hover{background:rgba(84,22,181,.25);color:#fff;}
+        .pd-qty-n{min-width:46px;text-align:center;font-family:'Oxanium',sans-serif;font-weight:700;
+          font-size:1.05rem;color:#f0ecff;font-variant-numeric:tabular-nums;}
+
+        .pd-actions{display:flex;gap:10px;align-items:stretch;margin-bottom:1.1rem;flex-wrap:wrap;}
+        .pd-buynow{flex:1;min-width:150px;display:flex;align-items:center;justify-content:center;gap:9px;padding:.95rem 1rem;
+          border:none;border-radius:14px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:1.02rem;font-weight:800;
+          background:linear-gradient(135deg,#5416B5,#7F3AA1);color:#fff;box-shadow:0 6px 22px rgba(84,22,181,.45);transition:all .25s;}
+        .pd-buynow:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(84,22,181,.6);}
+        .pd-buynow i{color:#ffcf7a;}
+        .pd-cart{flex:1;min-width:150px;display:flex;align-items:center;justify-content:center;gap:9px;padding:.95rem 1rem;
+          border:1px solid rgba(155,89,208,.4);border-radius:14px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:1rem;font-weight:700;
+          background:rgba(84,22,181,.15);color:#c8b8f0;transition:all .25s;}
+        .pd-cart:hover{background:rgba(84,22,181,.3);color:#fff;transform:translateY(-2px);}
+        .pd-cart.added{background:rgba(46,204,113,.18);border-color:rgba(46,204,113,.5);color:#7ef0a8;}
         .pd-icon-btn{width:52px;flex-shrink:0;border-radius:14px;border:1px solid rgba(84,22,181,.35);
           background:rgba(84,22,181,.12);color:#c4a0e0;font-size:1.1rem;cursor:pointer;transition:all .25s;
           display:flex;align-items:center;justify-content:center;position:relative;}
@@ -165,6 +183,16 @@ export function ProductClient({ product }: { product: PProduct }) {
         .pd-toast{position:absolute;bottom:-30px;right:50%;transform:translateX(50%);white-space:nowrap;
           font-size:.7rem;background:rgba(12,5,22,.95);border:1px solid rgba(84,22,181,.4);color:#c8b8f0;
           padding:.25rem .6rem;border-radius:6px;}
+
+        .pd-pay{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:.9rem 0 1.3rem;
+          margin-bottom:1.2rem;border-bottom:1px solid rgba(84,22,181,.14);}
+        .pd-pay-label{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;color:rgba(180,168,215,.55);font-weight:700;}
+        .pd-pay-label i{color:#7ef0a8;font-size:.72rem;}
+        .pd-pay-icons{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+        .pd-pay-icons i{font-size:1.7rem;color:rgba(210,204,232,.75);transition:color .2s;}
+        .pd-pay-icons i:hover{color:#fff;}
+        .pd-pay-txt{font-family:'Oxanium',sans-serif;font-size:.72rem;font-weight:800;letter-spacing:.5px;
+          padding:.2rem .5rem;border-radius:5px;background:rgba(84,22,181,.2);color:#c8b8f0;border:1px solid rgba(155,89,208,.3);}
 
         .pd-contacts{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
         @media(max-width:420px){.pd-contacts{grid-template-columns:1fr;}}
@@ -240,9 +268,23 @@ export function ProductClient({ product }: { product: PProduct }) {
 
             <p className="pd-warn">المنتج حق للمشتري فقط، ولا يُسمح بإعادة بيعه لشخص آخر.</p>
 
+            {/* Quantity */}
+            <div className="pd-qty-row">
+              <span className="pd-qty-label">الكمية</span>
+              <div className="pd-qty">
+                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} aria-label="أقل">−</button>
+                <span className="pd-qty-n">{quantity}</span>
+                <button onClick={() => setQuantity(q => Math.min(99, q + 1))} aria-label="أكثر">+</button>
+              </div>
+            </div>
+
+            {/* Buy buttons */}
             <div className="pd-actions">
+              <button className="pd-buynow" onClick={buyNow}>
+                <i className="fas fa-bolt" /> اشتري الآن
+              </button>
               <button className={`pd-cart${added ? ' added' : ''}`} onClick={addToCart}>
-                {added ? <>✓ تمت الإضافة للسلة</> : <><i className="fas fa-cart-plus" /> أضف للسلة</>}
+                {added ? <>✓ تمت الإضافة</> : <><i className="fas fa-cart-plus" /> أضف للسلة</>}
               </button>
               <button className={`pd-icon-btn${wished ? ' on' : ''}`} onClick={() => setWished(w => !w)} aria-label="المفضلة">
                 <i className={wished ? 'fas fa-heart' : 'far fa-heart'} />
@@ -251,6 +293,19 @@ export function ProductClient({ product }: { product: PProduct }) {
                 <i className="fas fa-share-alt" />
                 {shareMsg && <span className="pd-toast">{shareMsg}</span>}
               </button>
+            </div>
+
+            {/* Payment methods */}
+            <div className="pd-pay">
+              <span className="pd-pay-label"><i className="fas fa-lock" /> دفع آمن عبر</span>
+              <div className="pd-pay-icons">
+                <i className="fab fa-cc-visa" title="Visa" />
+                <i className="fab fa-cc-mastercard" title="Mastercard" />
+                <span className="pd-pay-txt">mada</span>
+                <i className="fab fa-apple-pay" title="Apple Pay" />
+                <i className="fab fa-cc-paypal" title="PayPal" />
+                <span className="pd-pay-txt">Meeza</span>
+              </div>
             </div>
 
             <div className="pd-contacts">
