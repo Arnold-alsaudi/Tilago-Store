@@ -85,7 +85,10 @@ export function ProductClient({ product }: { product: PProduct }) {
     updatedAt: new Date(),
   } as Product;
 
-  const addN = (qty: number) => { for (let i = 0; i < qty; i++) addItem(cartProduct); };
+  const addN = (qty: number) => {
+    const customization = { logoUrl, name: custName.trim(), contact: contact.trim() };
+    for (let i = 0; i < qty; i++) addItem(cartProduct, customization);
+  };
 
   const hasCustomization = () => !!(logoUrl || custName.trim());
 

@@ -3,14 +3,21 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '@/types';
 
+export interface Customization {
+  logoUrl?: string;
+  name?: string;
+  contact?: string;
+}
+
 interface CartItem {
   product: Product;
   quantity: number;
+  customization?: Customization;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product) => void;
+  addItem: (product: Product, customization?: Customization) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -36,15 +43,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('tilago-cart', JSON.stringify(items));
   }, [items]);
 
-  const addItem = (product: Product) => {
+  const addItem = (product: Product, customization?: Customization) => {
     setItems(prev => {
       const existing = prev.find(i => i.product.id === product.id);
       if (existing) {
         return prev.map(i =>
-          i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.product.id === product.id
+            ? { ...i, quantity: i.quantity + 1, customization: customization ?? i.customization }
+            : i
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1, customization }];
     });
   };
 

@@ -6,40 +6,103 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-// وسيلة التواصل الحقيقية بتتجمّع من صفحة المنتج وبتوصل الأدمن — فمابنطلبش رقم هنا.
-// بس بوابات الدفع محتاجة رقم في بيانات الفوترة، فنبعت placeholder.
+// وسيلة التواصل الحقيقية بتتجمّع من التخصيص — بوابات الدفع محتاجة رقم للفوترة فبس.
 const BILLING_PHONE = '01000000000';
+
+type PayMethod = 'meeza' | 'paypal';
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, total, clearCart } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
-  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkingOut, setCheckingOut] = useState<PayMethod | null>(null);
 
-  const handleMeezaCheckout = async () => {
-    if (!session) { router.push('/auth/signin'); return; }
-    setCheckingOut(true);
+  // ── بوابة التخصيص للمنتجات اللي اتضافت بدون بيانات ──
+  const needing = useMemo(() => items.filter(i => !i.customization?.contact), [items]);
+  const [showForm, setShowForm] = useState(false);
+  const [pendingPay, setPendingPay] = useState<PayMethod | null>(null);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [custName, setCustName] = useState('');
+  const [contact, setContact] = useState('');
+  const [formErr, setFormErr] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const uploadLogo = async (file: File) => {
+    setUploading(true); setFormErr('');
+    try {
+      const fd = new FormData(); fd.append('file', file);
+      const res = await fetch('/api/upload/logo', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) setLogoUrl(data.url as string);
+      else setFormErr(data.error ?? 'تعذّر رفع الشعار');
+    } catch { setFormErr('تعذّر رفع الشعار، حاول تاني'); }
+    finally { setUploading(false); }
+  };
+
+  // يبعت بيانات المنتجات اللي كانت ناقصة للأدمن
+  const sendNeededCustomization = async () => {
+    if (needing.length === 0) return;
+    const productName = needing.map(i => `${i.product.title} ×${i.quantity}`).join('، ');
+    const qty = Math.min(99, needing.reduce((s, i) => s + i.quantity, 0));
+    const amount = needing.reduce((s, i) => s + i.product.price * i.quantity, 0);
+    await fetch('/api/product/custom-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productName, quantity: qty, amount, currency: 'EGP', name: custName.trim(), contact: contact.trim(), logoUrl }),
+    }).catch(() => {});
+  };
+
+  const runPayment = async (method: PayMethod) => {
+    if (method === 'paypal') {
+      const names = items.map(i => `${i.product.title} ×${i.quantity}`).join('، ');
+      fetch('/api/lead', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: names, amount: total, phone: BILLING_PHONE, method: 'PayPal' }),
+      }).catch(() => {});
+      const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
+      window.location.href = `https://www.paypal.me/${handle}/${total.toFixed(2)}`;
+      return;
+    }
+    // meeza / visa via paymob
+    setCheckingOut('meeza');
     try {
       const names = items.map(i => `${i.product.title} ×${i.quantity}`).join('، ');
       const res = await fetch('/api/alerts/paymob', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: names,
-          alertId: 'cart',
-          phone: BILLING_PHONE,
+          name: names, alertId: 'cart', phone: BILLING_PHONE,
           items: items.map(i => ({ productId: i.product.id, quantity: i.quantity })),
         }),
       });
       const { url, error } = await res.json();
       if (url) window.location.href = url;
-      else alert(typeof error === 'string' ? error : 'تعذر بدء عملية الدفع، حاول مرة أخرى');
-    } catch { alert('تعذر بدء عملية الدفع، حاول مرة أخرى'); }
-    finally { setCheckingOut(false); }
+      else { alert(typeof error === 'string' ? error : 'تعذر بدء عملية الدفع، حاول مرة أخرى'); setCheckingOut(null); }
+    } catch { alert('تعذر بدء عملية الدفع، حاول مرة أخرى'); setCheckingOut(null); }
+  };
+
+  const startCheckout = (method: PayMethod) => {
+    if (!session) { router.push('/auth/signin'); return; }
+    if (needing.length > 0) {
+      // فيه منتجات بدون بيانات — نطلبها الأول
+      setPendingPay(method);
+      setShowForm(true);
+      setTimeout(() => document.querySelector('.cart-custom')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      return;
+    }
+    runPayment(method);
+  };
+
+  const confirmAndPay = async () => {
+    if (!logoUrl && !custName.trim()) { setFormErr('ارفع شعارك أو اكتب اسمك — لازم واحد منهم'); return; }
+    if (!contact.trim()) { setFormErr('اكتب وسيلة التواصل — مطلوبة'); return; }
+    await sendNeededCustomization();
+    if (pendingPay) runPayment(pendingPay);
   };
 
   const styles = (
@@ -52,19 +115,18 @@ export default function CartPage() {
         background:linear-gradient(120deg,#fff,#9B59D0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin:0;}
       .cart-back{display:inline-flex;align-items:center;gap:8px;color:rgba(180,168,215,.6);text-decoration:none;font-size:.9rem;transition:color .2s;}
       .cart-back:hover{color:#c8b8f0;}
-
       .cart-grid{display:grid;grid-template-columns:1fr 360px;gap:1.6rem;align-items:start;}
       @media(max-width:860px){.cart-grid{grid-template-columns:1fr;}}
-
-      /* items */
       .cart-items{display:flex;flex-direction:column;gap:1rem;}
       .cart-item{display:flex;gap:1rem;align-items:center;background:rgba(15,8,59,.5);
         border:1px solid rgba(84,22,181,.18);border-radius:16px;padding:1rem 1.1rem;}
-      .cart-item-img{position:relative;width:84px;height:84px;border-radius:12px;overflow:hidden;flex-shrink:0;
-        background:#0a0420;border:1px solid rgba(155,89,208,.22);}
+      .cart-item-img{position:relative;width:84px;height:84px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#0a0420;border:1px solid rgba(155,89,208,.22);}
       .cart-item-mid{flex:1;min-width:0;}
       .cart-item-title{font-family:'Oxanium',sans-serif;font-weight:700;font-size:1rem;color:#f0ecff;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .cart-item-cat{font-size:.72rem;color:rgba(155,89,208,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:.7rem;}
+      .cart-item-cat{font-size:.72rem;color:rgba(155,89,208,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:.7rem;display:flex;align-items:center;gap:8px;}
+      .cart-badge{font-size:.62rem;padding:.12rem .5rem;border-radius:50px;font-weight:700;letter-spacing:0;}
+      .cart-badge.ok{background:rgba(46,204,113,.15);color:#7ef0a8;border:1px solid rgba(46,204,113,.4);}
+      .cart-badge.no{background:rgba(240,131,11,.15);color:#ffcf7a;border:1px solid rgba(240,131,11,.4);}
       .cart-item-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
       .cart-qty{display:inline-flex;align-items:center;background:rgba(10,4,22,.6);border:1px solid rgba(84,22,181,.3);border-radius:10px;overflow:hidden;}
       .cart-qty button{width:34px;height:34px;border:none;background:transparent;color:#c4a0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
@@ -73,33 +135,44 @@ export default function CartPage() {
       .cart-item-price{font-family:'Oxanium',sans-serif;font-weight:700;color:#c084f5;font-size:1.05rem;}
       .cart-item-del{background:none;border:none;color:#e06a6a;cursor:pointer;padding:6px;transition:color .2s;}
       .cart-item-del:hover{color:#ff8080;}
-
-      /* summary */
-      .cart-summary{position:sticky;top:6.5rem;background:rgba(15,8,59,.55);border:1px solid rgba(84,22,181,.2);
-        border-radius:18px;padding:1.5rem 1.6rem;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+      .cart-summary{position:sticky;top:6.5rem;background:rgba(15,8,59,.55);border:1px solid rgba(84,22,181,.2);border-radius:18px;padding:1.5rem 1.6rem;box-shadow:0 20px 50px rgba(0,0,0,.4);}
       @media(max-width:860px){.cart-summary{position:static;}}
       .cart-summary h2{font-family:'Oxanium',sans-serif;font-weight:700;font-size:1.15rem;color:#f0ecff;margin:0 0 1.1rem;}
       .cart-lines{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;}
       .cart-line{display:flex;justify-content:space-between;gap:1rem;font-size:.86rem;}
       .cart-line span:first-child{color:rgba(200,190,225,.65);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
       .cart-line span:last-child{color:#e8e2ff;font-family:'Oxanium',sans-serif;white-space:nowrap;}
-      .cart-total{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;margin-bottom:1.4rem;
-        border-top:1px solid rgba(84,22,181,.22);}
+      .cart-total{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;margin-bottom:1.4rem;border-top:1px solid rgba(84,22,181,.22);}
       .cart-total .lbl{font-weight:800;color:#f0ecff;}
-      .cart-total .val{font-family:'Oxanium',sans-serif;font-weight:800;font-size:1.5rem;
-        background:linear-gradient(135deg,#c084f5,#9B59D0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-
-      .cart-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:.9rem 1rem;
-        border:none;border-radius:13px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.98rem;font-weight:800;transition:all .25s;}
+      .cart-total .val{font-family:'Oxanium',sans-serif;font-weight:800;font-size:1.5rem;background:linear-gradient(135deg,#c084f5,#9B59D0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+      .cart-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:.9rem 1rem;border:none;border-radius:13px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.98rem;font-weight:800;transition:all .25s;}
       .cart-btn:disabled{opacity:.6;cursor:default;}
       .cart-btn-meeza{background:linear-gradient(135deg,#5416B5,#7F3AA1);color:#fff;margin-bottom:.7rem;}
       .cart-btn-meeza:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(84,22,181,.45);}
       .cart-btn-paypal{background:#FFB703;color:#003087;}
       .cart-btn-paypal:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(255,183,3,.35);}
-      .cart-clear{width:100%;margin-top:.9rem;background:none;border:none;color:rgba(180,168,215,.45);
-        font-size:.8rem;cursor:pointer;font-family:'Cairo',sans-serif;transition:color .2s;}
+      .cart-clear{width:100%;margin-top:.9rem;background:none;border:none;color:rgba(180,168,215,.45);font-size:.8rem;cursor:pointer;font-family:'Cairo',sans-serif;transition:color .2s;}
       .cart-clear:hover{color:#e06a6a;}
       .cart-note{font-size:.74rem;color:rgba(180,168,215,.45);text-align:center;margin:.9rem 0 0;line-height:1.6;}
+
+      /* ── Customization gate ── */
+      .cart-custom{background:rgba(10,4,22,.55);border:1px solid rgba(240,131,11,.35);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:1rem;}
+      .cart-custom h3{font-family:'Oxanium',sans-serif;font-size:.95rem;font-weight:700;color:#ffcf7a;margin:0 0 .3rem;display:flex;align-items:center;gap:8px;}
+      .cart-custom .hint{font-size:.76rem;color:rgba(200,190,225,.6);margin:0 0 .8rem;line-height:1.6;}
+      .cart-lbl{display:block;font-size:.78rem;color:rgba(200,190,225,.72);font-weight:700;margin:.7rem 0 .4rem;}
+      .cart-lbl .req{color:#e06a6a;}
+      .cart-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-height:92px;border:2px dashed rgba(155,89,208,.4);border-radius:11px;padding:10px;cursor:pointer;color:rgba(180,168,215,.7);font-size:.8rem;transition:all .25s;background:rgba(0,0,0,.25);}
+      .cart-drop:hover,.cart-drop.over{border-color:#7F3AA1;background:rgba(84,22,181,.12);color:#c8b8f0;}
+      .cart-drop.has{padding:6px;border-style:solid;}
+      .cart-drop i{font-size:1.3rem;color:#9B59D0;}
+      .cart-drop-preview{max-height:100px;max-width:100%;border-radius:7px;object-fit:contain;}
+      .cart-drop-clear{margin-top:6px;background:none;border:none;color:#e06a6a;font-size:.74rem;cursor:pointer;font-family:'Cairo',sans-serif;}
+      .cart-input{width:100%;padding:.62rem .8rem;border-radius:9px;border:1px solid rgba(84,22,181,.3);background:rgba(0,0,0,.3);color:#f0ecff;font-size:.85rem;font-family:'Cairo',sans-serif;box-sizing:border-box;}
+      .cart-input::placeholder{color:rgba(180,168,215,.4);}
+      .cart-input:focus{outline:none;border-color:rgba(155,89,208,.6);}
+      .cart-err{color:#e06a6a;font-size:.78rem;margin:.6rem 0 0;}
+      .cart-confirm{width:100%;margin-top:.9rem;display:flex;align-items:center;justify-content:center;gap:8px;padding:.8rem 1rem;border:none;border-radius:11px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.9rem;font-weight:800;background:linear-gradient(135deg,#1eaf52,#25D366);color:#fff;transition:all .25s;}
+      .cart-confirm:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,211,102,.35);}
     `}</style>
   );
 
@@ -134,14 +207,19 @@ export default function CartPage() {
           {/* Items */}
           <div className="cart-items">
             <AnimatePresence>
-              {items.map(({ product, quantity }) => (
+              {items.map(({ product, quantity, customization }) => (
                 <motion.div key={product.id} layout exit={{ opacity: 0, x: 20 }} className="cart-item">
                   <div className="cart-item-img">
                     {product.imageUrl && <Image src={product.imageUrl} alt={product.title} fill className="object-cover" sizes="84px" />}
                   </div>
                   <div className="cart-item-mid">
                     <h3 className="cart-item-title">{product.title}</h3>
-                    <div className="cart-item-cat">{product.category.replace('_', ' ')}</div>
+                    <div className="cart-item-cat">
+                      {product.category.replace('_', ' ')}
+                      {customization?.contact
+                        ? <span className="cart-badge ok">✓ بياناته مكتملة</span>
+                        : <span className="cart-badge no">! محتاج بيانات</span>}
+                    </div>
                     <div className="cart-item-row">
                       <div className="cart-qty">
                         <button onClick={() => updateQuantity(product.id, quantity - 1)} aria-label="أقل"><Minus size={14} /></button>
@@ -175,41 +253,57 @@ export default function CartPage() {
               <span className="val">{formatPrice(total)}</span>
             </div>
 
-            <button className="cart-btn cart-btn-meeza" onClick={handleMeezaCheckout} disabled={checkingOut}>
-              <CreditCard size={18} /> {checkingOut ? 'جارٍ التحويل...' : 'الدفع بكارت ميزة / Visa'}
-            </button>
-            <PayPalButton items={items} total={total} session={session} />
+            {/* Customization gate — يظهر لما فيه منتجات بدون بيانات وضغط الدفع */}
+            {showForm && needing.length > 0 && (
+              <div className="cart-custom">
+                <h3><i className="fas fa-paint-brush" /> أكمل بيانات طلبك</h3>
+                <p className="hint">فيه {needing.length} منتج محتاج بيانات (شعار أو اسم + وسيلة تواصل) عشان نسلّمك.</p>
 
-            <button className="cart-clear" onClick={clearCart}>إفراغ السلة</button>
-            <p className="cart-note">هنتواصل معك على وسيلة التواصل اللي اخترتها في صفحة المنتج لتسليم طلبك.</p>
+                <label className="cart-lbl">ارفع شعارك</label>
+                <div className={`cart-drop${dragOver ? ' over' : ''}${logoUrl ? ' has' : ''}`}
+                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) uploadLogo(f); }}
+                  onClick={() => fileRef.current?.click()}>
+                  {logoUrl
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img className="cart-drop-preview" src={logoUrl} alt="الشعار" />
+                    : uploading ? <span><i className="fas fa-spinner fa-spin" /> جارٍ الرفع...</span>
+                    : <span><i className="fas fa-cloud-upload-alt" /> اسحب الشعار أو اضغط للاستعراض</span>}
+                  <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }} />
+                </div>
+                {logoUrl && <button className="cart-drop-clear" onClick={() => setLogoUrl('')}>إزالة الشعار</button>}
+
+                <label className="cart-lbl">أو اكتب اسمك</label>
+                <input className="cart-input" value={custName} onChange={e => setCustName(e.target.value)} placeholder="مثال: Bello" />
+
+                <label className="cart-lbl">وسيلة التواصل <span className="req">*</span></label>
+                <input className="cart-input" value={contact} onChange={e => { setContact(e.target.value); setFormErr(''); }} placeholder="تيليجرام / ديسكورد / واتساب" />
+
+                {formErr && <p className="cart-err">{formErr}</p>}
+
+                <button className="cart-confirm" onClick={confirmAndPay}>
+                  <i className="fas fa-check" /> تأكيد ومتابعة الدفع
+                </button>
+              </div>
+            )}
+
+            {!showForm && (
+              <>
+                <button className="cart-btn cart-btn-meeza" onClick={() => startCheckout('meeza')} disabled={checkingOut !== null}>
+                  <CreditCard size={18} /> {checkingOut === 'meeza' ? 'جارٍ التحويل...' : 'الدفع بكارت ميزة / Visa'}
+                </button>
+                <button className="cart-btn cart-btn-paypal" onClick={() => startCheckout('paypal')} disabled={checkingOut !== null}>
+                  💳 Pay with PayPal
+                </button>
+                <button className="cart-clear" onClick={clearCart}>إفراغ السلة</button>
+                <p className="cart-note">هنتواصل معك على وسيلة التواصل اللي اخترتها لتسليم طلبك.</p>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function PayPalButton({ items, total, session }: any) {
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  const handlePayPal = () => {
-    if (!session) { router.push('/auth/signin'); return; }
-    setLoading(true);
-    const names = items.map((i: any) => `${i.product.title} ×${i.quantity}`).join('، ');
-    fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: names, amount: total, phone: BILLING_PHONE, method: 'PayPal' }),
-    }).catch(() => {});
-    const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
-    window.location.href = `https://www.paypal.me/${handle}/${total.toFixed(2)}`;
-  };
-
-  return (
-    <motion.button whileTap={{ scale: 0.98 }} onClick={handlePayPal} disabled={loading}
-      className="cart-btn cart-btn-paypal">
-      {loading ? 'Connecting...' : '💳 Pay with PayPal'}
-    </motion.button>
   );
 }
