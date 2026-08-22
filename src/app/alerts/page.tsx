@@ -709,13 +709,13 @@ export default function AlertsPage() {
             <div className="al-cat-grid">
               {alerts.map(alert => (
                 <div key={alert.id} className="al-small-card">
-                  <div className="al-card-header">
+                  <Link href={`/product/${alert.id}`} className="al-card-header">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={alert.imgs?.[0] ?? '/caf.png'} alt={alert.name} />
                     <div className="al-card-overlay" />
-                  </div>
+                  </Link>
                   <div className="al-card-content">
-                    <h3 className="al-card-name">{alert.name}</h3>
+                    <h3 className="al-card-name"><Link href={`/product/${alert.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{alert.name}</Link></h3>
                     <div className="al-card-meta">
                       <span className="al-rating">★ {alert.rating} ({alert.ratingCount})</span>
                       <span className="al-price">{alert.price}</span>
