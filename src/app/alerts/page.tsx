@@ -320,8 +320,8 @@ export default function AlertsPage() {
           backdrop-filter:blur(6px); box-shadow:0 0 18px rgba(84,22,181,0.2);
         }
         .al-cat-grid {
-          display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-          gap:1.5rem; text-align:center; padding:0 5%; margin-top:1rem;
+          display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+          gap:1.4rem; text-align:center; padding:0 5%; margin-top:1rem;
         }
         @media(min-width:769px) { .al-cat-grid { grid-template-columns:repeat(3,1fr); } }
 
@@ -338,17 +338,22 @@ export default function AlertsPage() {
           border-color:rgba(84,22,181,0.5);
         }
         .al-card-header {
-          position:relative; width:100%; height:180px; overflow:hidden;
+          position:relative; width:100%; height:250px; overflow:hidden;
           display:flex; align-items:center; justify-content:center;
-          background:rgba(12,5,22,0.4);
+          padding:14px 14px 6px;
+          background:radial-gradient(ellipse at 50% 38%, rgba(84,22,181,0.20), rgba(12,5,22,0.4) 72%);
         }
         .al-card-header img {
-          width:100%; height:100%; object-fit:cover; border-radius:0;
+          width:100%; height:100%; object-fit:cover; border-radius:16px;
+          border:1px solid rgba(155,89,208,0.28);
+          box-shadow:0 10px 26px rgba(0,0,0,0.5);
+          transition:transform .4s cubic-bezier(.25,.8,.25,1);
         }
+        .al-small-card:hover .al-card-header img { transform:scale(1.04); }
         .al-card-overlay {
-          position:absolute; top:0; left:0; width:100%; height:100%;
-          background:linear-gradient(180deg,rgba(84,22,181,0.1),rgba(84,22,181,0.5));
-          opacity:0; transition:opacity .3s ease; z-index:1;
+          position:absolute; inset:14px 14px 6px; border-radius:16px;
+          background:linear-gradient(180deg,rgba(84,22,181,0.05),rgba(84,22,181,0.45));
+          opacity:0; transition:opacity .3s ease; z-index:1; pointer-events:none;
         }
         .al-small-card:hover .al-card-overlay { opacity:1; }
         .al-card-content {
