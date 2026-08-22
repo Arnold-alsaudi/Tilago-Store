@@ -63,6 +63,7 @@ export default function AlertsPage() {
   const [pauseMessage, setPauseMessage] = useState('');
   const { addItem } = useCart();
   const [addedToCart, setAddedToCart] = useState(false);
+  const [addedCardId, setAddedCardId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
 
   const priceValue = (price: string) => Number(price.replace(/[^\d.]/g, '')) || 0;
@@ -367,18 +368,30 @@ export default function AlertsPage() {
         .al-card-content {
           padding:1rem; color:#d0cce8; text-align:center;
           background:rgba(12,5,22,0.7); z-index:2; width:100%;
+          display:flex; flex-direction:column; flex:1;
         }
         .al-card-name { font-size:1rem; font-weight:600; margin-bottom:.5rem; color:#e8e4f8; }
         .al-card-meta { display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:.5rem; }
         .al-rating    { color:#c4a0e0; font-weight:600; }
         .al-price     { color:#9d7fd4; }
         .al-card-desc { color:#9090b0; font-size:.85rem; margin-bottom:1rem; }
-        .al-btn-preview {
-          padding:.45rem 1.1rem; border:1px solid rgba(84,22,181,0.5); border-radius:8px;
-          font-size:.85rem; cursor:pointer; font-weight:600;
-          background:rgba(84,22,181,0.25); color:#c4a0e0; transition:all .3s;
+        .al-card-btns { display:flex; flex-direction:column; gap:8px; width:100%; margin-top:auto; }
+        .al-btn-cart {
+          display:flex; align-items:center; justify-content:center; gap:7px;
+          width:100%; padding:.62rem 1rem; border-radius:10px; border:none; cursor:pointer;
+          font-family:'Cairo','29LtBukra',sans-serif; font-size:.88rem; font-weight:700;
+          background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff;
+          box-shadow:0 4px 14px rgba(84,22,181,0.35); transition:all .25s;
         }
-        .al-btn-preview:hover { background:rgba(84,22,181,0.5); color:#fff; }
+        .al-btn-cart:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(84,22,181,0.5); }
+        .al-btn-cart.added { background:linear-gradient(135deg,#1e8e4f,#27ae60); box-shadow:none; }
+        .al-btn-cart i { font-size:.8rem; }
+        .al-btn-preview {
+          width:100%; padding:.55rem 1rem; border:1px solid rgba(84,22,181,0.5); border-radius:10px;
+          font-size:.85rem; cursor:pointer; font-weight:600;
+          background:rgba(84,22,181,0.18); color:#c4a0e0; transition:all .3s;
+        }
+        .al-btn-preview:hover { background:rgba(84,22,181,0.4); color:#fff; }
 
         /* ── Contact Buttons ── */
         .al-contact-btns {
@@ -708,7 +721,20 @@ export default function AlertsPage() {
                       <span className="al-price">{alert.price}</span>
                     </div>
                     <p className="al-card-desc">{alert.desc}</p>
-                    <button className="al-btn-preview" onClick={() => openModal(alert)}>عرض سريع</button>
+                    <div className="al-card-btns">
+                      <button
+                        className={`al-btn-cart${addedCardId === alert.id ? ' added' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addAlertToCart(alert);
+                          setAddedCardId(alert.id);
+                          setTimeout(() => setAddedCardId(null), 1500);
+                        }}
+                      >
+                        {addedCardId === alert.id ? '✓ تمت الإضافة' : <><i className="fas fa-plus" /> أضف للسلة</>}
+                      </button>
+                      <button className="al-btn-preview" onClick={() => openModal(alert)}>عرض سريع</button>
+                    </div>
                   </div>
                 </div>
               ))}
