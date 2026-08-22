@@ -107,10 +107,15 @@ export function ProductClient({ product }: { product: PProduct }) {
     }).catch(() => {});
   };
 
-  // لو العميل خصّص (شعار/اسم) لازم يكتب وسيلة تواصل عشان يوصلنا التخصيص
-  const ensureContact = () => {
-    if (hasCustomization() && !contact.trim()) {
-      setFormErr('اكتب وسيلة تواصل (رقمك) عشان يوصلنا التخصيص');
+  // التخصيص إجباري: لازم (شعار أو اسم) + وسيلة تواصل قبل الشراء
+  const validateForm = () => {
+    if (!logoUrl && !custName.trim()) {
+      setFormErr('ارفع شعارك أو اكتب اسمك — لازم واحد منهم');
+      document.querySelector('.pd-custom')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    if (!contact.trim()) {
+      setFormErr('اكتب وسيلة التواصل — مطلوبة');
       document.querySelector('.pd-custom')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
@@ -118,12 +123,12 @@ export function ProductClient({ product }: { product: PProduct }) {
   };
 
   const addToCart = () => {
-    if (!ensureContact()) return;
+    if (!validateForm()) return;
     sendCustomization();
     addN(quantity); setAdded(true); setTimeout(() => setAdded(false), 1800);
   };
   const buyNow = () => {
-    if (!ensureContact()) return;
+    if (!validateForm()) return;
     sendCustomization();
     addN(quantity); router.push('/cart');
   };
@@ -223,6 +228,8 @@ export function ProductClient({ product }: { product: PProduct }) {
           margin:0 0 .4rem;display:flex;align-items:center;gap:8px;}
         .pd-cust-lbl{display:block;font-size:.82rem;color:rgba(200,190,225,.72);font-weight:700;margin:.9rem 0 .5rem;}
         .pd-cust-lbl .req{color:#e06a6a;}
+        .pd-cust-hint{font-size:.78rem;color:rgba(180,168,215,.6);margin:.2rem 0 .4rem;line-height:1.7;}
+        .pd-cust-hint b{color:#c8b8f0;}
         .pd-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;
           min-height:110px;border:2px dashed rgba(155,89,208,.4);border-radius:12px;padding:12px;cursor:pointer;
           color:rgba(180,168,215,.7);font-size:.85rem;transition:all .25s;background:rgba(10,4,22,.4);}
@@ -354,6 +361,7 @@ export function ProductClient({ product }: { product: PProduct }) {
             {/* Customization */}
             <div className="pd-custom">
               <h3><i className="fas fa-paint-brush" />ارفع صورة للشعار الخاص بك</h3>
+              <p className="pd-cust-hint">مطلوب قبل الشراء: <b>الشعار أو الاسم</b> (واحد منهم على الأقل) + <b>وسيلة التواصل</b>.</p>
 
               <label className="pd-cust-lbl">ارفع صورة الشعار الخاص بك</label>
               <div className={`pd-drop${dragOver ? ' over' : ''}${logoUrl ? ' has' : ''}`}
