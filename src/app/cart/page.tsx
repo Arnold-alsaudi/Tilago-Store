@@ -6,9 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import type { Product } from '@/types';
 
 // وسيلة التواصل الحقيقية بتتجمّع من التخصيص — بوابات الدفع محتاجة رقم للفوترة فبس.
 const BILLING_PHONE = '01000000000';
@@ -16,7 +17,7 @@ const BILLING_PHONE = '01000000000';
 type PayMethod = 'meeza' | 'paypal';
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, total, clearCart } = useCart();
+  const { items, addItem, removeItem, updateQuantity, total, clearCart } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
   const [checkingOut, setCheckingOut] = useState<PayMethod | null>(null);
@@ -32,6 +33,40 @@ export default function CartPage() {
   const [formErr, setFormErr] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // ── منتجات مقترحة "أضفها لسلتك" ──
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [addedReco, setAddedReco] = useState<string | null>(null);
+  useEffect(() => {
+    fetch('/api/products?category=ALERTS')
+      .then(r => r.json())
+      .then((list: any[]) => setSuggestions(Array.isArray(list) ? list : []))
+      .catch(() => {});
+  }, []);
+  const cartIds = new Set(items.map(i => i.product.id));
+  const recos = suggestions
+    .filter(p => !cartIds.has(p.id))
+    .slice(0, 8)
+    .map(p => ({
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      priceLabel: p.priceLabel ?? null,
+      image: p.images?.[0] || p.imageUrl || '',
+      category: p.category,
+      description: p.description ?? '',
+      videoUrl: p.videoUrl ?? null,
+      tags: p.tags ?? [],
+    }));
+  const addReco = (p: (typeof recos)[number]) => {
+    addItem({
+      id: p.id, title: p.title, description: p.description, price: p.price,
+      category: p.category, imageUrl: p.image, videoUrl: p.videoUrl,
+      tags: p.tags, featured: false, active: true, createdAt: new Date(), updatedAt: new Date(),
+    } as Product);
+    setAddedReco(p.id);
+    setTimeout(() => setAddedReco(null), 1400);
+  };
 
   const uploadLogo = async (file: File) => {
     setUploading(true); setFormErr('');
@@ -154,6 +189,22 @@ export default function CartPage() {
       .cart-clear{width:100%;margin-top:.9rem;background:none;border:none;color:rgba(180,168,215,.45);font-size:.8rem;cursor:pointer;font-family:'Cairo',sans-serif;transition:color .2s;}
       .cart-clear:hover{color:#e06a6a;}
       .cart-note{font-size:.74rem;color:rgba(180,168,215,.45);text-align:center;margin:.9rem 0 0;line-height:1.6;}
+
+      /* ── أضفها لسلتك ── */
+      .cart-reco{margin-top:2rem;background:rgba(15,8,59,.5);border:1px solid rgba(84,22,181,.2);border-radius:18px;padding:1.4rem 1.6rem;}
+      .cart-reco h2{font-family:'Oxanium',sans-serif;font-weight:700;font-size:1.15rem;color:#f0ecff;margin:0 0 .6rem;}
+      .cart-reco-list{display:flex;flex-direction:column;}
+      .cart-reco-row{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid rgba(84,22,181,.12);}
+      .cart-reco-row:last-child{border-bottom:none;}
+      .cart-reco-img{width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(155,89,208,.22);}
+      .cart-reco-info{flex:1;min-width:0;}
+      .cart-reco-name{font-family:'Oxanium',sans-serif;font-weight:700;font-size:.95rem;color:#e8e2ff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .cart-reco-price{font-family:'Oxanium',sans-serif;font-weight:700;color:#c084f5;font-size:.9rem;}
+      .cart-reco-add{flex-shrink:0;padding:.55rem 1.3rem;border:1px solid rgba(155,89,208,.4);border-radius:10px;cursor:pointer;
+        font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;background:rgba(84,22,181,.18);color:#c8b8f0;transition:all .2s;}
+      .cart-reco-add:hover{background:rgba(84,22,181,.35);color:#fff;}
+      .cart-reco-add.done{background:rgba(46,204,113,.18);border-color:rgba(46,204,113,.5);color:#7ef0a8;}
+      @media(max-width:520px){.cart-reco-name{white-space:normal;} .cart-reco-add{padding:.5rem .9rem;}}
 
       /* ── Customization gate ── */
       .cart-custom{background:rgba(10,4,22,.55);border:1px solid rgba(240,131,11,.35);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:1rem;}
@@ -303,6 +354,28 @@ export default function CartPage() {
             )}
           </div>
         </div>
+
+        {/* أضفها لسلتك — منتجات مقترحة */}
+        {recos.length > 0 && (
+          <div className="cart-reco">
+            <h2>أضفها لسلتك</h2>
+            <div className="cart-reco-list">
+              {recos.map(p => (
+                <div key={p.id} className="cart-reco-row">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="cart-reco-img" src={p.image} alt={p.title} loading="lazy" />
+                  <div className="cart-reco-info">
+                    <div className="cart-reco-name">{p.title}</div>
+                    <div className="cart-reco-price">{p.priceLabel ?? formatPrice(p.price)}</div>
+                  </div>
+                  <button className={`cart-reco-add${addedReco === p.id ? ' done' : ''}`} onClick={() => addReco(p)}>
+                    {addedReco === p.id ? '✓ أُضيف' : 'أضف للسلة'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
