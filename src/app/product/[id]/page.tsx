@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ProductClient } from './ProductClient';
+import { RelatedSections, type MiniProduct } from './RelatedSections';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,5 +31,27 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     tags: product.tags ?? [],
   };
 
-  return <ProductClient product={p} />;
+  // منتجات مرتبطة من نفس الفئة — للـ cross-sell
+  const related = await prisma.product.findMany({
+    where: { category: product.category, active: true, id: { not: product.id } },
+    orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+    take: 10,
+  });
+
+  const toMini = (x: typeof product): MiniProduct => ({
+    id: x.id,
+    ref: x.slug ?? x.id,
+    title: x.title,
+    price: x.price,
+    priceLabel: x.priceLabel,
+    image: x.images?.[0] || x.imageUrl || '',
+    category: x.category as string,
+  });
+
+  return (
+    <>
+      <ProductClient product={p} />
+      <RelatedSections current={toMini(product)} related={related.map(toMini)} />
+    </>
+  );
 }
