@@ -105,20 +105,6 @@ export function ProductClient({ product }: { product: PProduct }) {
     }
   };
 
-  const WA = '1234567890'; // رقم واتساب للطلبات — غيّره لرقمك
-  const orderWhatsapp = () => {
-    if (!contact.trim()) { setFormErr('اكتب وسيلة تواصل أولاً (مطلوبة)'); return; }
-    const lines = [
-      'طلب منتج من Tilago 🎨',
-      `المنتج: ${product.title}`,
-      `السعر: ${priceText} × ${quantity}`,
-      custName.trim() ? `الاسم/الشعار المكتوب: ${custName.trim()}` : '',
-      logoUrl ? `الشعار المرفوع: ${logoUrl}` : '',
-      `وسيلة التواصل: ${contact.trim()}`,
-    ].filter(Boolean);
-    window.open(`https://wa.me/${WA}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
-  };
-
   const share = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
     try {
@@ -213,11 +199,6 @@ export function ProductClient({ product }: { product: PProduct }) {
         .pd-input::placeholder{color:rgba(180,168,215,.4);}
         .pd-input:focus{outline:none;border-color:rgba(155,89,208,.6);}
         .pd-cust-err{color:#e06a6a;font-size:.8rem;margin:.6rem 0 0;}
-        .pd-order-wa{width:100%;margin-top:1rem;display:flex;align-items:center;justify-content:center;gap:9px;
-          padding:.85rem 1rem;border:none;border-radius:12px;cursor:pointer;font-family:'Cairo',sans-serif;
-          font-size:.95rem;font-weight:800;background:linear-gradient(135deg,#1eaf52,#25D366);color:#fff;
-          box-shadow:0 6px 20px rgba(37,211,102,.3);transition:all .25s;}
-        .pd-order-wa:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(37,211,102,.45);}
 
         .pd-qty-row{display:flex;align-items:center;gap:16px;margin-bottom:1rem;}
         .pd-qty-label{font-size:.9rem;color:rgba(200,190,225,.7);font-weight:700;}
@@ -368,10 +349,6 @@ export function ProductClient({ product }: { product: PProduct }) {
                 placeholder="تيليجرام / ديسكورد / واتساب" />
 
               {formErr && <p className="pd-cust-err">{formErr}</p>}
-
-              <button className="pd-order-wa" onClick={orderWhatsapp}>
-                <i className="fab fa-whatsapp" /> اطلب الآن مع التخصيص
-              </button>
             </div>
 
             <p className="pd-warn">المنتج حق للمشتري فقط، ولا يُسمح بإعادة بيعه لشخص آخر.</p>
