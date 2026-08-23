@@ -35,7 +35,7 @@ const toAlertItem = (p: DbProduct): AlertItem => ({
   name: p.title,
   rating: String(p.rating),
   ratingCount: p.ratingCount,
-  price: p.priceLabel ?? `${p.price} $`,
+  price: p.priceLabel ?? `${p.price} جنيه`,
   desc: p.description,
   category: p.tags?.[0] ?? '',
   imgs: p.images?.length ? p.images : [p.imageUrl],
@@ -131,7 +131,7 @@ export default function AlertsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingProducts, alertsData]);
 
-  const payWithPaypal = (item: AlertItem) => {
+  const payWithPaypal = async (item: AlertItem) => {
     if (!validPhone()) return;
     // سجّل الطلب مع رقم العميل عشان يوصل الأدمن، ثم حوّل لرابط PayPal.me
     fetch('/api/lead', {
@@ -140,7 +140,16 @@ export default function AlertsPage() {
       body: JSON.stringify({ name: item.name, amount: priceValue(item.price), phone: phone.trim(), method: 'PayPal' }),
     }).catch(() => {});
     const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
-    window.location.href = `https://www.paypal.me/${handle}/${priceValue(item.price)}`;
+    // PayPal مبيدعمش الجنيه — نحوّل بسعر الدولار الحيّ (جنيه ÷ سعر الدولار = دولار)
+    const egp = priceValue(item.price);
+    let egpPerUsd = 50;
+    try {
+      const r = await fetch('/api/fx');
+      const d = await r.json();
+      if (d?.egpPerUsd > 0) egpPerUsd = d.egpPerUsd;
+    } catch { /* نستخدم القيمة الافتراضية */ }
+    const usd = Math.max(1, egp / egpPerUsd).toFixed(2);
+    window.location.href = `https://www.paypal.me/${handle}/${usd}USD`;
   };
 
   const payWithMeeza = async (item: AlertItem) => {
@@ -774,7 +783,7 @@ export default function AlertsPage() {
                   <div className="al-info-box">
                     <p><strong>التصنيف:</strong> <span className="al-highlight">{modal.category}</span></p>
                     <p><strong>تقييم:</strong> {'★'.repeat(Math.floor(Number(modal.rating)))} ({modal.ratingCount})</p>
-                    <p><strong>السعر:</strong> <span className="al-highlight">{modal.price} $</span></p>
+                    <p><strong>السعر:</strong> <span className="al-highlight">{modal.price}</span></p>
                     <ul style={{ margin: '8px 0', paddingRight: '1.2rem', fontSize: '.88rem', color: '#c0b0e0' }}>
                       <li>إضافة الشعار الخاص بك أو اسمك</li>
                       <li>التسليم: من ساعة إلى 24 ساعة</li>
