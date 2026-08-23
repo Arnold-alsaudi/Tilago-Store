@@ -38,12 +38,8 @@ const FEATURES = [
 type ModalState = { product: TDProduct; imgIdx: number } | null;
 
 export default function ThreeDClient({ products }: { products: TDProduct[] }) {
-  const [activeCat, setActiveCat] = useState('all');
   const [modal, setModal]         = useState<ModalState>(null);
   const revRef                    = useRef<HTMLDivElement>(null);
-
-  const filtered = activeCat === 'all' ? products : products.filter(p => p.cat === activeCat);
-  const catCount = (id: string) => id === 'all' ? products.length : products.filter(p => p.cat === id).length;
 
   /* scroll reveal */
   useEffect(() => {
@@ -53,7 +49,7 @@ export default function ThreeDClient({ products }: { products: TDProduct[] }) {
     }, { threshold: 0.1 });
     els.forEach(el => obs.observe(el));
     return () => obs.disconnect();
-  }, [filtered.length]);
+  }, [products.length]);
 
   /* keyboard nav in modal */
   useEffect(() => {
@@ -88,13 +84,7 @@ export default function ThreeDClient({ products }: { products: TDProduct[] }) {
         .tdp-stat:last-child { border-left:none; }
         .tdp-stat-num { font-family:'Oxanium',sans-serif; font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#9B59D0,#5416B5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .tdp-stat-label { font-size:.8rem; color:rgba(255,255,255,0.55); margin-top:2px; }
-        .tdp-filter { padding:2.5rem 5% 1rem; }
-        .tdp-filter-inner { display:flex; flex-wrap:wrap; gap:.7rem; justify-content:center; }
-        .tdp-filter-btn { display:inline-flex; align-items:center; gap:7px; padding:.55rem 1.3rem; border-radius:50px; background:rgba(15,8,59,0.6); border:1px solid rgba(84,22,181,0.2); color:rgba(255,255,255,0.6); font-family:'29LtBukra','Montserrat',sans-serif; font-size:.9rem; cursor:pointer; transition:all .25s; }
-        .tdp-filter-btn:hover { border-color:#5416B5; color:#fff; }
-        .tdp-filter-btn.active { background:linear-gradient(135deg,#5416B5,#7F3AA1); border-color:transparent; color:#fff; box-shadow:0 4px 16px rgba(84,22,181,0.4); }
-        .tdp-filter-btn .cnt { font-size:.72rem; opacity:.7; background:rgba(0,0,0,.25); padding:1px 7px; border-radius:20px; }
-        .tdp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.2rem; padding:1.5rem 5% 3rem; }
+        .tdp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.2rem; padding:3rem 5%; }
         .tdp-card { background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.12); border-radius:14px; overflow:hidden; cursor:pointer; transition:transform .28s,border-color .28s,box-shadow .28s; position:relative; }
         .tdp-card:hover { transform:translateY(-6px); border-color:rgba(84,22,181,0.5); box-shadow:0 12px 36px rgba(84,22,181,0.25); }
         .tdp-card-img { width:100%; height:180px; object-fit:cover; display:block; transition:transform .4s; background:#0a0420; }
@@ -210,22 +200,11 @@ export default function ThreeDClient({ products }: { products: TDProduct[] }) {
         ))}
       </div>
 
-      {/* FILTER */}
-      <div className="tdp-filter" id="grid">
-        <div className="tdp-filter-inner">
-          {CATEGORIES.map(c => (
-            <button key={c.id} className={`tdp-filter-btn${activeCat === c.id ? ' active' : ''}`} onClick={() => setActiveCat(c.id)}>
-              <i className={c.icon} /> {c.label} <span className="cnt">{catCount(c.id)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* CARDS */}
-      <div className="tdp-grid">
-        {filtered.length === 0 ? (
-          <div className="tdp-empty"><i className="fas fa-cube" /><p>لا توجد تأثيرات في هذا القسم حالياً</p></div>
-        ) : filtered.map((p, i) => (
+      <div className="tdp-grid" id="grid">
+        {products.length === 0 ? (
+          <div className="tdp-empty"><i className="fas fa-cube" /><p>لا توجد تأثيرات متاحة حالياً</p></div>
+        ) : products.map((p, i) => (
           <div key={p.id} className="tdp-card" data-reveal="scale" data-delay={String((i % 6) + 1) as any}
             onClick={() => setModal({ product: p, imgIdx: 0 })}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
