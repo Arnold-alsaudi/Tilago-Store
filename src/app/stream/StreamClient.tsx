@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { isYouTubeUrl, youtubeEmbedUrl } from '@/lib/youtube';
+import { youtubeEmbedUrl } from '@/lib/youtube';
+import { mediaKind, videoPoster } from '@/lib/media';
+import { InlineVideo } from '@/components/InlineVideo';
 
 export interface StreamPkg {
   id: string;
@@ -315,10 +317,10 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-detail-hero-content { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px; }
         .sp-detail-hero-tag {
           font-size:.62rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;
-          color:rgba(155,89,208,0.75); padding:4px 14px; border-radius:20px;
-          border:1px solid rgba(155,89,208,0.3); background:rgba(84,22,181,0.12);
+          color:rgba(184,172,214,0.7); padding:4px 14px; border-radius:20px;
+          border:1px solid rgba(155,89,208,0.18); background:rgba(84,22,181,0.07);
         }
-        .sp-detail-hero-title { font-family:'Oxanium'; font-size:clamp(1.1rem,3vw,1.9rem); font-weight:900; color:#fff; text-align:center; text-shadow:0 0 40px rgba(155,89,208,0.5); letter-spacing:1px; }
+        .sp-detail-hero-title { font-family:'Oxanium'; font-size:clamp(1.1rem,3vw,1.9rem); font-weight:800; color:#eae6ff; text-align:center; text-shadow:0 2px 10px rgba(0,0,0,0.55); letter-spacing:.4px; }
         .sp-detail-hero-sub { font-size:clamp(.72rem,1.6vw,.88rem); color:rgba(200,190,225,0.55); font-weight:600; }
         @media(max-width:480px){ .sp-detail-hero{height:180px} }
 
@@ -557,7 +559,8 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
               </div>
             </div>
 
-            {youtubeEmbedUrl(active.video) && (
+            {/* فيديو المعاينة العلوي — يظهر فقط لو مش مضاف ضمن الصور (باكدجات قديمة) */}
+            {active.video && youtubeEmbedUrl(active.video) && !active.images.includes(active.video) && (
               <div className="sp-pkg-video">
                 <div className="sp-pkg-video-label"><i className="fas fa-play-circle"/> معاينة الباكدج</div>
                 <iframe src={youtubeEmbedUrl(active.video, { loop: true })!} title={active.nameAr}
@@ -567,21 +570,26 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
             )}
 
             <div className="sp-imgs">
-              {active.images.map((src,i)=>(
+              {active.images.map((src,i)=>{
+                const kind = mediaKind(src);
+                return (
                 <div key={i}>
                   {i > 0 && <div className="sp-img-sep"/>}
                   <div className="sp-img-wrap">
-                    {isYouTubeUrl(src) ? (
+                    {kind === 'youtube' ? (
                       <iframe src={youtubeEmbedUrl(src)!} title={`${active.nameAr} ${i+1}`}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen style={{ width:'100%', aspectRatio:'16/9', display:'block', border:'none' }}/>
+                    ) : kind === 'video' ? (
+                      <InlineVideo src={src} poster={videoPoster(src)} />
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={src} alt={`${active.nameAr} ${i+1}`}/>
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </>

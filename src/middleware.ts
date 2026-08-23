@@ -34,7 +34,7 @@ export async function middleware(req: NextRequest) {
       "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
       "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://img.youtube.com https://i.ytimg.com",
       "media-src 'self' blob: https://res.cloudinary.com",
-      "connect-src 'self' https://accept.paymob.com https://accounts.google.com",
+      "connect-src 'self' https://accept.paymob.com https://accounts.google.com https://api.cloudinary.com",
       "frame-src https://accept.paymob.com https://accounts.google.com https://www.youtube-nocookie.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",

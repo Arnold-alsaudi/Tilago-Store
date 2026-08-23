@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
-import { youtubeEmbedUrl, youtubeThumbnail, isYouTubeUrl } from '@/lib/youtube';
+import { youtubeEmbedUrl } from '@/lib/youtube';
+import { mediaKind, videoPoster } from '@/lib/media';
 import type { Product } from '@/types';
 
 export interface PProduct {
@@ -40,7 +41,7 @@ const CONTACTS = [
   { icon: 'fas fa-headset',  label: 'خدمة العملاء',  sub: 'نرد خلال 24 ساعة', href: 'mailto:support@tilago.com',    c: '#9B59D0' },
 ];
 
-type Media = { type: 'image' | 'video'; src: string };
+type Media = { type: 'image' | 'video' | 'youtube'; src: string };
 
 export function ProductClient({ product }: { product: PProduct }) {
   const { addItem } = useCart();
@@ -60,10 +61,12 @@ export function ProductClient({ product }: { product: PProduct }) {
   const cat = CAT[product.category] ?? { label: product.category, href: '/' };
 
   const imgs = product.images?.length ? product.images : (product.imageUrl ? [product.imageUrl] : []);
-  const media: Media[] = [
-    ...imgs.filter(s => !isYouTubeUrl(s)).map(src => ({ type: 'image' as const, src })),
-    ...(youtubeEmbedUrl(product.videoUrl) ? [{ type: 'video' as const, src: product.videoUrl! }] : []),
-  ];
+  // كل الوسائط بالترتيب (صورة/فيديو محلي/يوتيوب)
+  const media: Media[] = imgs.map(src => ({ type: mediaKind(src), src }));
+  // ألحق فيديو يوتيوب المنفصل لو مش موجود ضمن الصور
+  if (product.videoUrl && !imgs.includes(product.videoUrl) && mediaKind(product.videoUrl) !== 'image') {
+    media.push({ type: mediaKind(product.videoUrl), src: product.videoUrl });
+  }
   const [active, setActive] = useState(0);
   const current = media[active];
 
@@ -314,9 +317,12 @@ export function ProductClient({ product }: { product: PProduct }) {
           {/* Gallery */}
           <div className="pd-gallery">
             <div className="pd-main">
-              {current?.type === 'video' ? (
+              {current?.type === 'youtube' ? (
                 <iframe src={youtubeEmbedUrl(current.src, { autoplay: false })!} title={product.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+              ) : current?.type === 'video' ? (
+                <video src={current.src} controls playsInline
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: 14 }} />
               ) : current ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={current.src} alt={product.title} />
@@ -329,8 +335,8 @@ export function ProductClient({ product }: { product: PProduct }) {
                 {media.map((m, i) => (
                   <div key={i} className={`pd-thumb${i === active ? ' on' : ''}`} onClick={() => setActive(i)}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={m.type === 'video' ? (youtubeThumbnail(m.src) ?? '') : m.src} alt="" />
-                    {m.type === 'video' && <div className="play"><i className="fas fa-play" /></div>}
+                    <img src={m.type === 'image' ? m.src : (videoPoster(m.src) ?? '')} alt="" />
+                    {m.type !== 'image' && <div className="play"><i className="fas fa-play" /></div>}
                   </div>
                 ))}
               </div>

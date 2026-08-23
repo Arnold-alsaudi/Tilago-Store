@@ -5,6 +5,8 @@ import { AnimatePresence, motion, Reorder } from 'framer-motion';
 import { Plus, Edit2, Trash2, X, Upload, Star, Layers, GripVertical, ImagePlus } from 'lucide-react';
 import Image from 'next/image';
 import { youtubeThumbnail } from '@/lib/youtube';
+import { mediaKind, videoPoster } from '@/lib/media';
+import { uploadVideoDirect } from '@/lib/uploadClient';
 
 interface FormState {
   title: string;
@@ -32,9 +34,11 @@ export function AdminStream({ packages: init }: { packages: any[] }) {
 
   const [uploadingCover,   setUploadingCover]   = useState(false);
   const [uploadingPreview, setUploadingPreview]  = useState(false);
+  const [uploadingVideo,   setUploadingVideo]    = useState(false);
 
   const coverRef   = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLInputElement>(null);
+  const videoRef   = useRef<HTMLInputElement>(null);
 
   const [newImgUrl, setNewImgUrl] = useState('');
 
@@ -65,6 +69,16 @@ export function AdminStream({ packages: init }: { packages: any[] }) {
     if (!url) return;
     setForm(f => ({ ...f, images: [...f.images, url] }));
     setNewImgUrl('');
+  };
+
+  // رفع فيديو من الجهاز — مباشر لـ Cloudinary — يتضاف لقائمة المعاينة بالترتيب
+  const uploadVideo = async (file: File) => {
+    setUploadingVideo(true); setError('');
+    try {
+      const url = await uploadVideoDirect(file);
+      setForm(f => ({ ...f, images: [...f.images, url] }));
+    } catch (e: any) { setError(e?.message ?? 'فشل رفع الفيديو'); }
+    finally { setUploadingVideo(false); }
   };
 
   const removePreview = (idx: number) => {
@@ -313,7 +327,17 @@ export function AdminStream({ packages: init }: { packages: any[] }) {
                           style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 8px', borderRadius:10, background:'rgba(84,22,181,0.1)', border:'1px solid rgba(84,22,181,0.2)', cursor:'grab', listStyle:'none' }}>
                           <GripVertical size={13} style={{ color:'#9B8FC0', flexShrink:0 }}/>
                           <div style={{ position:'relative', width:44, height:28, borderRadius:5, overflow:'hidden', flexShrink:0, background:'#000' }}>
-                            <Image src={url} alt="" fill style={{ objectFit:'cover' }} sizes="44px"/>
+                            {mediaKind(url) === 'image' ? (
+                              <Image src={url} alt="" fill style={{ objectFit:'cover' }} sizes="44px"/>
+                            ) : (
+                              <>
+                                {videoPoster(url) && (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={videoPoster(url)!} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                                )}
+                                <span style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.4)', color:'#fff', fontSize:'.6rem' }}>▶</span>
+                              </>
+                            )}
                           </div>
                           <p style={{ flex:1, fontSize:'.7rem', color:'#9B8FC0', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                             {idx+1}. {url.split('/').pop()}
@@ -337,10 +361,15 @@ export function AdminStream({ packages: init }: { packages: any[] }) {
                       <ImagePlus size={13}/> أضف
                     </button>
                     <button type="button" onClick={()=>previewRef.current?.click()} disabled={uploadingPreview} style={uploadBtnStyle}>
-                      <Upload size={13}/> {uploadingPreview ? '...' : 'رفع'}
+                      <Upload size={13}/> {uploadingPreview ? '...' : 'صورة'}
                     </button>
                     <input ref={previewRef} type="file" accept="image/*" style={{ display:'none' }}
                       onChange={e=>e.target.files?.[0] && upload(e.target.files[0],'__preview',setUploadingPreview)}/>
+                    <button type="button" onClick={()=>videoRef.current?.click()} disabled={uploadingVideo} style={uploadBtnStyle}>
+                      <Upload size={13}/> {uploadingVideo ? '...' : 'فيديو'}
+                    </button>
+                    <input ref={videoRef} type="file" accept="video/*" style={{ display:'none' }}
+                      onChange={e=>e.target.files?.[0] && uploadVideo(e.target.files[0])}/>
                   </div>
                 </Field>
 

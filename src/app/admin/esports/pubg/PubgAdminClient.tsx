@@ -6,7 +6,9 @@ import {
   Plus, Edit2, Trash2, X, Upload, GripVertical,
   ImagePlus, Video, ChevronDown, Star,
 } from 'lucide-react';
-import { isYouTubeUrl, youtubeThumbnail } from '@/lib/youtube';
+import { isYouTubeUrl } from '@/lib/youtube';
+import { mediaKind, videoPoster } from '@/lib/media';
+import { uploadVideoDirect } from '@/lib/uploadClient';
 
 /* ── Types ─────────────────────────────────────────────────── */
 type MediaType = 'image' | 'video';
@@ -43,19 +45,21 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
   const [form, setForm]           = useState<FormState>(empty());
   const [showReorder, setShowReorder] = useState(false);
   const [saving, setSaving]       = useState(false);
-  const [uploading, setUploading] = useState<'cover'|'img'|null>(null);
+  const [uploading, setUploading] = useState<'cover'|'img'|'video'|null>(null);
   const [deleting, setDeleting]   = useState<string|null>(null);
   const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [uploadErr, setUploadErr] = useState('');
 
   const coverRef = useRef<HTMLInputElement>(null);
   const imgRef   = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
 
   function openAdd() { setEditId(null); setForm(empty()); setShowReorder(false); setNewVideoUrl(''); setModal(true); }
 
   function openEdit(p: PkgItem) {
     setEditId(p.id);
-    // rebuild combined media list from images[] — نكتشف النوع من رابط يوتيوب
-    const media: MediaItem[] = p.images.map(u => ({ id: uid(), url: u, type: isYouTubeUrl(u) ? 'video' : 'image' }));
+    // rebuild combined media list from images[] — نكتشف النوع (يوتيوب/فيديو محلي/صورة)
+    const media: MediaItem[] = p.images.map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
     setForm({ title: p.title, imageUrl: p.imageUrl, media, featured: p.featured, active: p.active });
     setShowReorder(false); setNewVideoUrl(''); setModal(true);
   }
@@ -83,6 +87,18 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
     if (!url || !isYouTubeUrl(url)) return;
     setForm(f => ({ ...f, media: [...f.media, { id: uid(), url, type: 'video' as const }] }));
     setNewVideoUrl('');
+  }
+
+  // رفع فيديو من الجهاز — مباشر لـ Cloudinary (يدعم الملفات الكبيرة)
+  async function pickVideo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploading('video'); setUploadErr('');
+    try {
+      const url = await uploadVideoDirect(file);
+      setForm(f => ({ ...f, media: [...f.media, { id: uid(), url, type: 'video' as const }] }));
+    } catch (err: any) {
+      setUploadErr(err?.message ?? 'فشل رفع الفيديو');
+    } finally { setUploading(null); e.target.value = ''; }
   }
 
   function removeMedia(id: string) { setForm(f => ({ ...f, media: f.media.filter(m => m.id !== id) })); }
@@ -195,8 +211,8 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
       ) : (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))', gap:'1.2rem' }}>
           {packages.map(p => {
-            const imgC = p.images.filter(u => !isYouTubeUrl(u)).length;
-            const vidC = p.images.filter(u =>  isYouTubeUrl(u)).length;
+            const imgC = p.images.filter(u => mediaKind(u) === 'image').length;
+            const vidC = p.images.filter(u => mediaKind(u) !== 'image').length;
             return (
               <div key={p.id} className="pa-card">
                 {p.imageUrl
@@ -229,6 +245,7 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
       {/* Hidden inputs */}
       <input ref={coverRef} type="file" accept="image/*"          style={{display:'none'}} onChange={pickCover}/>
       <input ref={imgRef}   type="file" accept="image/*" multiple style={{display:'none'}} onChange={pickImages}/>
+      <input ref={videoRef} type="file" accept="video/*"          style={{display:'none'}} onChange={pickVideo}/>
 
       {/* Modal */}
       <AnimatePresence>
@@ -277,12 +294,16 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
                   </div>
                 </div>
 
-                {/* إضافة صور */}
-                <div style={{ display:'flex', gap:10, marginBottom:'1rem', flexWrap:'wrap' }}>
+                {/* إضافة صور / فيديو من الجهاز */}
+                <div style={{ display:'flex', gap:10, marginBottom:'.6rem', flexWrap:'wrap' }}>
                   <button className="pa-upload-btn pa-btn" onClick={() => imgRef.current?.click()} disabled={uploading==='img'}>
                     <ImagePlus size={14}/>{uploading==='img' ? 'جاري الرفع...' : `إضافة صور (${imgCount})`}
                   </button>
+                  <button className="pa-upload-btn pa-btn" onClick={() => videoRef.current?.click()} disabled={uploading==='video'}>
+                    <Video size={14}/>{uploading==='video' ? 'جاري رفع الفيديو...' : `رفع فيديو (${vidCount})`}
+                  </button>
                 </div>
+                {uploadErr && <p style={{ marginBottom:'.8rem', fontSize:'.72rem', color:'#f87171' }}>{uploadErr}</p>}
 
                 {/* إضافة رابط فيديو يوتيوب */}
                 <div style={{ marginBottom:'1rem' }}>
@@ -309,8 +330,8 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
                         <div key={item.id} className="pa-media-item">
                           {item.type === 'image'
                             ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={item.url} alt=""/>
-                            : youtubeThumbnail(item.url)
-                              ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={youtubeThumbnail(item.url)!} alt=""/>
+                            : videoPoster(item.url)
+                              ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={videoPoster(item.url)!} alt=""/>
                               : <div className="pa-media-item-video"><Video size={20} style={{color:'rgba(155,89,208,0.6)'}}/></div>
                           }
                           <div className="pa-media-type" style={{ background: item.type==='image' ? 'rgba(84,22,181,0.8)' : 'rgba(58,161,161,0.8)', color:'#fff' }}>
@@ -352,8 +373,8 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
                                     <GripVertical size={16} style={{ color:'rgba(84,22,181,0.4)', flexShrink:0 }}/>
                                     {item.type === 'image'
                                       ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={item.url} alt="" className="pa-reorder-thumb"/>
-                                      : youtubeThumbnail(item.url)
-                                        ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={youtubeThumbnail(item.url)!} alt="" className="pa-reorder-thumb"/>
+                                      : videoPoster(item.url)
+                                        ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={videoPoster(item.url)!} alt="" className="pa-reorder-thumb"/>
                                         : <div style={{ width:44, height:32, borderRadius:6, background:'rgba(58,161,161,0.1)', border:'1px solid rgba(58,161,161,0.25)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><Video size={14} style={{color:'rgba(58,161,161,0.7)'}}/></div>
                                     }
                                     <span style={{ fontSize:'.7rem', color:'rgba(155,89,208,0.5)', fontWeight:700 }}>#{idx+1}</span>

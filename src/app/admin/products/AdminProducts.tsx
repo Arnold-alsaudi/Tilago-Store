@@ -6,6 +6,8 @@ import { Plus, Edit2, Trash2, Star, X, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { formatPrice } from '@/lib/utils';
 import { youtubeThumbnail } from '@/lib/youtube';
+import { mediaKind } from '@/lib/media';
+import { uploadVideoDirect } from '@/lib/uploadClient';
 
 const CATEGORIES = ['ALERTS', 'STREAM', 'PACKAGE', 'THREE_D'] as const;
 const SUB_CATEGORIES: Record<string, { value: string; label: string }[]> = {
@@ -31,7 +33,18 @@ export function AdminProducts({ products: initialProducts }: { products: any[] }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [uploadingImg, setUploadingImg] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const imgRef = useRef<HTMLInputElement>(null);
+  const vidRef = useRef<HTMLInputElement>(null);
+
+  const uploadVideo = async (file: File) => {
+    setUploadingVideo(true); setError('');
+    try {
+      const url = await uploadVideoDirect(file);
+      setForm(f => ({ ...f, videoUrl: url }));
+    } catch (e: any) { setError(e?.message ?? 'فشل رفع الفيديو'); }
+    finally { setUploadingVideo(false); }
+  };
 
   const uploadImage = async (file: File) => {
     setUploadingImg(true);
@@ -175,17 +188,26 @@ export function AdminProducts({ products: initialProducts }: { products: any[] }
                   {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 h-20 rounded-lg object-cover" />}
                 </div>
 
-                {/* رابط يوتيوب */}
+                {/* الفيديو — رابط يوتيوب أو رفع من الجهاز */}
                 <div>
-                  <label className="text-xs text-text-muted mb-1 block">فيديو يوتيوب (اختياري)</label>
-                  <input value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    dir="ltr"
-                    className="w-full bg-accent-deep/10 border border-accent-deep/30 rounded-xl px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-violet transition-colors" />
+                  <label className="text-xs text-text-muted mb-1 block">الفيديو (رابط يوتيوب أو رفع من الجهاز)</label>
+                  <div className="flex gap-2 items-center">
+                    <input value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })}
+                      placeholder="https://youtube.com/... أو ارفع ملف"
+                      dir="ltr"
+                      className="flex-1 bg-accent-deep/10 border border-accent-deep/30 rounded-xl px-4 py-2.5 text-sm text-text-primary outline-none focus:border-accent-violet transition-colors" />
+                    <button type="button" onClick={() => vidRef.current?.click()} disabled={uploadingVideo}
+                      className="flex items-center gap-1 px-3 py-2.5 rounded-xl text-sm font-medium bg-accent-deep/20 hover:bg-accent-deep/30 text-text-muted transition-colors whitespace-nowrap">
+                      <Upload size={14} /> {uploadingVideo ? '...' : 'رفع'}
+                    </button>
+                    <input ref={vidRef} type="file" accept="video/*" className="hidden" onChange={e => e.target.files?.[0] && uploadVideo(e.target.files[0])} />
+                  </div>
                   {form.videoUrl && (
-                    youtubeThumbnail(form.videoUrl)
+                    mediaKind(form.videoUrl) === 'youtube'
                       ? <img src={youtubeThumbnail(form.videoUrl)!} alt="" className="mt-2 h-20 rounded-lg object-cover" />
-                      : <p className="mt-1 text-xs text-red-400">مش رابط يوتيوب صحيح</p>
+                      : mediaKind(form.videoUrl) === 'video'
+                        ? <video src={form.videoUrl} muted playsInline preload="metadata" className="mt-2 h-20 rounded-lg object-cover" />
+                        : <p className="mt-1 text-xs text-red-400">رابط غير صحيح</p>
                   )}
                 </div>
                 <div>

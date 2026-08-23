@@ -1,7 +1,8 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { youtubeThumbnail, youtubeEmbedUrl } from '@/lib/youtube';
+import { youtubeEmbedUrl } from '@/lib/youtube';
+import { mediaKind, videoPoster } from '@/lib/media';
 
 /* ─── Data ─────────────────────────────────────────────────── */
 type VideoProduct = {
@@ -230,9 +231,9 @@ export default function VideosPage() {
         {products.map((p, i) => (
           <div key={p.id} className="vp-card" onClick={() => openModal(p)}>
             <div className="vp-card-thumb">
-              {youtubeThumbnail(p.video)
+              {(p.thumb || videoPoster(p.video))
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={youtubeThumbnail(p.video)!} alt={p.name} loading="lazy" />
+                ? <img src={p.thumb || videoPoster(p.video)!} alt={p.name} loading="lazy" />
                 : <div className="no-vid"><i className="fas fa-film" /></div>
               }
               <div className="vp-card-play">
@@ -287,13 +288,19 @@ export default function VideosPage() {
 
             {/* video / thumb */}
             <div className="vp-modal-video">
-              {youtubeEmbedUrl(modal.video, { autoplay: true }) ? (
+              {mediaKind(modal.video) === 'youtube' ? (
                 <iframe
                   src={youtubeEmbedUrl(modal.video, { autoplay: true })!}
                   title={modal.name}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   style={{ width:'100%', aspectRatio:'16/9', display:'block', background:'#000', border:'none' }}
+                />
+              ) : mediaKind(modal.video) === 'video' ? (
+                <video
+                  src={modal.video}
+                  controls autoPlay playsInline
+                  style={{ width:'100%', aspectRatio:'16/9', display:'block', background:'#000', maxHeight:'65vh' }}
                 />
               ) : (
                 <div style={{ minHeight:'200px', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(15,8,59,0.6)', color:'rgba(155,89,208,0.4)', fontSize:'3rem' }}>
