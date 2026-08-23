@@ -196,6 +196,13 @@ export function ProductClient({ product }: { product: PProduct }) {
         .pd-main img{width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;}
         .pd-main iframe{width:100%;height:100%;border:none;border-radius:14px;background:#000;}
         .pd-main .pd-empty{color:rgba(155,89,208,.4);font-size:3rem;}
+        /* زرار صغير بسيط في الجنب لتقليب الصور والفيديو — بدون توهج */
+        .pd-nav{position:absolute;top:50%;left:10px;transform:translateY(-50%);z-index:6;
+          width:28px;height:28px;min-height:28px;padding:0;border-radius:50%;cursor:pointer;
+          border:1px solid rgba(255,255,255,.14);background:rgba(10,6,20,.5);
+          color:rgba(220,214,240,.7);display:flex;align-items:center;justify-content:center;
+          font-size:.72rem;transition:background .2s,color .2s;}
+        .pd-nav:hover{background:rgba(10,6,20,.78);color:#fff;}
         .pd-thumbs{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
         .pd-thumb{position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;cursor:pointer;
           border:2px solid transparent;background:#0a0420;transition:border-color .2s,transform .2s;flex-shrink:0;}
@@ -328,6 +335,11 @@ export function ProductClient({ product }: { product: PProduct }) {
                 <img src={current.src} alt={product.title} />
               ) : (
                 <div className="pd-empty"><i className="fas fa-image" /></div>
+              )}
+              {media.length > 1 && (
+                <button className="pd-nav" onClick={() => setActive(a => (a + 1) % media.length)} aria-label="العنصر التالي">
+                  <i className="fas fa-chevron-left" />
+                </button>
               )}
             </div>
             {media.length > 1 && (
