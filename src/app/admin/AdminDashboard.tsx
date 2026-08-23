@@ -221,6 +221,7 @@ export function AdminDashboard({ stats }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
             { label: 'تعديل الصفحة الرئيسية', href: '/admin/home',     color: '#9B59D0' },
+            { label: 'إدارة الأليرتات',   href: '/admin/alerts',       color: '#c084f5' },
             { label: 'Manage Products', href: '/admin/products',       color: '#5416B5' },
             { label: 'Manage Videos',   href: '/admin/videos',         color: '#9B59D0' },
             { label: 'Manage Stream',   href: '/admin/stream',         color: '#3AA1A1' },
