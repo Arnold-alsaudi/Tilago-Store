@@ -66,7 +66,7 @@ export default function ThreeDClient({ products }: { products: TDProduct[] }) {
   return (
     <div className="tdp" dir="rtl" ref={revRef}>
       <style>{`
-        .tdp { background:linear-gradient(180deg,#0F083B,#0C0516); min-height:100vh; font-family:'29LtBukra','Montserrat',sans-serif; color:#fff; }
+        .tdp { background:linear-gradient(180deg,#0F083B,#0C0516); min-height:100vh; font-family:'29LtBukra','Montserrat',sans-serif; color:#fff; overflow-x:hidden; }
         .tdp-hero { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; padding:4rem 5%; gap:2rem; }
         .tdp-hero-videos { display:flex; gap:1rem; justify-content:center; flex-wrap:nowrap; }
         .tdp-hero-vid { width:320px; flex-shrink:0; border-radius:14px; overflow:hidden; border:1px solid rgba(84,22,181,0.35); box-shadow:0 4px 28px rgba(0,0,0,0.55); }
@@ -79,6 +79,16 @@ export default function ThreeDClient({ products }: { products: TDProduct[] }) {
         .tdp-hero-content p { color:rgba(255,255,255,0.7); font-size:1rem; line-height:1.8; margin-bottom:1.6rem; }
         .tdp-hero-cta { display:inline-flex; align-items:center; gap:10px; padding:.9rem 2.2rem; border-radius:50px; background:linear-gradient(135deg,#5416B5,#7F3AA1); color:#fff; font-family:'29LtBukra','Montserrat',sans-serif; font-size:1rem; font-weight:700; text-decoration:none; transition:transform .2s,box-shadow .2s; }
         .tdp-hero-cta:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(84,22,181,0.5); }
+        @media(max-width:1024px){
+          .tdp-hero { flex-direction:column-reverse; text-align:right; padding:3rem 6% 2.5rem; gap:1.6rem; }
+          .tdp-hero-content { max-width:100%; width:100%; text-align:right; }
+          .tdp-hero-videos { width:100%; justify-content:center; flex-wrap:wrap; }
+          .tdp-hero-vid { width:100%; max-width:420px; }
+          .tdp-hero-vid:nth-child(n+2){ display:none; }
+          /* على الموبايل: أنيميشن ظهور رأسي بدل أفقي عشان النص ما يتزحلقش بره الشاشة */
+          .tdp-hero-content[data-reveal], .tdp-hero-videos[data-reveal] { transform:translateY(28px); }
+          .tdp-hero-content[data-reveal].sr-in, .tdp-hero-videos[data-reveal].sr-in { transform:none; }
+        }
         .tdp-stats { display:flex; justify-content:center; gap:0; padding:1.4rem 5%; border-top:1px solid rgba(84,22,181,0.12); border-bottom:1px solid rgba(84,22,181,0.12); background:rgba(15,8,59,0.4); flex-wrap:wrap; }
         .tdp-stat { flex:1; min-width:120px; text-align:center; padding:.8rem 1.5rem; border-left:1px solid rgba(84,22,181,0.2); }
         .tdp-stat:last-child { border-left:none; }
