@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import TdmClient, { TdmPkg } from './TdmClient';
 
+// نقرأ من قاعدة البيانات في كل طلب — علشان تعديلات الأدمن تظهر فوراً
+export const dynamic = 'force-dynamic';
+
 export default async function TdmPage() {
   let packages: TdmPkg[] = [];
   try {

@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import StreamClient, { StreamPkg } from './StreamClient';
 
+// نقرأ الباكدجات من قاعدة البيانات في كل طلب — علشان تعديلات الأدمن تظهر فوراً
+export const dynamic = 'force-dynamic';
+
 export default async function StreamPage() {
   let packages: StreamPkg[] = [];
   try {

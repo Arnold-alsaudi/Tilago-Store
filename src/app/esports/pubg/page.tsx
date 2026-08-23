@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import PubgClient, { PubgPkg } from './PubgClient';
 
+// نقرأ من قاعدة البيانات في كل طلب — علشان تعديلات الأدمن تظهر فوراً
+export const dynamic = 'force-dynamic';
+
 export default async function PubgChampionshipPage() {
   let packages: PubgPkg[] = [];
   try {
