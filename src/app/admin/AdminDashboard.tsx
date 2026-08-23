@@ -225,6 +225,7 @@ export function AdminDashboard({ stats }: Props) {
             { label: 'Manage Products', href: '/admin/products',       color: '#5416B5' },
             { label: 'Manage Videos',   href: '/admin/videos',         color: '#9B59D0' },
             { label: 'Manage Stream',   href: '/admin/stream',         color: '#3AA1A1' },
+            { label: 'إدارة تأثيرات 3D', href: '/admin/3d',            color: '#5EC8F0' },
             { label: 'View Orders',     href: '/admin/orders',         color: '#F0830B' },
             { label: 'Manage Users',    href: '/admin/users',          color: '#7F3AA1' },
             { label: 'PUBG Championship', href: '/admin/esports/pubg', color: '#FFD700' },
