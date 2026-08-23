@@ -107,7 +107,15 @@ export default function CartPage() {
         body: JSON.stringify({ name: names, amount: total, phone: BILLING_PHONE, method: 'PayPal' }),
       }).catch(() => {});
       const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
-      window.location.href = `https://www.paypal.me/${handle}/${total.toFixed(2)}`;
+      // PayPal مبيدعمش الجنيه — نحوّل بسعر الدولار الحيّ (جنيه ÷ سعر الدولار = دولار)
+      let egpPerUsd = 50;
+      try {
+        const r = await fetch('/api/fx');
+        const d = await r.json();
+        if (d?.egpPerUsd > 0) egpPerUsd = d.egpPerUsd;
+      } catch { /* نستخدم القيمة الافتراضية */ }
+      const usd = Math.max(1, total / egpPerUsd).toFixed(2);
+      window.location.href = `https://www.paypal.me/${handle}/${usd}USD`;
       return;
     }
     // meeza / visa via paymob
