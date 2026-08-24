@@ -297,10 +297,8 @@ export default function AlertsPage() {
           border-color:rgba(84,22,181,0.5);
         }
         .al-product-img {
-          display:block; width:calc(100% - 28px); height:240px; object-fit:cover;
-          margin:14px auto 8px; border-radius:16px;
-          border:1px solid rgba(155,89,208,0.28);
-          box-shadow:0 10px 26px rgba(0,0,0,0.5);
+          display:block; width:100%; height:240px; object-fit:cover;
+          margin:0 0 10px; border-radius:0; border:none; box-shadow:none;
           transition:transform .4s cubic-bezier(.25,.8,.25,1);
         }
         .al-product-card:hover .al-product-img { transform:scale(1.03); }
