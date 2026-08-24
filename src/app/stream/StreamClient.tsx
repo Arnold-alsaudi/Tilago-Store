@@ -13,6 +13,7 @@ export interface StreamPkg {
   cover: string;
   images: string[];
   video?: string;
+  available?: boolean;
 }
 
 const CONTACTS = [
@@ -212,6 +213,17 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-card:hover { transform:translateY(-6px); box-shadow:0 8px 24px rgba(84,22,181,0.25); border-color:rgba(84,22,181,0.5); }
         .sp-card img { width:100%; height:100%; object-fit:cover; display:block; image-rendering:-webkit-optimize-contrast; transition:transform .55s cubic-bezier(.25,.8,.25,1); }
         .sp-card:hover img { transform:scale(1.06); }
+        /* باكدج غير متاح — مايتفتحش */
+        .sp-card.sp-unavail { cursor:not-allowed; }
+        .sp-card.sp-unavail:hover { transform:none; box-shadow:0 4px 16px rgba(0,0,0,0.3); border-color:rgba(84,22,181,0.2); }
+        .sp-card.sp-unavail:hover img { transform:none; }
+        .sp-card.sp-unavail img { filter:grayscale(.7) brightness(.5); }
+        .sp-unavail-layer { position:absolute; inset:0; z-index:3; display:flex; align-items:center; justify-content:center;
+          background:rgba(6,2,16,0.55); backdrop-filter:blur(1px); }
+        .sp-unavail-badge { display:inline-flex; align-items:center; gap:8px; padding:.5rem 1.1rem; border-radius:50px;
+          background:rgba(10,4,22,0.85); border:1px solid rgba(255,255,255,0.18); color:#f0ecff;
+          font-family:'Cairo','29LtBukra',sans-serif; font-weight:700; font-size:.85rem; letter-spacing:.5px; }
+        .sp-unavail-badge i { font-size:.78rem; opacity:.85; }
         .sp-card-grad {
           position:absolute; inset:0;
           background:linear-gradient(to top,rgba(4,1,14,0.96) 0%,rgba(4,1,14,0.5) 35%,rgba(4,1,14,0.05) 65%,transparent 100%);
@@ -464,11 +476,19 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
                 <i className="fas fa-layer-group"/>
                 <p>لا توجد باكدجات متاحة حالياً</p>
               </div>
-            ) : packages.map(pkg=>(
-              <div key={pkg.id} className="sp-card" onClick={()=>setActive(pkg)}>
+            ) : packages.map(pkg=>{
+              const unavailable = pkg.available === false;
+              return (
+              <div key={pkg.id} className={`sp-card${unavailable ? ' sp-unavail' : ''}`}
+                onClick={()=>{ if (!unavailable) setActive(pkg); }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {pkg.cover && <img src={pkg.cover} alt={pkg.nameAr}/>}
                 <div className="sp-card-grad"/>
+                {unavailable && (
+                  <div className="sp-unavail-layer">
+                    <span className="sp-unavail-badge"><i className="fas fa-lock"/> غير متاح</span>
+                  </div>
+                )}
                 <div className="sp-card-count">
                   <i className="fas fa-layer-group"/>
                   {pkg.images.length} عنصر
@@ -478,7 +498,8 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
                   {pkg.name && pkg.name !== pkg.nameAr && <div className="sp-card-sub">{pkg.name}</div>}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Features */}

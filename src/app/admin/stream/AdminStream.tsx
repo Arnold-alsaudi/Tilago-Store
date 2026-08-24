@@ -16,17 +16,21 @@ interface MediaItem { id: string; url: string; type: MediaType; }
 
 interface PkgItem {
   id: string; title: string; description: string; price: number;
-  imageUrl: string; images: string[]; videos: string[];
+  imageUrl: string; images: string[]; videos: string[]; tags: string[];
   featured: boolean; active: boolean;
 }
 interface FormState {
   title: string; description: string; price: string; imageUrl: string;
   media: MediaItem[];          // combined images + فيديو (يوتيوب أو مرفوع) بالترتيب
   featured: boolean; active: boolean;
+  available: boolean;          // متاح للطلب؟ لو false بيظهر "غير متاح" ومايتفتحش
 }
 
+// نخزّن حالة "غير متاح" في tags (بدون تعديل قاعدة البيانات)
+const UNAVAILABLE_TAG = 'unavailable';
+
 const uid = () => Math.random().toString(36).slice(2);
-const empty = (): FormState => ({ title:'', description:'', price:'', imageUrl:'', media:[], featured:false, active:true });
+const empty = (): FormState => ({ title:'', description:'', price:'', imageUrl:'', media:[], featured:false, active:true, available:true });
 
 /* ── Upload helper (صور) ────────────────────────────────────── */
 async function uploadFile(file: File): Promise<string> {
@@ -60,7 +64,7 @@ export function AdminStream({ packages: init }: { packages: PkgItem[] }) {
     setEditId(p.id);
     // rebuild combined media list from images[] — نكتشف النوع (يوتيوب/فيديو محلي/صورة)
     const media: MediaItem[] = p.images.map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
-    setForm({ title: p.title, description: p.description ?? '', price: String(p.price ?? ''), imageUrl: p.imageUrl, media, featured: p.featured, active: p.active });
+    setForm({ title: p.title, description: p.description ?? '', price: String(p.price ?? ''), imageUrl: p.imageUrl, media, featured: p.featured, active: p.active, available: !(p.tags ?? []).includes(UNAVAILABLE_TAG) });
     setShowReorder(false); setNewVideoUrl(''); setUploadErr(''); setModal(true);
   }
 
@@ -120,7 +124,8 @@ export function AdminStream({ packages: init }: { packages: PkgItem[] }) {
       images: orderedUrls,
       videos: videoUrls,
       videoUrl: videoUrls[0] ?? null,
-      featured: form.featured, active: form.active, tags: [],
+      featured: form.featured, active: form.active,
+      tags: form.available ? [] : [UNAVAILABLE_TAG],
     };
     try {
       if (editId) {
@@ -230,6 +235,7 @@ export function AdminStream({ packages: init }: { packages: PkgItem[] }) {
                     {p.price > 0 && <span>💰 {p.price} EGP</span>}
                     {p.featured && <span style={{color:'#FFD700'}}>⭐</span>}
                     {!p.active && <span style={{color:'rgba(255,80,80,0.7)'}}>مخفي</span>}
+                    {(p.tags ?? []).includes(UNAVAILABLE_TAG) && <span style={{color:'#ffcf7a'}}>⛔ غير متاح</span>}
                   </div>
                   <div className="sa-card-actions">
                     <button className="sa-btn" onClick={() => openEdit(p)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'.5rem', borderRadius:8, background:'rgba(84,22,181,0.15)', border:'1px solid rgba(84,22,181,0.3)', color:'#c4a0e0', fontSize:'.8rem', fontWeight:600 }}>
@@ -415,8 +421,9 @@ export function AdminStream({ packages: init }: { packages: PkgItem[] }) {
                 {/* Toggles */}
                 <div style={{ display:'flex', gap:'1.5rem', marginBottom:'1.6rem', flexWrap:'wrap' }}>
                   {[
-                    { key:'featured', label:'مميز ⭐', color:'#FFD700' },
-                    { key:'active',   label:'نشط',     color:'#3AA1A1' },
+                    { key:'featured',  label:'مميز ⭐',     color:'#FFD700' },
+                    { key:'active',    label:'نشط',        color:'#3AA1A1' },
+                    { key:'available', label:'متاح للطلب', color:'#4ade80' },
                   ].map(t => (
                     <label key={t.key} className="sa-toggle">
                       <div className="sa-toggle-box" style={{ background: form[t.key as keyof FormState] ? t.color : 'rgba(255,255,255,0.1)' }} onClick={() => setForm(f => ({ ...f, [t.key]: !f[t.key as keyof FormState] }))}>

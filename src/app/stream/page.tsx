@@ -18,6 +18,7 @@ export default async function StreamPage() {
       cover:  p.imageUrl || (p.images?.[0] ?? ''),
       images: p.images ?? [],
       video:  p.videoUrl ?? undefined,
+      available: !(p.tags ?? []).includes('unavailable'),
     }));
   } catch {}
 
