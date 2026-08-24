@@ -620,7 +620,7 @@ export default function AlertsPage() {
           .al-product-img { height:150px; }
           .al-cat-grid { grid-template-columns:1fr !important; }
           .al-features { grid-template-columns:1fr; }
-          .al-stat-item { min-width:100%; }
+          .al-stat-item { min-width:50%; }
           .al-modal-box { padding:1.2rem; border-radius:12px; }
           .al-modal-head h2 { font-size:1.2rem; }
           .al-modal-video-wrap { border-radius:10px; }
