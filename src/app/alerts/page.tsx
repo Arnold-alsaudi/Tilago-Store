@@ -183,12 +183,6 @@ export default function AlertsPage() {
 
   const moveCarousel = (dir: number) => setSlide(s => (s + dir + total) % total);
 
-  const openModal = (alert: AlertItem) => {
-    setModal(alert);
-    setMediaTab('image');
-    setDelivered(false);
-  };
-
   const closeModal = () => {
     setModal(null);
     setDelivered(false);
@@ -399,6 +393,7 @@ export default function AlertsPage() {
           width:100%; padding:.55rem 1rem; border:1px solid rgba(84,22,181,0.5); border-radius:10px;
           font-size:.85rem; cursor:pointer; font-weight:600;
           background:rgba(84,22,181,0.18); color:#c4a0e0; transition:all .3s;
+          display:block; text-align:center; text-decoration:none;
         }
         .al-btn-preview:hover { background:rgba(84,22,181,0.4); color:#fff; }
 
@@ -743,7 +738,7 @@ export default function AlertsPage() {
                       >
                         {addedCardId === alert.id ? '✓ تمت الإضافة' : <><i className="fas fa-plus" /> أضف للسلة</>}
                       </button>
-                      <button className="al-btn-preview" onClick={() => openModal(alert)}>عرض سريع</button>
+                      <Link href={`/product/${alert.id}`} className="al-btn-preview">عرض</Link>
                     </div>
                   </div>
                 </div>
