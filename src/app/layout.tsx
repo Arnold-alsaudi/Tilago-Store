@@ -7,13 +7,68 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { PageTransition } from '@/components/PageTransition';
 import { Analytics } from '@vercel/analytics/react';
 import { validateEnv } from '@/lib/validateEnv';
+import { SITE_URL, SITE_NAME } from '@/lib/site';
 
 validateEnv();
 
+const DESCRIPTION =
+  'Tilago (تيلاجو) — متجر أليرتات وأوفرلايز وتصاميم ثلاثية الأبعاد احترافية جاهزة للبث المباشر على تويتش ويوتيوب.';
+
 export const metadata: Metadata = {
-  title: 'Tilago | Store',
-  description: 'اليرتات احترافية جاهزة للبث المباشر — ماسية، ذهبية، بلاتينية، أنمي، ثلجية، نارية',
-  keywords: ['اليرتات', 'بث مباشر', 'تويتش', 'يوتيوب', 'stream alerts', 'Tilago'],
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Tilago | تيلاجو — متجر أليرتات وتصاميم البث المباشر',
+    template: '%s | Tilago',
+  },
+  description: DESCRIPTION,
+  applicationName: 'Tilago Store',
+  keywords: [
+    'Tilago', 'تيلاجو', 'Tilago Store', 'تيلاجو ستور', 'تيلاجو ستريم',
+    'اليرتات', 'أليرتات', 'اليرت', 'بث مباشر', 'تويتش', 'يوتيوب',
+    'stream alerts', 'overlays', 'أوفرلاي', 'تصاميم بث', 'ثري دي',
+  ],
+  alternates: { canonical: '/' },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    title: 'Tilago | تيلاجو — متجر أليرتات وتصاميم البث المباشر',
+    description: DESCRIPTION,
+    url: SITE_URL,
+    locale: 'ar_EG',
+    images: [{ url: '/images.png', alt: 'Tilago' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tilago | تيلاجو',
+    description: DESCRIPTION,
+    images: ['/images.png'],
+  },
+  icons: { icon: '/icon.png' },
+};
+
+// بيانات منظّمة (JSON-LD) تساعد جوجل يفهم اسم العلامة وبدائله (عربي/إنجليزي)
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Tilago',
+      alternateName: ['تيلاجو', 'Tilago Store', 'تيلاجو ستور'],
+      url: SITE_URL,
+      logo: `${SITE_URL}/images.png`,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      name: 'Tilago',
+      alternateName: 'تيلاجو',
+      url: SITE_URL,
+      inLanguage: 'ar',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
 };
 
 export const viewport: Viewport = {
@@ -28,6 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl">
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       </head>
       <body style={{ fontFamily: "'Cairo', '29LtBukra', 'Montserrat', sans-serif", background: 'linear-gradient(180deg,#0F083B,#0C0516)', color: '#e0e0ff', minHeight: '100vh' }}>
 <Providers>
