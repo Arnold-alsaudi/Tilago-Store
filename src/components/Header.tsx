@@ -86,9 +86,15 @@ export function Header() {
 
           {/* Auth */}
           {session ? (
-            <button className="login-btn" onClick={() => signOut()}>Logout</button>
+            <button className="login-btn" onClick={() => signOut()} aria-label="Logout" title="Logout">
+              <i className="fas fa-right-from-bracket login-ico" />
+              <span className="login-txt">Logout</span>
+            </button>
           ) : (
-            <Link href="/auth/signin" className="login-btn" style={{ textDecoration: 'none' }}>Login</Link>
+            <Link href="/auth/signin" className="login-btn" style={{ textDecoration: 'none' }} aria-label="Login" title="Login">
+              <i className="fas fa-right-to-bracket login-ico" />
+              <span className="login-txt">Login</span>
+            </Link>
           )}
         </div>
       </header>
@@ -203,7 +209,7 @@ export function Header() {
           gap: 20px;
           align-items: center;
         }
-        .icons > a {
+        .icons > a:not(.login-btn) {
           color: #c4a0e0;
           font-size: 1.3rem;
           transition: all 0.3s;
@@ -215,7 +221,7 @@ export function Header() {
           border: 1px solid rgba(84, 22, 181, 0.4);
           text-decoration: none;
         }
-        .icons > a:hover {
+        .icons > a:not(.login-btn):hover {
           color: #fff;
           transform: translateY(-3px);
           background: rgba(84, 22, 181, 0.3);
@@ -242,6 +248,8 @@ export function Header() {
           transform: translateY(-2px);
           box-shadow: 0 7px 22px rgba(84, 22, 181, 0.55);
         }
+        /* الديسكتوب: نص فقط (نخفي الأيقونة) */
+        .login-ico { display: none; }
         .mobile-menu-btn {
           display: none;
           background: none;
@@ -287,13 +295,20 @@ export function Header() {
           .mobile-menu-btn { display: block; }
           .logo-img { height: 38px; }
           .icons { gap: 12px; }
-          .login-btn { padding: 9px 18px; font-size: 0.85rem; }
+          /* الموبايل: زر Login/Logout يبقى أيقونة دائرية صغيرة بدل النص العريض */
+          .login-txt { display: none; }
+          .login-ico { display: inline-flex; font-size: 1.15rem; }
+          .login-btn {
+            width: 44px; height: 44px; min-width: 44px; padding: 0;
+            border-radius: 50%; justify-content: center;
+            letter-spacing: 0;
+          }
         }
         @media (max-width: 480px) {
           header { padding: 12px 14px; }
           .logo-img { height: 32px; }
           .icons { gap: 8px; }
-          .login-btn { padding: 8px 14px; font-size: 0.8rem; }
+          .login-btn { width: 42px; height: 42px; min-width: 42px; font-size: 1.05rem; }
         }
       `}</style>
     </>
