@@ -10,12 +10,23 @@ export function Header() {
   const { count } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openSub, setOpenSub] = useState<'page' | 'esports' | null>(null);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 100);
     window.addEventListener('scroll', fn);
     return () => window.removeEventListener('scroll', fn);
   }, []);
+
+  // قفل تمرير الصفحة ورا المنيو لما يكون مفتوح
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
+  const closeMenu = () => { setMenuOpen(false); setOpenSub(null); };
+  const toggleMenu = () => { setMenuOpen(o => !o); setOpenSub(null); };
+  const toggleSub = (key: 'page' | 'esports') => setOpenSub(prev => (prev === key ? null : key));
 
   return (
     <>
@@ -30,35 +41,40 @@ export function Header() {
         <button
           className="mobile-menu-btn"
           id="mobileMenuBtn"
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={toggleMenu}
+          aria-label="القائمة"
         >
-          <i className="fas fa-bars" />
+          <i className={menuOpen ? 'fas fa-times' : 'fas fa-bars'} />
         </button>
 
         {/* Nav */}
         <nav>
           <ul className={menuOpen ? 'mobile-open' : ''}>
-            <li><Link href="/">Home</Link></li>
-            <li>
-              <a href="#">Page <i className="fas fa-chevron-down" /></a>
+            <li><Link href="/" onClick={closeMenu}>Home</Link></li>
+            <li className={openSub === 'page' ? 'sub-open' : ''}>
+              <a href="#" className="has-sub" onClick={(e) => { e.preventDefault(); toggleSub('page'); }}>
+                <span>Page</span> <i className="fas fa-chevron-down" />
+              </a>
               <div className="dropdown-content">
-                <Link href="/alerts"><i className="fas fa-bell" /> Alerts</Link>
-                <Link href="/stream"><i className="fas fa-video" /> Stream</Link>
-                <Link href="/videos"><i className="fas fa-play-circle" /> Videos</Link>
-                <Link href="/3d"><i className="fa-solid fa-cube" /> 3D</Link>
-                <Link href="/contact"><i className="fa fa-code" /> Developer</Link>
+                <Link href="/alerts" onClick={closeMenu}><i className="fas fa-bell" /> Alerts</Link>
+                <Link href="/stream" onClick={closeMenu}><i className="fas fa-video" /> Stream</Link>
+                <Link href="/videos" onClick={closeMenu}><i className="fas fa-play-circle" /> Videos</Link>
+                <Link href="/3d" onClick={closeMenu}><i className="fa-solid fa-cube" /> 3D</Link>
+                <Link href="/contact" onClick={closeMenu}><i className="fa fa-code" /> Developer</Link>
               </div>
             </li>
-            <li>
-              <a href="#">E-Sports <i className="fas fa-chevron-down" /></a>
+            <li className={openSub === 'esports' ? 'sub-open' : ''}>
+              <a href="#" className="has-sub" onClick={(e) => { e.preventDefault(); toggleSub('esports'); }}>
+                <span>E-Sports</span> <i className="fas fa-chevron-down" />
+              </a>
               <div className="dropdown-content">
-                <Link href="/esports/pubg"><i className="fas fa-trophy" /> Championship Pubg</Link>
-                <Link href="/esports/tdm"><i className="fas fa-crosshairs" /> TDM</Link>
+                <Link href="/esports/pubg" onClick={closeMenu}><i className="fas fa-trophy" /> Championship Pubg</Link>
+                <Link href="/esports/tdm" onClick={closeMenu}><i className="fas fa-crosshairs" /> TDM</Link>
               </div>
             </li>
-            <li><Link href="/contact">Contact</Link></li>
-            <li><Link href="/#about">About</Link></li>
-            <li><Link href="/3d">3D Model</Link></li>
+            <li><Link href="/contact" onClick={closeMenu}>Contact</Link></li>
+            <li><Link href="/#about" onClick={closeMenu}>About</Link></li>
+            <li><Link href="/3d" onClick={closeMenu}>3D Model</Link></li>
           </ul>
         </nav>
 
@@ -266,32 +282,59 @@ export function Header() {
         @media (max-width: 900px) {
           header { padding: 14px 20px; }
           header nav ul { display: none; }
+          /* ── منيو الموبايل: شاشة كاملة ── */
           header nav ul.mobile-open {
             display: flex;
             flex-direction: column;
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            background: rgba(12, 5, 22, 0.99);
-            padding: 20px 24px;
+            align-items: stretch;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100vh; height: 100dvh;
+            background: linear-gradient(180deg, #0c0516 0%, #12082b 55%, #0c0516 100%);
+            padding: 84px 0 32px;
             z-index: 999;
-            border-bottom: 1px solid rgba(84, 22, 181, 0.4);
-            gap: 4px;
+            gap: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            animation: menuFade .28s ease;
           }
-          header nav ul.mobile-open li a { font-size: 1rem; padding: 10px 0; }
+          header nav ul.mobile-open > li { border-bottom: 1px solid rgba(84,22,181,0.14); }
+          header nav ul.mobile-open > li > a {
+            font-size: 1.2rem; font-weight: 700; letter-spacing: .5px;
+            padding: 20px 26px; width: 100%;
+            justify-content: space-between; color: rgba(255,255,255,0.9);
+          }
+          header nav ul.mobile-open > li > a::after { display: none; }
+          header nav ul.mobile-open > li > a:active { background: rgba(84,22,181,0.15); }
+          header nav ul.mobile-open > li > a .fa-chevron-down {
+            font-size: .85rem; color: #9B59D0; transition: transform .3s ease;
+          }
+          header nav ul.mobile-open > li.sub-open > a { color: #c4a0e0; }
+          header nav ul.mobile-open > li.sub-open > a .fa-chevron-down { transform: rotate(180deg); }
+
+          /* ── الأقسام الفرعية: أكورديون يفتح بالضغط على السهم ── */
           header nav ul.mobile-open .dropdown-content {
             position: static;
-            display: flex !important;
+            display: flex;
             flex-direction: column;
-            background: rgba(30,15,55,0.9);
-            border: none;
-            border-left: 2px solid rgba(84,22,181,0.4);
-            border-radius: 0;
-            padding: 0 0 0 14px;
-            margin: 0 0 0 10px;
-            box-shadow: none;
+            background: rgba(84,22,181,0.06);
+            border: none; border-radius: 0; box-shadow: none; margin: 0;
+            padding: 0 26px;
+            max-height: 0; opacity: 0; overflow: hidden;
+            transition: max-height .35s ease, opacity .28s ease, padding .3s ease;
             animation: none;
           }
-          header nav ul.mobile-open .dropdown-content a { font-size: 0.9rem !important; padding: 8px 12px !important; }
+          header nav ul.mobile-open .dropdown-content::before { display: none; }
+          header nav ul.mobile-open > li.sub-open .dropdown-content {
+            max-height: 460px; opacity: 1; padding: 6px 26px 14px;
+          }
+          header nav ul.mobile-open .dropdown-content a {
+            font-size: 1rem !important; padding: 13px 14px !important; margin: 2px 0 !important;
+            border-radius: 10px; color: rgba(220,210,240,0.82) !important; gap: 14px !important;
+          }
+          header nav ul.mobile-open .dropdown-content a i { color: #9B59D0; width: 20px; text-align: center; }
+          header nav ul.mobile-open .dropdown-content a:active { background: rgba(84,22,181,0.22); transform: none; }
           .mobile-menu-btn { display: block; }
           .logo-img { height: 38px; }
           .icons { gap: 12px; }
@@ -309,6 +352,10 @@ export function Header() {
           .logo-img { height: 32px; }
           .icons { gap: 8px; }
           .login-btn { width: 42px; height: 42px; min-width: 42px; font-size: 1.05rem; }
+        }
+        @keyframes menuFade {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </>
