@@ -619,7 +619,8 @@ export default function AlertsPage() {
           .al-products { grid-template-columns:1fr; padding:1.5rem 4%; }
           .al-product-img { height:150px; }
           .al-cat-grid { grid-template-columns:1fr !important; }
-          .al-features { grid-template-columns:1fr; }
+          .al-features { grid-template-columns:repeat(2,1fr); gap:.8rem; }
+          .al-feature-card { padding:1.3rem 1rem; }
           .al-stat-item { min-width:50%; }
           .al-modal-box { padding:1.2rem; border-radius:12px; }
           .al-modal-head h2 { font-size:1.2rem; }
