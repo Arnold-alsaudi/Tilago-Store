@@ -50,6 +50,11 @@ export function Header() {
         {/* Nav */}
         <nav>
           <ul className={menuOpen ? 'mobile-open' : ''}>
+            <li className="menu-close-row">
+              <button type="button" className="menu-close" onClick={closeMenu} aria-label="إغلاق القائمة">
+                <i className="fas fa-times" />
+              </button>
+            </li>
             <li><Link href="/" onClick={closeMenu}>Home</Link></li>
             <li className={openSub === 'page' ? 'sub-open' : ''}>
               <a href="#" className="has-sub" onClick={(e) => { e.preventDefault(); toggleSub('page'); }}>
@@ -274,6 +279,8 @@ export function Header() {
           font-size: 1.5rem;
           cursor: pointer;
         }
+        /* صف زر الإغلاق (✕) — يظهر فقط داخل منيو الموبايل */
+        .menu-close-row { display: none; }
         @media (max-width: 1200px) {
           header { padding: 15px 30px; }
           header nav ul { gap: 20px; }
@@ -292,13 +299,26 @@ export function Header() {
             width: 100%;
             height: 100vh; height: 100dvh;
             background: linear-gradient(180deg, #0c0516 0%, #12082b 55%, #0c0516 100%);
-            padding: 84px 0 32px;
-            z-index: 999;
+            padding: 14px 0 36px;
+            z-index: 1100;
             gap: 0;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             animation: menuFade .28s ease;
           }
+          /* صف زر الإغلاق فوق */
+          header nav ul.mobile-open .menu-close-row {
+            display: flex; justify-content: flex-end; align-items: center;
+            padding: 4px 18px 12px;
+          }
+          .menu-close {
+            width: 46px; height: 46px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(84,22,181,0.16); border: 1px solid rgba(155,89,208,0.4);
+            color: #e6dcff; font-size: 1.3rem; cursor: pointer;
+            transition: background .2s ease, transform .15s ease, border-color .2s ease;
+          }
+          .menu-close:active { background: rgba(84,22,181,0.34); border-color: #7F3AA1; transform: scale(0.93); }
           header nav ul.mobile-open > li { border-bottom: 1px solid rgba(84,22,181,0.14); }
           header nav ul.mobile-open > li > a {
             font-size: 1.2rem; font-weight: 700; letter-spacing: .5px;
