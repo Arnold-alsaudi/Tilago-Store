@@ -235,7 +235,7 @@ export function AdminStream({ packages: init }: { packages: PkgItem[] }) {
                     {p.price > 0 && <span>💰 {p.price} EGP</span>}
                     {p.featured && <span style={{color:'#FFD700'}}>⭐</span>}
                     {!p.active && <span style={{color:'rgba(255,80,80,0.7)'}}>مخفي</span>}
-                    {(p.tags ?? []).includes(UNAVAILABLE_TAG) && <span style={{color:'#ffcf7a'}}>⛔ غير متاح</span>}
+                    {(p.tags ?? []).includes(UNAVAILABLE_TAG) && <span style={{color:'#ffcf7a'}}>⛔ غير متاح الآن</span>}
                   </div>
                   <div className="sa-card-actions">
                     <button className="sa-btn" onClick={() => openEdit(p)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'.5rem', borderRadius:8, background:'rgba(84,22,181,0.15)', border:'1px solid rgba(84,22,181,0.3)', color:'#c4a0e0', fontSize:'.8rem', fontWeight:600 }}>

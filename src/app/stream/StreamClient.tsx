@@ -486,7 +486,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
                 <div className="sp-card-grad"/>
                 {unavailable && (
                   <div className="sp-unavail-layer">
-                    <span className="sp-unavail-badge"><i className="fas fa-lock"/> غير متاح</span>
+                    <span className="sp-unavail-badge"><i className="fas fa-lock"/> غير متاح الآن</span>
                   </div>
                 )}
                 <div className="sp-card-count">
