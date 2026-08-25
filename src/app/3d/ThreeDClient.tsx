@@ -10,15 +10,6 @@ export interface TDProduct {
   badge?: string; cover: string; media: string[];
 }
 
-const CATEGORIES = [
-  { id: 'all',      label: 'الكل',            icon: 'fas fa-th' },
-  { id: 'logo3d',   label: 'شعارات 3D',        icon: 'fas fa-cube' },
-  { id: 'intro3d',  label: 'إنترو 3D',         icon: 'fas fa-film' },
-  { id: 'particle', label: 'تأثيرات الجزيئات', icon: 'fas fa-star' },
-  { id: 'hologram', label: 'هولوغرام',          icon: 'fas fa-ghost' },
-  { id: 'text3d',   label: 'نصوص 3D',           icon: 'fas fa-font' },
-  { id: 'scene3d',  label: 'مشاهد كاملة',       icon: 'fas fa-mountain' },
-];
 
 const CONTACT_BTNS = [
   { icon: 'fab fa-whatsapp', label: 'واتساب',       href: 'https://wa.me/1234567890',      color: '#25D366' },
@@ -199,7 +190,7 @@ export default function ThreeDClient({ products }: { products: TDProduct[] }) {
       <div className="tdp-stats" data-reveal="up">
         {[
           { num: products.length > 0 ? `+${products.length}` : '0', label: 'تأثير 3D' },
-          { num: String(new Set(products.map(p => p.cat)).size || 6), label: 'تصنيف' },
+          { num: '4K', label: 'دقة عالية' },
           { num: '24h', label: 'وقت التسليم' },
           { num: '100%', label: 'جودة مضمونة' },
         ].map(s => (
@@ -301,10 +292,6 @@ export default function ThreeDClient({ products }: { products: TDProduct[] }) {
 
               {/* info */}
               <div className="tdp-modal-info">
-                <div className="tdp-modal-cat">
-                  <i className={CATEGORIES.find(c => c.id === modal.product.cat)?.icon} />
-                  {CATEGORIES.find(c => c.id === modal.product.cat)?.label ?? modal.product.cat}
-                </div>
                 <div className="tdp-modal-name">{modal.product.name}</div>
                 <div className="tdp-modal-divider" />
                 <div className="tdp-modal-desc-box"><p>{modal.product.desc}</p></div>
