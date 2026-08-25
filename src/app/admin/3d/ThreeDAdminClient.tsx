@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { Reorder, motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, X, Upload, GripVertical,
@@ -10,16 +10,6 @@ import { isYouTubeUrl } from '@/lib/youtube';
 import { mediaKind, videoPoster } from '@/lib/media';
 import { uploadVideoDirect } from '@/lib/uploadClient';
 
-/* ── 3D categories (color-coded) ───────────────────────────── */
-const CATS = [
-  { value: 'logo3d',   label: 'شعارات 3D',        color: '#B57BEA', icon: 'fa-cube' },
-  { value: 'intro3d',  label: 'إنترو 3D',         color: '#5EC8F0', icon: 'fa-film' },
-  { value: 'particle', label: 'تأثيرات الجزيئات', color: '#F5C542', icon: 'fa-star' },
-  { value: 'hologram', label: 'هولوغرام',          color: '#4FE3B8', icon: 'fa-ghost' },
-  { value: 'text3d',   label: 'نصوص 3D',           color: '#FF6FA5', icon: 'fa-font' },
-  { value: 'scene3d',  label: 'مشاهد كاملة',       color: '#FF8A3D', icon: 'fa-mountain' },
-];
-const catMeta = (v?: string | null) => CATS.find(c => c.value === v) ?? { value: v ?? '', label: v ?? '—', color: '#9B59D0', icon: 'fa-cube' };
 const BADGE_PRESETS = ['الأكثر طلباً', 'جديد', 'حصري', 'مميز'];
 
 /* ── Types ─────────────────────────────────────────────────── */
@@ -32,12 +22,12 @@ interface TDItem {
   featured: boolean; active: boolean;
 }
 interface FormState {
-  name: string; desc: string; cat: string; badge: string;
+  name: string; desc: string; badge: string;
   imageUrl: string; media: MediaItem[]; featured: boolean; active: boolean;
 }
 
 const uid = () => Math.random().toString(36).slice(2);
-const empty = (): FormState => ({ name: '', desc: '', cat: 'logo3d', badge: '', imageUrl: '', media: [], featured: false, active: true });
+const empty = (): FormState => ({ name: '', desc: '', badge: '', imageUrl: '', media: [], featured: false, active: true });
 
 async function uploadFile(file: File): Promise<string> {
   const fd = new FormData();
@@ -50,7 +40,6 @@ async function uploadFile(file: File): Promise<string> {
 /* ── Component ─────────────────────────────────────────────── */
 export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
   const [items, setItems]     = useState<TDItem[]>(init);
-  const [filter, setFilter]   = useState('all');
   const [modal, setModal]     = useState(false);
   const [editId, setEditId]   = useState<string | null>(null);
   const [form, setForm]       = useState<FormState>(empty());
@@ -65,13 +54,12 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
   const imgRef   = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
 
-  const shown = useMemo(() => filter === 'all' ? items : items.filter(i => i.subCategory === filter), [items, filter]);
 
   function openAdd() { setEditId(null); setForm(empty()); setShowReorder(false); setNewVideoUrl(''); setUploadErr(''); setModal(true); }
   function openEdit(it: TDItem) {
     setEditId(it.id);
     const media: MediaItem[] = (it.images ?? []).map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
-    setForm({ name: it.title, desc: it.description ?? '', cat: it.subCategory ?? 'logo3d', badge: it.tags?.[0] ?? '', imageUrl: it.imageUrl, media, featured: it.featured, active: it.active });
+    setForm({ name: it.title, desc: it.description ?? '', badge: it.tags?.[0] ?? '', imageUrl: it.imageUrl, media, featured: it.featured, active: it.active });
     setShowReorder(false); setNewVideoUrl(''); setUploadErr(''); setModal(true);
   }
   function closeModal() { setModal(false); setEditId(null); }
@@ -116,7 +104,7 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
       title: form.name.trim(),
       description: form.desc.trim() || form.name.trim(),
       price: 0,
-      category: 'THREE_D', subCategory: form.cat,
+      category: 'THREE_D', subCategory: null,
       imageUrl: form.imageUrl || orderedUrls.find(u => mediaKind(u) === 'image') || '',
       images: orderedUrls,
       videos: videoUrls,
@@ -149,7 +137,6 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
   const imgCount = form.media.filter(m => m.type === 'image').length;
   const vidCount = form.media.filter(m => m.type === 'video').length;
   const previewCover = form.imageUrl || form.media.find(m => m.type === 'image')?.url || '';
-  const cm = catMeta(form.cat);
 
   return (
     <div className="t3-root" dir="rtl">
@@ -279,37 +266,17 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
             { n: items.length, l: 'إجمالي التأثيرات' },
             { n: items.filter(i => i.active).length, l: 'نشط' },
             { n: items.filter(i => i.featured).length, l: 'مميز' },
-            { n: new Set(items.map(i => i.subCategory)).size, l: 'أقسام مستخدمة' },
           ].map(s => (
             <div key={s.l} className="t3-stat"><div className="t3-stat-n">{s.n}</div><div className="t3-stat-l">{s.l}</div></div>
           ))}
         </div>
 
-        {/* Filters */}
-        <div className="t3-filters">
-          <button className="t3-btn t3-pill" onClick={() => setFilter('all')}
-            style={filter === 'all' ? { background: 'rgba(155,89,208,.22)', borderColor: 'rgba(155,89,208,.55)', color: '#c8a4f0' } : undefined}>
-            <i className="fas fa-th" /> الكل <span className="cnt">{items.length}</span>
-          </button>
-          {CATS.map(c => {
-            const cnt = items.filter(i => i.subCategory === c.value).length;
-            const on = filter === c.value;
-            return (
-              <button key={c.value} className="t3-btn t3-pill" onClick={() => setFilter(c.value)}
-                style={on ? { background: `${c.color}22`, borderColor: `${c.color}88`, color: c.color } : undefined}>
-                <i className={`fas ${c.icon}`} style={{ color: c.color }} /> {c.label} <span className="cnt">{cnt}</span>
-              </button>
-            );
-          })}
-        </div>
-
         {/* Grid */}
-        {shown.length === 0 ? (
-          <div className="t3-empty"><i className="fas fa-cube" /><p>لا توجد تأثيرات في هذا القسم — ابدأ بإضافة أول تأثير</p></div>
+        {items.length === 0 ? (
+          <div className="t3-empty"><i className="fas fa-cube" /><p>لا توجد تأثيرات — ابدأ بإضافة أول تأثير</p></div>
         ) : (
           <div className="t3-grid">
-            {shown.map(it => {
-              const m = catMeta(it.subCategory);
+            {items.map(it => {
               const imgC = (it.images ?? []).filter(u => mediaKind(u) === 'image').length;
               const vidC = (it.images ?? []).filter(u => mediaKind(u) !== 'image').length;
               return (
@@ -319,9 +286,6 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
                       ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={it.imageUrl} alt={it.title} />
                       : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(155,89,208,.3)' }}><ImagePlus size={30} /></div>}
                     <div className="t3-card-grad" />
-                    <span className="t3-card-cat" style={{ background: `${m.color}26`, color: m.color, border: `1px solid ${m.color}66` }}>
-                      <i className={`fas ${m.icon}`} /> {m.label}
-                    </span>
                     {it.tags?.[0] && <span className="t3-card-badge">{it.tags[0]}</span>}
                   </div>
                   <div className="t3-card-body">
@@ -372,9 +336,6 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
                         ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={previewCover} alt="" />
                         : <div className="ph"><i className="fas fa-cube" /></div>}
                       <div className="t3-pcard-grad" />
-                      <span className="t3-pcard-cat" style={{ background: `${cm.color}26`, color: cm.color, border: `1px solid ${cm.color}66` }}>
-                        <i className={`fas ${cm.icon}`} /> {cm.label}
-                      </span>
                       {form.badge.trim() && <span className="t3-pcard-badge">{form.badge}</span>}
                     </div>
                     <div className="t3-pcard-body">
@@ -397,21 +358,6 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
                     <div className="t3-sec-label"><Sparkles size={13} /> الأساسيات</div>
                     <input className="t3-input" placeholder="اسم التأثير (مثال: Venom Logo 3D)" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ marginBottom: 10 }} />
                     <textarea className="t3-input" rows={2} placeholder="وصف قصير للتأثير" value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} style={{ resize: 'none' }} />
-                  </div>
-
-                  <div className="t3-sec">
-                    <div className="t3-sec-label"><Box size={13} /> القسم</div>
-                    <div className="t3-cats">
-                      {CATS.map(c => {
-                        const on = form.cat === c.value;
-                        return (
-                          <button key={c.value} type="button" className="t3-btn t3-catpill" onClick={() => setForm(f => ({ ...f, cat: c.value }))}
-                            style={on ? { background: `${c.color}22`, borderColor: `${c.color}99`, color: c.color } : undefined}>
-                            <i className={`fas ${c.icon}`} style={{ color: c.color }} /> {c.label}
-                          </button>
-                        );
-                      })}
-                    </div>
                   </div>
 
                   <div className="t3-sec">
