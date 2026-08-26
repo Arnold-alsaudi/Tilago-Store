@@ -76,20 +76,10 @@ export default function DeveloperPage() {
           font-family:'Cairo','29LtBukra','Montserrat',sans-serif;overflow-x:hidden;}
 
         /* ── Hero ── */
-        .dv-hero{position:relative;width:100%;margin-top:20px;padding:0 18px;}
+        .dv-hero{width:100%;margin-top:24px;padding:0 18px;}
         .dv-hero-box{max-width:1400px;margin:0 auto;position:relative;border-radius:28px;overflow:hidden;
-          height:clamp(240px,42vw,600px);border:1px solid rgba(127,58,161,0.25);
-          box-shadow:0 12px 60px rgba(0,0,0,0.5);}
+          height:clamp(240px,42vw,600px);border:1px solid rgba(127,58,161,0.25);box-shadow:0 12px 60px rgba(0,0,0,0.5);}
         .dv-hero-box img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
-        .dv-hero-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px;
-          background:linear-gradient(180deg,rgba(12,5,22,0.55),rgba(12,5,22,0.82));}
-        .dv-hero-tag{display:inline-flex;align-items:center;gap:9px;font-family:'Oxanium',sans-serif;font-weight:800;
-          font-size:.7rem;letter-spacing:4px;text-transform:uppercase;color:rgba(196,160,224,0.85);
-          padding:6px 18px;border-radius:50px;border:1px solid rgba(155,89,208,0.4);background:rgba(84,22,181,0.18);backdrop-filter:blur(6px);}
-        .dv-hero-box h1{font-family:'Oxanium','29LtBukra',sans-serif;font-weight:900;
-          font-size:clamp(1.8rem,5vw,3.5rem);line-height:1.15;margin:0;color:#fff;text-shadow:0 4px 30px rgba(0,0,0,0.5);}
-        .dv-hero-box h1 span{background:linear-gradient(120deg,#c084f5,#9B59D0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-        .dv-hero-box p{color:rgba(230,222,245,0.75);font-size:clamp(.9rem,1.7vw,1.1rem);max-width:560px;line-height:1.8;margin:0;}
         .dv-hero-cta{display:inline-flex;align-items:center;gap:10px;margin-top:8px;padding:.85rem 2rem;border-radius:50px;
           background:linear-gradient(135deg,#5416B5,#7F3AA1);color:#fff;font-weight:800;font-size:.95rem;text-decoration:none;
           box-shadow:0 8px 26px rgba(84,22,181,0.5);transition:transform .25s,box-shadow .25s;}
@@ -148,6 +138,9 @@ export default function DeveloperPage() {
         .dv-cta{max-width:900px;margin:clamp(50px,7vw,80px) auto 0;padding:0 5%;}
         .dv-cta-box{position:relative;border-radius:26px;overflow:hidden;text-align:center;padding:clamp(2.5rem,5vw,3.5rem) 1.5rem;
           background:linear-gradient(135deg,rgba(84,22,181,0.35),rgba(58,161,161,0.12));border:1px solid rgba(155,89,208,0.3);}
+        .dv-cta-box::before{content:'';position:absolute;inset:0;background-image:url('/photo/tilago-emblem.png');
+          background-repeat:no-repeat;background-position:center;background-size:min(62%,360px);opacity:0.14;pointer-events:none;}
+        .dv-cta-box > *{position:relative;z-index:1;}
         .dv-cta-box h2{font-family:'Oxanium','29LtBukra',sans-serif;font-weight:900;font-size:clamp(1.5rem,3.5vw,2.3rem);color:#fff;margin:0 0 .8rem;}
         .dv-cta-box p{color:rgba(220,210,240,0.7);font-size:.95rem;max-width:480px;margin:0 auto 1.8rem;line-height:1.8;}
 
@@ -170,13 +163,7 @@ export default function DeveloperPage() {
       <section className="dv-hero">
         <div className="dv-hero-box">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/55.png" alt="Tilago Developer" />
-          <div className="dv-hero-overlay">
-            <span className="dv-hero-tag"><i className="fas fa-code" /> Tilago Development</span>
-            <h1>نطوّر لك <span>كل ما تحتاجه</span></h1>
-            <p>مواقع، تطبيقات، ألعاب، وسيرفرات ديسكورد كاملة — حلول تطوير احترافية من فريق Tilago.</p>
-            <a href="#contact" className="dv-hero-cta">ابدأ مشروعك <i className="fas fa-arrow-left" /></a>
-          </div>
+          <img src="/55.png" alt="Tilago" />
         </div>
       </section>
 
