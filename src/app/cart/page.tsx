@@ -319,7 +319,7 @@ export default function CartPage() {
               {items.map(({ product, quantity }) => (
                 <div key={product.id} className="cart-line">
                   <span>{product.title} ×{quantity}</span>
-                  <span>{formatPrice(product.price * quantity)}</span>
+                   <span>{formatPrice(product.price * quantity)}</span>
                 </div>
               ))}
             </div>

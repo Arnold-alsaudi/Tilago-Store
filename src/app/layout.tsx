@@ -12,12 +12,12 @@ import { SITE_URL, SITE_NAME } from '@/lib/site';
 validateEnv();
 
 const DESCRIPTION =
-  'Tilago (تيلاجو) — متجر أليرتات وأوفرلايز وتصاميم ثلاثية الأبعاد احترافية جاهزة للبث المباشر على تويتش ويوتيوب.';
+  'Tilago Store | متجر متخصص بتصميم و بيع الاليرتات و باكدجات ستريم و 3D و جميع ما يخص محتوى البثوث تصميم و بيع الاليرتات بجميع انواعها العمل على اعدادات بث كاملة تصميم و بيع بكجات بث كاملة';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Tilago | تيلاجو — متجر أليرتات وتصاميم البث المباشر',
+    default: 'Tilago Alert',
     template: '%s | Tilago',
   },
   description: DESCRIPTION,
