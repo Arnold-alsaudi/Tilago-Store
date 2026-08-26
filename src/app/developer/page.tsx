@@ -108,6 +108,15 @@ export default async function DeveloperPage() {
         .dv-contact-sub{font-size:.75rem;color:rgba(170,160,205,0.5);margin-top:2px;}
         .dv-contact-arrow{color:rgba(155,89,208,0.3);font-size:.85rem;transition:all .25s;}
         .dv-contact:hover .dv-contact-arrow{color:rgba(155,89,208,0.8);transform:translateX(-5px);}
+
+        /* ── موبايل: كروت الديسكورد 2 في الصف ── */
+        @media(max-width:600px){
+          .dv-grid-4{grid-template-columns:repeat(2,1fr);gap:.9rem;}
+          .dv-grid-4 .dv-card{padding:1.3rem 1rem;}
+          .dv-grid-4 .dv-card-icon{width:48px;height:48px;font-size:1.2rem;margin-bottom:.9rem;border-radius:14px;}
+          .dv-grid-4 .dv-card h3{font-size:1.05rem;}
+          .dv-grid-4 .dv-card p{font-size:.82rem;}
+        }
       `}</style>
 
       {/* ── HERO ── */}
