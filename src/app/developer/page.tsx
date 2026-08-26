@@ -82,8 +82,8 @@ export default function DeveloperPage() {
         .dv-hero-box img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
         .dv-hero-cta{display:inline-flex;align-items:center;gap:10px;margin-top:8px;padding:.85rem 2rem;border-radius:50px;
           background:linear-gradient(135deg,#5416B5,#7F3AA1);color:#fff;font-weight:800;font-size:.95rem;text-decoration:none;
-          box-shadow:0 8px 26px rgba(84,22,181,0.5);transition:transform .25s,box-shadow .25s;}
-        .dv-hero-cta:hover{transform:translateY(-3px);box-shadow:0 12px 34px rgba(84,22,181,0.65);}
+          box-shadow:0 6px 18px rgba(0,0,0,0.35);transition:transform .25s,box-shadow .25s;}
+        .dv-hero-cta:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,0.45);}
 
         /* ── Ticker ── */
         .dv-ticker{margin-top:26px;height:44px;overflow:hidden;position:relative;
@@ -111,9 +111,8 @@ export default function DeveloperPage() {
 
         .dv-card{position:relative;background:rgba(15,8,59,0.55);border:1px solid rgba(84,22,181,0.2);border-radius:20px;
           padding:2rem 1.6rem;transition:transform .3s cubic-bezier(.25,.8,.25,1),border-color .3s,box-shadow .3s;overflow:hidden;}
-        .dv-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(84,22,181,0.14),transparent 65%);opacity:0;transition:opacity .3s;}
-        .dv-card:hover{transform:translateY(-8px);border-color:rgba(155,89,208,0.5);box-shadow:0 20px 50px rgba(84,22,181,0.25);}
-        .dv-card:hover::before{opacity:1;}
+        .dv-card::before{content:'';position:absolute;inset:0;background:transparent;opacity:0;transition:opacity .3s;}
+        .dv-card:hover{transform:translateY(-8px);border-color:rgba(155,89,208,0.5);box-shadow:0 16px 34px rgba(0,0,0,0.35);}
         .dv-card-icon{position:relative;width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;
           font-size:1.5rem;margin-bottom:1.2rem;}
         .dv-card h3{position:relative;font-family:'Oxanium','29LtBukra',sans-serif;font-weight:800;font-size:1.25rem;color:#f0ecff;margin:0 0 .7rem;}
@@ -150,7 +149,7 @@ export default function DeveloperPage() {
         @media(max-width:560px){.dv-contacts-grid{grid-template-columns:1fr;}}
         .dv-contact{display:flex;align-items:center;gap:15px;padding:1.1rem 1.3rem;border-radius:16px;text-decoration:none;
           background:rgba(15,8,59,0.55);border:1px solid rgba(84,22,181,0.2);transition:all .3s cubic-bezier(.25,.8,.25,1);}
-        .dv-contact:hover{transform:translateY(-3px);border-color:rgba(155,89,208,0.45);box-shadow:0 12px 34px rgba(84,22,181,0.25);}
+        .dv-contact:hover{transform:translateY(-3px);border-color:rgba(155,89,208,0.45);box-shadow:0 10px 24px rgba(0,0,0,0.3);}
         .dv-contact-icon{width:50px;height:50px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
         .dv-contact-txt{flex:1;}
         .dv-contact-label{font-weight:800;color:#ece8ff;font-size:1rem;}
