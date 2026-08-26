@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
-    title: 'Tilago | تيلاجو — متجر أليرتات وتصاميم البث المباشر',
+    title: 'Tilago Alert',
     description: DESCRIPTION,
     url: SITE_URL,
     locale: 'ar_EG',
