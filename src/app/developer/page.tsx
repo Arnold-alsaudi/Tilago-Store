@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { prisma } from '@/lib/prisma';
+import { DEFAULT_DEVELOPER_CONTENT, type DeveloperContent } from '@/lib/developerContent';
 import DevServices from './DevServices';
 
 export const metadata: Metadata = {
@@ -6,48 +8,22 @@ export const metadata: Metadata = {
   description: 'تطوير مواقع وتطبيقات وألعاب، وتنظيم سيرفرات ديسكورد كاملة وبناء بوتات احترافية — خدمات تطوير احترافية من Tilago.',
 };
 
-/* ─── Data ─────────────────────────────────────────── */
-const DISCORD_SERVICES = [
-  {
-    icon: 'fas fa-robot', color: '#5865F2',
-    title: 'بوتات مخصصة',
-    desc: 'بوتات ديسكورد بأي مهام تحتاجها — إدارة، ترحيب، حماية، تذاكر دعم، اقتصاد، وأكثر.',
-  },
-  {
-    icon: 'fas fa-users-gear', color: '#9B59D0',
-    title: 'تنظيم السيرفرات',
-    desc: 'هيكلة كاملة للسيرفر: رومات مرتبة، أقسام، صلاحيات، وتصميم منظّم واحترافي.',
-  },
-  {
-    icon: 'fas fa-user-shield', color: '#4FE3B8',
-    title: 'رولات وصلاحيات',
-    desc: 'نظام رولات متكامل بألوان وصلاحيات مدروسة، ونظام مستويات (Levels) وتفاعل.',
-  },
-  {
-    icon: 'fas fa-server', color: '#F5C542',
-    title: 'إعداد سيرفر كامل',
-    desc: 'سيرفر ديسكورد جاهز من الصفر — تصميم، بوتات، حماية، وتنظيم كامل باحترافية.',
-  },
-];
-
-const FEATURES = [
-  { icon: 'fas fa-gem',        title: 'جودة احترافية',  desc: 'شغل نظيف ومدروس بأعلى المعايير، يليق باسمك ومشروعك.' },
-  { icon: 'fas fa-bolt',       title: 'تسليم سريع',     desc: 'ننجز مشروعك في أسرع وقت ممكن دون أي تنازل عن الجودة.' },
-  { icon: 'fas fa-sliders',    title: 'تخصيص كامل',     desc: 'كل شيء مبني حسب احتياجك بالظبط — من الفكرة للتفاصيل.' },
-  { icon: 'fas fa-headset',    title: 'دعم مستمر',      desc: 'فريقنا معاك خطوة بخطوة، وبعد التسليم كمان.' },
-];
-
-const CONTACTS = [
-  { icon: 'fab fa-whatsapp', label: 'واتساب',      sub: 'ابدأ مشروعك الآن',     href: 'https://wa.me/1234567890',      c: '#25D366' },
-  { icon: 'fab fa-telegram', label: 'تيليجرام',    sub: 'تواصل معنا مباشرة',    href: 'https://t.me/yourchannel',      c: '#0088cc' },
-  { icon: 'fab fa-discord',  label: 'ديسكورد',     sub: 'انضم لسيرفر الدعم',    href: 'https://discord.gg/yourserver', c: '#5865F2' },
-  { icon: 'fas fa-headset',  label: 'الدعم الفني', sub: 'نرد خلال 24 ساعة',     href: 'mailto:support@tilago.com',     c: '#9B59D0' },
-];
+// نقرأ المحتوى من قاعدة البيانات في كل طلب — علشان تعديلات الأدمن تظهر فوراً
+export const dynamic = 'force-dynamic';
 
 const TICKER = ['Web Development', 'Mobile Apps', 'Game Dev', 'Discord Bots', 'Server Setup', 'UI / UX', 'APIs', 'Automation'];
 
+async function getContent(): Promise<DeveloperContent> {
+  try {
+    const row = await prisma.siteSetting.findUnique({ where: { key: 'developerContent' } });
+    if (!row) return DEFAULT_DEVELOPER_CONTENT;
+    return { ...DEFAULT_DEVELOPER_CONTENT, ...JSON.parse(row.value) };
+  } catch { return DEFAULT_DEVELOPER_CONTENT; }
+}
+
 /* ─── Page ─────────────────────────────────────────── */
-export default function DeveloperPage() {
+export default async function DeveloperPage() {
+  const c = await getContent();
   return (
     <div className="dv" dir="rtl">
       <style>{`
@@ -91,15 +67,11 @@ export default function DeveloperPage() {
 
         .dv-card{position:relative;background:rgba(15,8,59,0.55);border:1px solid rgba(84,22,181,0.2);border-radius:20px;
           padding:2rem 1.6rem;transition:transform .3s cubic-bezier(.25,.8,.25,1),border-color .3s,box-shadow .3s;overflow:hidden;}
-        .dv-card::before{content:'';position:absolute;inset:0;background:transparent;opacity:0;transition:opacity .3s;}
         .dv-card:hover{transform:translateY(-8px);border-color:rgba(155,89,208,0.5);box-shadow:0 16px 34px rgba(0,0,0,0.35);}
         .dv-card-icon{position:relative;width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;
           font-size:1.5rem;margin-bottom:1.2rem;}
         .dv-card h3{position:relative;font-family:'Oxanium','29LtBukra',sans-serif;font-weight:800;font-size:1.25rem;color:#f0ecff;margin:0 0 .7rem;}
         .dv-card p{position:relative;color:rgba(180,168,215,0.6);font-size:.9rem;line-height:1.8;margin:0;}
-        .dv-card-tags{position:relative;display:flex;flex-wrap:wrap;gap:7px;margin-top:1.2rem;}
-        .dv-card-tag{font-size:.72rem;font-weight:700;padding:.35rem .8rem;border-radius:8px;
-          background:rgba(84,22,181,0.14);border:1px solid rgba(155,89,208,0.22);color:#c8b8f0;}
 
         /* ── Features ── */
         .dv-features{background:linear-gradient(180deg,#0C0516,#0F083B);border-top:1px solid rgba(84,22,181,0.14);border-bottom:1px solid rgba(84,22,181,0.14);
@@ -142,7 +114,7 @@ export default function DeveloperPage() {
       <section className="dv-hero">
         <div className="dv-hero-box">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/55.png" alt="Tilago" />
+          {c.heroImage && <img src={c.heroImage} alt="Tilago" />}
         </div>
       </section>
 
@@ -158,20 +130,20 @@ export default function DeveloperPage() {
       {/* ── Dev Services ── */}
       <div className="dv-head">
         <span className="dv-head-tag">Development</span>
-        <h2>كل ما يخص <span>المطوّرين</span></h2>
-        <p>حلول برمجية متكاملة من الفكرة للتنفيذ — بأعلى جودة وأحدث التقنيات.</p>
+        <h2><span>{c.servicesTitle}</span></h2>
+        <p>{c.servicesSubtitle}</p>
       </div>
-      <DevServices />
+      <DevServices categories={c.categories} contacts={c.contacts} orderWhatsapp={c.orderWhatsapp} />
 
       {/* ── Discord Services ── */}
       <div className="dv-head">
         <span className="dv-head-tag">Discord</span>
-        <h2>تنظيم <span>الديسكورد</span> وبناء البوتات</h2>
-        <p>سيرفرات احترافية من الصفر — تنظيم، بوتات، رولات، وحماية كاملة.</p>
+        <h2><span>{c.discordTitle}</span></h2>
+        <p>{c.discordSubtitle}</p>
       </div>
       <div className="dv-grid dv-grid-4">
-        {DISCORD_SERVICES.map(s => (
-          <div key={s.title} className="dv-card">
+        {c.discordServices.map(s => (
+          <div key={s.id} className="dv-card">
             <div className="dv-card-icon" style={{ background: `${s.color}1f`, color: s.color, border: `1px solid ${s.color}44` }}>
               <i className={s.icon} />
             </div>
@@ -185,11 +157,11 @@ export default function DeveloperPage() {
       <section className="dv-features">
         <div className="dv-head" style={{ padding: '0 0 30px' }}>
           <span className="dv-head-tag">Why Tilago</span>
-          <h2>ليه <span>Tilago</span>؟</h2>
+          <h2><span>{c.featuresTitle}</span></h2>
         </div>
         <div className="dv-features-grid">
-          {FEATURES.map(f => (
-            <div key={f.title} className="dv-feat">
+          {c.features.map(f => (
+            <div key={f.id} className="dv-feat">
               <div className="dv-feat-icon"><i className={f.icon} /></div>
               <h4>{f.title}</h4>
               <p>{f.desc}</p>
@@ -201,8 +173,8 @@ export default function DeveloperPage() {
       {/* ── CTA ── */}
       <div className="dv-cta">
         <div className="dv-cta-box">
-          <h2>جاهز تبدأ مشروعك؟</h2>
-          <p>احكيلنا فكرتك، وإحنا نحوّلها لواقع احترافي يليق بك.</p>
+          <h2>{c.ctaTitle}</h2>
+          <p>{c.ctaSubtitle}</p>
           <a href="#contact" className="dv-hero-cta">تواصل معنا <i className="fas fa-paper-plane" /></a>
         </div>
       </div>
@@ -214,9 +186,9 @@ export default function DeveloperPage() {
           <h2>تواصل <span>معنا</span></h2>
         </div>
         <div className="dv-contacts-grid">
-          {CONTACTS.map(b => (
-            <a key={b.label} href={b.href} target="_blank" rel="noreferrer" className="dv-contact">
-              <div className="dv-contact-icon" style={{ background: `${b.c}18`, color: b.c }}><i className={b.icon} /></div>
+          {c.contacts.map(b => (
+            <a key={b.id} href={b.href} target="_blank" rel="noreferrer" className="dv-contact">
+              <div className="dv-contact-icon" style={{ background: `${b.color}18`, color: b.color }}><i className={b.icon} /></div>
               <div className="dv-contact-txt">
                 <div className="dv-contact-label">{b.label}</div>
                 <div className="dv-contact-sub">{b.sub}</div>

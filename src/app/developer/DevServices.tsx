@@ -1,73 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import type { DevCategory, DevProject, DevContact } from '@/lib/developerContent';
 
-/* ─── Types ─── */
-interface Project {
-  id: string;
-  title: string;
-  desc: string;
-  images: string[];
-  link?: string;   // للمواقع: رابط زيارة (اختياري)
-}
-interface Cat {
-  id: string;
-  title: string;
-  icon: string;
-  color: string;
-  cover: string;
-  desc: string;
-  projects: Project[];
-}
-
-/* ─── روابط التواصل / الطلب (غيّرها لروابطك) ─── */
-const ORDER_WHATSAPP = 'https://wa.me/1234567890';
-const DEV_CONTACTS = [
-  { icon: 'fab fa-whatsapp', label: 'واتساب',   href: 'https://wa.me/1234567890',      c: '#25D366' },
-  { icon: 'fab fa-telegram', label: 'تيليجرام', href: 'https://t.me/yourchannel',      c: '#0088cc' },
-  { icon: 'fab fa-discord',  label: 'ديسكورد',  href: 'https://discord.gg/yourserver', c: '#5865F2' },
-];
-
-/* ─── بيانات مبدئية — استبدلها بمشاريعك الحقيقية ─── */
-const CATS: Cat[] = [
-  {
-    id: 'web', title: 'تطوير المواقع', icon: 'fas fa-globe', color: '#7dd3fc',
-    cover: '/55.png',
-    desc: 'مواقع ومتاجر إلكترونية سريعة وآمنة بتصميم متجاوب يظهر مثالي على كل الأجهزة.',
-    projects: [
-      { id: 'w1', title: 'متجر إلكتروني', desc: 'متجر متكامل بلوحة تحكم ودفع أونلاين وتصميم عصري.', images: ['/55.png', '/images.png'], link: 'https://tilago-store-rtp2.vercel.app' },
-      { id: 'w2', title: 'موقع تعريفي',   desc: 'موقع شركة/براند بتصميم احترافي وأداء عالي.',        images: ['/images.png', '/55.png'] },
-    ],
-  },
-  {
-    id: 'apps', title: 'تطوير التطبيقات', icon: 'fas fa-mobile-screen-button', color: '#c084f5',
-    cover: '/photo/anime.png',
-    desc: 'تطبيقات موبايل احترافية (أندرويد و iOS) بتجربة استخدام سلسة وواجهات عصرية.',
-    projects: [
-      { id: 'a1', title: 'تطبيق متجر',  desc: 'تطبيق تسوّق بواجهة سلسة وربط كامل بالـ API.', images: ['/photo/anime.png', '/photo/alert-gift.png'] },
-      { id: 'a2', title: 'تطبيق خدمات', desc: 'تطبيق حجوزات وخدمات بتصميم حديث.',            images: ['/photo/alert-3d.png', '/photo/anime.png'] },
-    ],
-  },
-  {
-    id: 'games', title: 'تطوير الألعاب', icon: 'fas fa-gamepad', color: '#ff8a3d',
-    cover: '/photo/venom-1.png',
-    desc: 'ألعاب ومشاريع تفاعلية بجرافيك مميز وأداء عالي — من الفكرة للتنفيذ الكامل.',
-    projects: [
-      { id: 'g1', title: 'لعبة أكشن',  desc: 'لعبة بجرافيك مميز وأنظمة داخل اللعبة.', images: ['/photo/venom-1.png', '/photo/venom-2.png'] },
-      { id: 'g2', title: 'مشروع 3D',   desc: 'تجربة تفاعلية ثلاثية الأبعاد.',          images: ['/photo/venom-5.png', '/photo/venom-1.png'] },
-    ],
-  },
-];
-
-/* ─── Component ─── */
-export default function DevServices() {
-  const [cat, setCat] = useState<Cat | null>(null);         // مشاريع قسم مفتوح
-  const [project, setProject] = useState<Project | null>(null); // تفاصيل مشروع
+export default function DevServices({ categories, contacts, orderWhatsapp }: {
+  categories: DevCategory[];
+  contacts: DevContact[];
+  orderWhatsapp: string;
+}) {
+  const [cat, setCat] = useState<DevCategory | null>(null);         // مشاريع قسم مفتوح
+  const [project, setProject] = useState<DevProject | null>(null);  // تفاصيل مشروع
   const [slide, setSlide] = useState(0);
 
-  const openProject = (p: Project) => { setProject(p); setSlide(0); };
+  const openProject = (p: DevProject) => { setProject(p); setSlide(0); };
   const closeAll = () => { setProject(null); setCat(null); };
-  const orderHref = (name: string) => `${ORDER_WHATSAPP}?text=${encodeURIComponent('مهتم بمشروع: ' + name)}`;
+  const orderHref = (name: string) => `${orderWhatsapp}?text=${encodeURIComponent('مهتم بمشروع: ' + name)}`;
 
   return (
     <>
@@ -150,11 +97,11 @@ export default function DevServices() {
 
       {/* ── Service cards ── */}
       <div className="dvp-grid">
-        {CATS.map(c => (
+        {categories.map(c => (
           <div key={c.id} className="dvp-card">
             <div className="dvp-media">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={c.cover} alt={c.title} />
+              {c.cover && <img src={c.cover} alt={c.title} />}
               <div className="dvp-media-grad" />
               <div className="dvp-media-title">
                 <span className="dvp-media-ic" style={{ background: `${c.color}22`, color: c.color, border: `1px solid ${c.color}55` }}><i className={c.icon} /></span>
@@ -180,21 +127,25 @@ export default function DevServices() {
               <h3>مشاريع {cat.title}</h3>
               <button className="dvp-x" onClick={closeAll} aria-label="إغلاق"><i className="fas fa-times" /></button>
             </div>
-            <div className="dvp-plist">
-              {cat.projects.map(p => (
-                <div key={p.id} className="dvp-pcard">
-                  <div className="dvp-pcard-img">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.images[0]} alt={p.title} />
+            {cat.projects.length === 0 ? (
+              <div style={{ padding: '3rem 1.5rem', textAlign: 'center', color: 'rgba(155,89,208,0.4)' }}>لا توجد مشاريع في هذا القسم بعد.</div>
+            ) : (
+              <div className="dvp-plist">
+                {cat.projects.map(p => (
+                  <div key={p.id} className="dvp-pcard">
+                    <div className="dvp-pcard-img">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {p.images?.[0] && <img src={p.images[0]} alt={p.title} />}
+                    </div>
+                    <div className="dvp-pcard-body">
+                      <h4>{p.title}</h4>
+                      <p>{p.desc}</p>
+                      <button className="dvp-pview" onClick={() => openProject(p)}>عرض</button>
+                    </div>
                   </div>
-                  <div className="dvp-pcard-body">
-                    <h4>{p.title}</h4>
-                    <p>{p.desc}</p>
-                    <button className="dvp-pview" onClick={() => openProject(p)}>عرض</button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -211,7 +162,7 @@ export default function DevServices() {
             <div className="dvp-detail">
               <div className="dvp-gallery">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={project.images[slide]} alt={project.title} />
+                {project.images?.[slide] && <img src={project.images[slide]} alt={project.title} />}
                 {project.images.length > 1 && (
                   <>
                     <button className="dvp-gnav prev" onClick={() => setSlide(s => (s + 1) % project.images.length)}><i className="fas fa-chevron-right" /></button>
@@ -239,14 +190,16 @@ export default function DevServices() {
                 )}
                 <a className="dvp-order" href={orderHref(project.title)} target="_blank" rel="noreferrer"><i className="fas fa-cart-plus" /> اطلب مشروع زيّه</a>
 
-                <div className="dvp-order-label">تواصل مع المطوّر</div>
-                <div className="dvp-contacts">
-                  {DEV_CONTACTS.map(ct => (
-                    <a key={ct.label} className="dvp-ct" href={ct.href} target="_blank" rel="noreferrer">
-                      <i className={ct.icon} style={{ color: ct.c }} /> {ct.label}
-                    </a>
-                  ))}
-                </div>
+                {contacts.length > 0 && <>
+                  <div className="dvp-order-label">تواصل مع المطوّر</div>
+                  <div className="dvp-contacts">
+                    {contacts.map(ct => (
+                      <a key={ct.id} className="dvp-ct" href={ct.href} target="_blank" rel="noreferrer">
+                        <i className={ct.icon} style={{ color: ct.color }} /> {ct.label}
+                      </a>
+                    ))}
+                  </div>
+                </>}
               </div>
             </div>
           </div>
