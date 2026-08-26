@@ -65,7 +65,7 @@ export function Header() {
                 <Link href="/stream" onClick={closeMenu}><i className="fas fa-video" /> Stream</Link>
                 <Link href="/videos" onClick={closeMenu}><i className="fas fa-play-circle" /> Videos</Link>
                 <Link href="/3d" onClick={closeMenu}><i className="fa-solid fa-cube" /> 3D</Link>
-                <Link href="/contact" onClick={closeMenu}><i className="fa fa-code" /> Developer</Link>
+                <Link href="/developer" onClick={closeMenu}><i className="fa fa-code" /> Developer</Link>
               </div>
             </li>
             <li className={openSub === 'esports' ? 'sub-open' : ''}>
