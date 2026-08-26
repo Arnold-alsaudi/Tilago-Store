@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Trash2, Upload, X, Save, Code } from 'lucide-react';
+import { Plus, Trash2, Upload, X, Save, Code, Video } from 'lucide-react';
 import { DEFAULT_DEVELOPER_CONTENT, type DeveloperContent, type DevCategory, type DevProject } from '@/lib/developerContent';
+import { uploadVideoDirect } from '@/lib/uploadClient';
+import { mediaKind, videoPoster } from '@/lib/media';
+import { isYouTubeUrl } from '@/lib/youtube';
 
 const uid = () => Math.random().toString(36).slice(2);
 
@@ -306,25 +309,49 @@ function ImageField({ value, onChange, onBusy, busy, busyKey }: { value: string;
   );
 }
 
-/* ── Multiple images field ── */
+/* ── Media field (صور + فيديو + يوتيوب) ── */
 function MultiImages({ images, onChange, onBusy, busy, busyKey }: { images: string[]; onChange: (v: string[]) => void; onBusy: (k: string) => void; busy: boolean; busyKey: string }) {
-  const ref = useRef<HTMLInputElement>(null);
-  const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const imgRef = useRef<HTMLInputElement>(null);
+  const vidRef = useRef<HTMLInputElement>(null);
+  const [yt, setYt] = useState('');
+  const pickImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []); if (!files.length) return;
     onBusy(busyKey);
     try { const urls = await Promise.all(files.map(uploadImage)); onChange([...images, ...urls]); } catch {} finally { onBusy(''); e.target.value = ''; }
   };
+  const pickVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    onBusy(busyKey);
+    try { const url = await uploadVideoDirect(f); onChange([...images, url]); } catch {} finally { onBusy(''); e.target.value = ''; }
+  };
+  const addYt = () => { const v = yt.trim(); if (v && isYouTubeUrl(v)) { onChange([...images, v]); setYt(''); } };
   return (
-    <div className="da-imgs">
-      {images.map((img, i) => (
-        <div key={i} className="da-thumb">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={img} alt="" />
-          <button type="button" className="da-thumb-x" onClick={() => onChange(images.filter((_, x) => x !== i))}><X size={10} /></button>
-        </div>
-      ))}
-      <button type="button" className="da-up" onClick={() => ref.current?.click()}><Upload size={13} /> {busy ? '...' : 'رفع صور'}</button>
-      <input ref={ref} type="file" accept="image/*" multiple hidden onChange={pick} />
-    </div>
+    <>
+      <div className="da-imgs">
+        {images.map((m, i) => {
+          const kind = mediaKind(m);
+          const poster = kind !== 'image' ? videoPoster(m) : null;
+          return (
+            <div key={i} className="da-thumb">
+              {kind === 'image'
+                ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={m} alt="" />
+                : poster
+                  ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={poster} alt="" />
+                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(58,161,161,.14)', color: 'rgba(155,89,208,.7)' }}><Video size={16} /></div>}
+              {kind !== 'image' && <span style={{ position: 'absolute', bottom: 2, left: 2, fontSize: '.5rem', fontWeight: 800, padding: '1px 4px', borderRadius: 4, background: 'rgba(58,161,161,.85)', color: '#fff' }}>VID</span>}
+              <button type="button" className="da-thumb-x" onClick={() => onChange(images.filter((_, x) => x !== i))}><X size={10} /></button>
+            </div>
+          );
+        })}
+        <button type="button" className="da-up" onClick={() => imgRef.current?.click()}><Upload size={13} /> {busy ? '...' : 'رفع صور'}</button>
+        <button type="button" className="da-up" onClick={() => vidRef.current?.click()}><Video size={13} /> {busy ? '...' : 'رفع فيديو'}</button>
+        <input ref={imgRef} type="file" accept="image/*" multiple hidden onChange={pickImages} />
+        <input ref={vidRef} type="file" accept="video/*" hidden onChange={pickVideo} />
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <input className="da-in" dir="ltr" value={yt} onChange={e => setYt(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addYt(); } }} placeholder="رابط يوتيوب..." style={{ flex: 1 }} />
+        <button type="button" className="da-up" onClick={addYt} disabled={!isYouTubeUrl(yt)}><Video size={13} /> يوتيوب</button>
+      </div>
+    </>
   );
 }

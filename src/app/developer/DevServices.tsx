@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { DevCategory, DevProject, DevContact } from '@/lib/developerContent';
+import { mediaKind, videoPoster } from '@/lib/media';
+import { youtubeEmbedUrl } from '@/lib/youtube';
 
 export default function DevServices({ categories, contacts, orderWhatsapp }: {
   categories: DevCategory[];
@@ -69,6 +71,9 @@ export default function DevServices({ categories, contacts, orderWhatsapp }: {
         .dvp-detail{padding:1.4rem 1.5rem 1.6rem;}
         .dvp-gallery{position:relative;border-radius:16px;overflow:hidden;background:#05030f;aspect-ratio:16/9;}
         .dvp-gallery img{width:100%;height:100%;object-fit:cover;display:block;}
+        .dvp-gallery iframe,.dvp-gallery video{width:100%;height:100%;border:none;background:#000;object-fit:cover;display:block;}
+        .dvp-thumb{position:relative;}
+        .dvp-thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);color:#fff;font-size:.65rem;}
         .dvp-gnav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;
           background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.14);color:#fff;cursor:pointer;
           display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
@@ -135,7 +140,7 @@ export default function DevServices({ categories, contacts, orderWhatsapp }: {
                   <div key={p.id} className="dvp-pcard">
                     <div className="dvp-pcard-img">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {p.images?.[0] && <img src={p.images[0]} alt={p.title} />}
+                      {p.images?.[0] && <img src={mediaKind(p.images[0]) === 'image' ? p.images[0] : (videoPoster(p.images[0]) ?? '')} alt={p.title} />}
                     </div>
                     <div className="dvp-pcard-body">
                       <h4>{p.title}</h4>
@@ -161,8 +166,15 @@ export default function DevServices({ categories, contacts, orderWhatsapp }: {
             </div>
             <div className="dvp-detail">
               <div className="dvp-gallery">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {project.images?.[slide] && <img src={project.images[slide]} alt={project.title} />}
+                {(() => {
+                  const src = project.images[slide];
+                  if (!src) return null;
+                  const kind = mediaKind(src);
+                  if (kind === 'youtube') return <iframe src={youtubeEmbedUrl(src, { autoplay: false })!} title={project.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
+                  if (kind === 'video') return <video src={src} controls playsInline />;
+                  // eslint-disable-next-line @next/next/no-img-element
+                  return <img src={src} alt={project.title} />;
+                })()}
                 {project.images.length > 1 && (
                   <>
                     <button className="dvp-gnav prev" onClick={() => setSlide(s => (s + 1) % project.images.length)}><i className="fas fa-chevron-right" /></button>
@@ -173,12 +185,16 @@ export default function DevServices({ categories, contacts, orderWhatsapp }: {
               </div>
               {project.images.length > 1 && (
                 <div className="dvp-thumbs">
-                  {project.images.map((img, i) => (
-                    <div key={i} className={`dvp-thumb${i === slide ? ' on' : ''}`} onClick={() => setSlide(i)}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt="" />
-                    </div>
-                  ))}
+                  {project.images.map((img, i) => {
+                    const kind = mediaKind(img);
+                    return (
+                      <div key={i} className={`dvp-thumb${i === slide ? ' on' : ''}`} onClick={() => setSlide(i)}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={kind === 'image' ? img : (videoPoster(img) ?? '')} alt="" />
+                        {kind !== 'image' && <div className="play"><i className="fas fa-play" /></div>}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
