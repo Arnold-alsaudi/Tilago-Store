@@ -116,6 +116,11 @@ export default async function DeveloperPage() {
           .dv-grid-4 .dv-card-icon{width:48px;height:48px;font-size:1.2rem;margin-bottom:.9rem;border-radius:14px;}
           .dv-grid-4 .dv-card h3{font-size:1.05rem;}
           .dv-grid-4 .dv-card p{font-size:.82rem;}
+          .dv-features-grid{grid-template-columns:repeat(2,1fr);gap:.9rem;}
+          .dv-feat{padding:1.4rem 1rem;}
+          .dv-feat-icon{width:46px;height:46px;font-size:1.15rem;margin-bottom:.8rem;}
+          .dv-feat h4{font-size:.98rem;}
+          .dv-feat p{font-size:.78rem;}
         }
       `}</style>
 
