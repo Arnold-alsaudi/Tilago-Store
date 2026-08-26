@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import DevServices from './DevServices';
 
 export const metadata: Metadata = {
   title: 'Developer',
@@ -6,27 +7,6 @@ export const metadata: Metadata = {
 };
 
 /* ─── Data ─────────────────────────────────────────── */
-const DEV_SERVICES = [
-  {
-    icon: 'fas fa-globe', color: '#7dd3fc',
-    title: 'تطوير المواقع',
-    desc: 'مواقع ومتاجر إلكترونية سريعة وآمنة بأحدث التقنيات، بتصميم متجاوب يظهر مثالي على كل الأجهزة.',
-    tags: ['متاجر إلكترونية', 'لوحات تحكم', 'مواقع تعريفية', 'أداء وسرعة'],
-  },
-  {
-    icon: 'fas fa-mobile-screen-button', color: '#c084f5',
-    title: 'تطوير التطبيقات',
-    desc: 'تطبيقات موبايل احترافية (أندرويد و iOS) بتجربة استخدام سلسة وواجهات عصرية تناسب مشروعك.',
-    tags: ['أندرويد', 'iOS', 'تطبيقات هجينة', 'ربط APIs'],
-  },
-  {
-    icon: 'fas fa-gamepad', color: '#ff8a3d',
-    title: 'تطوير الألعاب',
-    desc: 'ألعاب ومشاريع تفاعلية بجرافيك مميز وأداء عالي، من الفكرة للتنفيذ الكامل.',
-    tags: ['ألعاب 2D / 3D', 'أنظمة داخل اللعبة', 'تحسين الأداء', 'تجربة لعب'],
-  },
-];
-
 const DISCORD_SERVICES = [
   {
     icon: 'fas fa-robot', color: '#5865F2',
@@ -181,20 +161,7 @@ export default function DeveloperPage() {
         <h2>كل ما يخص <span>المطوّرين</span></h2>
         <p>حلول برمجية متكاملة من الفكرة للتنفيذ — بأعلى جودة وأحدث التقنيات.</p>
       </div>
-      <div className="dv-grid">
-        {DEV_SERVICES.map(s => (
-          <div key={s.title} className="dv-card">
-            <div className="dv-card-icon" style={{ background: `${s.color}1f`, color: s.color, border: `1px solid ${s.color}44` }}>
-              <i className={s.icon} />
-            </div>
-            <h3>{s.title}</h3>
-            <p>{s.desc}</p>
-            <div className="dv-card-tags">
-              {s.tags.map(t => <span key={t} className="dv-card-tag">{t}</span>)}
-            </div>
-          </div>
-        ))}
-      </div>
+      <DevServices />
 
       {/* ── Discord Services ── */}
       <div className="dv-head">
