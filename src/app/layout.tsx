@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { PageTransition } from '@/components/PageTransition';
 import { Analytics } from '@vercel/analytics/react';
 import { validateEnv } from '@/lib/validateEnv';
-import { SITE_URL, SITE_NAME } from '@/lib/site';
+import { SITE_URL } from '@/lib/site';
 
 validateEnv();
 
@@ -17,8 +17,8 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Tilago Alert',
-    template: '%s | Tilago',
+    default: 'Tilago Store',
+    template: '%s | Tilago Store',
   },
   description: DESCRIPTION,
   applicationName: 'Tilago Store',
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   openGraph: {
     type: 'website',
-    siteName: SITE_NAME,
-    title: 'Tilago Alert',
+    siteName: 'Tilago Store',
+    title: 'Tilago Store',
     description: DESCRIPTION,
     url: SITE_URL,
     locale: 'ar_EG',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tilago | تيلاجو',
+    title: 'Tilago Store',
     description: DESCRIPTION,
     images: ['/images.png'],
   },
