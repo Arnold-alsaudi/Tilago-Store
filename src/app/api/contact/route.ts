@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { rateLimit } from '@/lib/rateLimit';
 import { getClientIp } from '@/lib/getClientIp';
+import { NOTIFY_EMAILS } from '@/lib/notify';
 import { z } from 'zod';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL!,
-      to: 'mohammedhany01290@gmail.com',
+      to: NOTIFY_EMAILS,
       subject: subject ? `رسالة من ${esc(name)}: ${esc(subject)}` : `رسالة جديدة من ${esc(name)}`,
       html: `
         <div style="font-family: Arial, sans-serif; direction: rtl; padding: 20px;">

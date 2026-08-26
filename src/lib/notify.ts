@@ -6,6 +6,11 @@ function esc(s: string): string {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// الإيميلات اللي تستقبل الرسائل والطلبات والإشعارات (في كل الصفحات)
+// ملاحظة: حساب Resend في الوضع التجريبي يسمح بالإرسال فقط لإيميل صاحب الحساب.
+// لإضافة tilagoesport@gmail.com لازم تفعيل دومين في resend.com/domains أولاً.
+export const NOTIFY_EMAILS = ['mohamed8abdalhamed@gmail.com'];
+
 export interface PaymentNotification {
   customerName: string;
   customerEmail: string;
@@ -88,7 +93,7 @@ export async function sendWhatsApp(data: PaymentNotification) {
 export async function sendEmailNotification(data: PaymentNotification) {
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
-    to: 'mohammedhany01290@gmail.com',
+    to: NOTIFY_EMAILS,
     subject: `💰 دفعة جديدة — ${data.productName} — ${data.amount} ${data.currency}`,
     html: `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
@@ -193,7 +198,7 @@ export async function notifyCustomOrder(d: CustomOrderNotification) {
   // Email (فيه معاينة صورة الشعار)
   jobs.push(resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
-    to: 'mohammedhany01290@gmail.com',
+    to: NOTIFY_EMAILS,
     subject: `🎨 طلب مع تخصيص — ${d.productName}`,
     html: `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">

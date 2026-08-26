@@ -121,6 +121,12 @@ export default async function DeveloperPage() {
           .dv-feat-icon{width:46px;height:46px;font-size:1.15rem;margin-bottom:.8rem;}
           .dv-feat h4{font-size:.98rem;}
           .dv-feat p{font-size:.78rem;}
+          .dv-contacts-grid{grid-template-columns:repeat(2,1fr);gap:.8rem;}
+          .dv-contact{padding:1rem .9rem;gap:10px;}
+          .dv-contact-arrow{display:none;}
+          .dv-contact-icon{width:42px;height:42px;font-size:1.2rem;}
+          .dv-contact-label{font-size:.9rem;}
+          .dv-contact-sub{font-size:.68rem;}
         }
       `}</style>
 
