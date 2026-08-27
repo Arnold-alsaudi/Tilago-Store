@@ -85,13 +85,25 @@ export default async function DeveloperPage() {
         .dv-feat h4{font-family:'Oxanium','29LtBukra',sans-serif;font-weight:800;font-size:1.05rem;color:#eae6ff;margin:0 0 .5rem;}
         .dv-feat p{color:rgba(170,158,200,0.6);font-size:.83rem;line-height:1.7;margin:0;}
 
-        /* ── CTA ── */
-        .dv-cta{max-width:900px;margin:clamp(50px,7vw,80px) auto 0;padding:0 5%;text-align:center;}
-        .dv-cta-box{position:relative;border-radius:26px;overflow:hidden;
-      height:clamp(200px,32vw,420px);background:#08040f;border:1px solid rgba(155,89,208,0.3);}
-        .dv-cta-box::before{content:'';position:absolute;inset:0;background-image:url('/photo/tilago-embl.png');
-      background-repeat:no-repeat;background-position:center;background-size:contain;opacity:1;pointer-events:none;}
-        .dv-cta-button{margin-top:20px;}
+/* ─ CTA ── */
+.dv-cta{max-width:1200px;margin:clamp(50px,7vw,80px) auto 0;padding:0 5%;text-align:center;}
+.dv-cta-box{position:relative;border-radius:26px;overflow:hidden;
+  height:clamp(250px,40vw,450px);background:#08040f;border:1px solid rgba(155,89,208,0.15);}
+.dv-cta-box::before{content:'';position:absolute;inset:0;background-image:url('/photo/tilago-embl.png');
+  background-repeat:no-repeat;background-position:center;background-size:cover;
+  opacity:1;pointer-events:none;}
+.dv-cta-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;height:100%;padding:2rem;gap:1rem;}
+.dv-cta-content h2{font-family:'Oxanium','29LtBukra',sans-serif;font-weight:900;
+  font-size:clamp(1.5rem,4vw,2.5rem);color:#fff;margin:0;line-height:1.3;}
+.dv-cta-content p{color:rgba(255,255,255,0.9);font-size:clamp(0.9rem,2vw,1.1rem);
+  max-width:600px;margin:0;line-height:1.7;}
+.dv-cta-button{position:relative;z-index:3;margin-top:20px;padding:1.1rem 3rem;font-size:1.1rem;}
+@media(max-width:768px){.dv-cta-box{height:clamp(230px,50vw,400px);border-radius:20px;}
+  .dv-cta-content{padding:1.5rem;}}
+@media(max-width:480px){.dv-cta-box{height:clamp(200px,60vw,350px);}
+  .dv-cta-content h2{font-size:1.4rem;}.dv-cta-content p{font-size:0.85rem;}
+  .dv-cta-button{padding:1rem 2.5rem;font-size:1rem;}}
 
         /* ── Contacts ── */
         .dv-contacts{max-width:900px;margin:0 auto;padding:clamp(44px,6vw,64px) 5% clamp(50px,7vw,80px);}
