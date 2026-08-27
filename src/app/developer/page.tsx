@@ -86,14 +86,12 @@ export default async function DeveloperPage() {
         .dv-feat p{color:rgba(170,158,200,0.6);font-size:.83rem;line-height:1.7;margin:0;}
 
         /* ── CTA ── */
-        .dv-cta{max-width:900px;margin:clamp(50px,7vw,80px) auto 0;padding:0 5%;}
-        .dv-cta-box{position:relative;border-radius:26px;overflow:hidden;text-align:center;padding:clamp(2.5rem,5vw,3.5rem) 1.5rem;
-          background:#08040f;border:1px solid rgba(155,89,208,0.3);}
-        .dv-cta-box::before{content:'';position:absolute;inset:0;background-image:url('/photo/tilago-emblem.png');
-          background-repeat:no-repeat;background-position:center;background-size:min(72%,440px);opacity:0.38;pointer-events:none;}
-        .dv-cta-box > *{position:relative;z-index:1;}
-        .dv-cta-box h2{font-family:'Oxanium','29LtBukra',sans-serif;font-weight:900;font-size:clamp(1.5rem,3.5vw,2.3rem);color:#fff;margin:0 0 .8rem;}
-        .dv-cta-box p{color:rgba(220,210,240,0.7);font-size:.95rem;max-width:480px;margin:0 auto 1.8rem;line-height:1.8;}
+        .dv-cta{max-width:900px;margin:clamp(50px,7vw,80px) auto 0;padding:0 5%;text-align:center;}
+        .dv-cta-box{position:relative;border-radius:26px;overflow:hidden;
+      height:clamp(200px,32vw,420px);background:#08040f;border:1px solid rgba(155,89,208,0.3);}
+        .dv-cta-box::before{content:'';position:absolute;inset:0;background-image:url('/photo/tilago-embl.png');
+      background-repeat:no-repeat;background-position:center;background-size:contain;opacity:1;pointer-events:none;}
+        .dv-cta-button{margin-top:20px;}
 
         /* ── Contacts ── */
         .dv-contacts{max-width:900px;margin:0 auto;padding:clamp(44px,6vw,64px) 5% clamp(50px,7vw,80px);}
@@ -192,11 +190,10 @@ export default async function DeveloperPage() {
 
       {/* ── CTA ── */}
       <div className="dv-cta">
-        <div className="dv-cta-box">
-          <h2>{c.ctaTitle}</h2>
-          <p>{c.ctaSubtitle}</p>
-          <a href="#contact" className="dv-hero-cta">تواصل معنا <i className="fas fa-paper-plane" /></a>
-        </div>
+      <div className="dv-cta-box" />
+    <a href="#contact" className="dv-hero-cta dv-cta-button">
+    تواصل معنا <i className="fas fa-paper-plane" />
+    </a>
       </div>
 
       {/* ── Contacts ── */}

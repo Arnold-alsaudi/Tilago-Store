@@ -188,6 +188,20 @@ export default function HomePage() {
             <span className="ticker-sep">✦</span>
             <span className="ticker-item"><i className="fas fa-code" /> Developer</span>
             <span className="ticker-sep">✦</span>
+            <span className="ticker-item"><i className="fas fa-bell" /> Alerts</span>
+            <span className="ticker-sep">✦</span>
+            <span className="ticker-item"><i className="fab fa-discord" /> خدمات Discord</span>
+            <span className="ticker-sep">✦</span>
+            <span className="ticker-item"><i className="fas fa-layer-group" /> الأوفرلاي</span>
+            <span className="ticker-sep">✦</span>
+            <span className="ticker-item"><i className="fas fa-video" /> باكدج ستريم</span>
+            <span className="ticker-sep">✦</span>
+            <span className="ticker-item"><i className="fa-solid fa-cube" /> 3D</span>
+            <span className="ticker-sep">✦</span>
+            <span className="ticker-item"><i className="fas fa-code" /> Developer</span>
+            <span className="ticker-sep">✦</span>
+            <span className="ticker-item"><i className="fas fa-bell" /> Alerts</span>
+            <span className="ticker-sep">✦</span>
           </div>
         </div>
       </section>

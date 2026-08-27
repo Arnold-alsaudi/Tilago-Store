@@ -18,7 +18,7 @@ export function CardBrands({ height = 20 }: { height?: number }) {
         <span style={{ color: '#1A1F71', fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 800, fontStyle: 'italic', letterSpacing: '.4px', fontSize: fs }}>VISA</span>
       </span>
       <span style={pill}>
-        <span style={{ color: '#00A19A', fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 800, fontSize: fs }}>meeza</span>
+        <span style={{ color: '#52266F', fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 800, fontSize: fs }}>meeza</span>
       </span>
     </span>
   );
