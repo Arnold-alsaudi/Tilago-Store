@@ -1,11 +1,12 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { PayPalLogo } from '@/components/PayPalLogo';
+import { CardBrands } from '@/components/CardBrands';
 import { formatPrice } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -375,7 +376,7 @@ export default function CartPage() {
                   </div>
                 )}
                 <button className="cart-btn cart-btn-meeza" onClick={() => startCheckout('meeza')} disabled={checkingOut !== null || storePaused}>
-                  <CreditCard size={18} /> {checkingOut === 'meeza' ? 'جارٍ التحويل...' : 'الدفع بكارت ميزة / Visa'}
+                  {checkingOut === 'meeza' ? 'جارٍ التحويل...' : <CardBrands height={20} />}
                 </button>
                 <button className="cart-btn cart-btn-paypal" onClick={() => startCheckout('paypal')} disabled={checkingOut !== null || storePaused}>
                   {checkingOut === 'paypal' ? 'جارٍ التحويل...' : <PayPalLogo height={22} />}

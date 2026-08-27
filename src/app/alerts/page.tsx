@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { youtubeEmbedUrl } from '@/lib/youtube';
 import { PayPalLogo } from '@/components/PayPalLogo';
+import { CardBrands } from '@/components/CardBrands';
 import type { Product } from '@/types';
 
 /* ─── Types ─── */
@@ -876,10 +877,7 @@ export default function AlertsPage() {
                             disabled={payLoading !== null}
                             onClick={() => payWithMeeza(modal)}
                           >
-                            <div className="pay-card-icons">
-                              <span className="meeza-tag">Meeza</span>
-                            </div>
-                            {payLoading === 'meeza' ? 'جارٍ التحويل...' : 'ميزة'}
+                            {payLoading === 'meeza' ? 'جارٍ التحويل...' : <CardBrands height={16} />}
                           </button>
                         </div>
                         <button
