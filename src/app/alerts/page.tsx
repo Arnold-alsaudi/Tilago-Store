@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { youtubeEmbedUrl } from '@/lib/youtube';
+import { PayPalLogo } from '@/components/PayPalLogo';
 import type { Product } from '@/types';
 
 /* ─── Types ─── */
@@ -445,11 +446,12 @@ export default function AlertsPage() {
           text-decoration:none; white-space:nowrap; flex:1; min-width:0;
         }
         .al-pay-btn-paypal {
-          background:linear-gradient(135deg,#003087,#009cde);
-          color:#fff; border-color:rgba(0,156,222,0.3);
-          box-shadow:0 2px 10px rgba(0,100,200,0.2);
+          background:#FFC439;
+          color:#003087; border-color:#E8A900;
+          box-shadow:0 2px 10px rgba(255,196,57,0.25);
         }
-        .al-pay-btn-paypal:hover { transform:translateY(-2px); box-shadow:0 5px 16px rgba(0,100,200,0.35); }
+        .al-pay-btn-paypal .paypal-logo { height:18px; width:auto; display:block; }
+        .al-pay-btn-paypal:hover { transform:translateY(-2px); background:#F0B90B; box-shadow:0 5px 16px rgba(255,196,57,0.4); }
         .al-pay-btn-card {
           background:rgba(20,14,50,0.9); color:#d0cce8;
           border:1px solid rgba(84,22,181,0.3);
@@ -867,7 +869,7 @@ export default function AlertsPage() {
                             disabled={payLoading !== null}
                             onClick={() => payWithPaypal(modal)}
                           >
-                            <i className="fab fa-paypal" /> {payLoading === 'paypal' ? 'جارٍ التحويل...' : 'PayPal'}
+                            {payLoading === 'paypal' ? 'جارٍ التحويل...' : <PayPalLogo height={18} />}
                           </button>
                           <button
                             className="al-pay-btn al-pay-btn-card"
