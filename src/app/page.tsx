@@ -87,6 +87,8 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [introVisible, setIntroVisible] = useState(true);
   const [formMsg, setFormMsg] = useState('');
+  const [formOk, setFormOk] = useState(true);
+  const [sending, setSending] = useState(false);
   const [content, setContent] = useState<HomeContent>(DEFAULT_HOME_CONTENT);
 
   useEffect(() => {
@@ -99,10 +101,43 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, []);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setFormMsg('Message sent successfully!');
-    setTimeout(() => setFormMsg(''), 3000);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const name = String(fd.get('name') || '').trim();
+    const email = String(fd.get('email') || '').trim();
+    const message = String(fd.get('message') || '').trim();
+
+    if (message.length < 10) {
+      setFormOk(false);
+      setFormMsg('اكتب رسالتك بتفصيل أكثر (١٠ حروف على الأقل)');
+      setTimeout(() => setFormMsg(''), 4000);
+      return;
+    }
+
+    setSending(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message }),
+      });
+      if (res.ok) {
+        setFormOk(true);
+        setFormMsg('تم استلام رسالتك — سنرد عليك في أقرب وقت');
+        form.reset();
+      } else {
+        setFormOk(false);
+        setFormMsg('حصل خطأ أثناء الإرسال، حاول مرة أخرى');
+      }
+    } catch {
+      setFormOk(false);
+      setFormMsg('تعذّر الاتصال — تأكد من الإنترنت وحاول تاني');
+    } finally {
+      setSending(false);
+      setTimeout(() => setFormMsg(''), 5000);
+    }
   }
 
   return (
@@ -432,26 +467,29 @@ export default function HomePage() {
               <div className="form-row">
                 <div className="input-group">
                   <i className="fas fa-user" />
-                  <input type="text" placeholder="الاسم" required />
+                  <input type="text" name="name" placeholder="الاسم" required minLength={2} />
                 </div>
                 <div className="input-group">
                   <i className="fas fa-envelope" />
-                  <input type="email" placeholder="البريد الإلكتروني" required />
+                  <input type="email" name="email" placeholder="البريد الإلكتروني" required />
                 </div>
               </div>
               <div className="input-group">
                 <i className="fas fa-comment-dots" />
-                <textarea placeholder="رسالتك..." required />
+                <textarea name="message" placeholder="رسالتك..." required minLength={10} />
               </div>
-              <button type="submit">
-                <i className="fas fa-paper-plane" />
-                إرسال الرسالة
+              <button type="submit" disabled={sending}>
+                <i className={`fas ${sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`} />
+                {sending ? 'جاري الإرسال...' : 'إرسال الرسالة'}
               </button>
             </form>
           </div>
 
           {formMsg && (
-            <div className="form-toast">{formMsg}</div>
+            <div className={`form-toast ${formOk ? 'ok' : 'err'}`}>
+              <span className="toast-ic"><i className={`fas ${formOk ? 'fa-check' : 'fa-xmark'}`} /></span>
+              <span>{formMsg}</span>
+            </div>
           )}
         </div>
       </section>
@@ -867,12 +905,28 @@ export default function HomePage() {
         }
         .contact-form button:hover { opacity: 0.9; transform: translateY(-2px); }
         .form-toast {
-          position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-          background: linear-gradient(135deg,#5416B5,#7F3AA1);
-          color: #fff; padding: 14px 32px; border-radius: 30px;
-          font-family:'Montserrat', sans-serif; font-size: 1rem; font-weight: 600;
-          z-index: 9999; letter-spacing: 1px;
+          position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%);
+          display: flex; align-items: center; gap: 11px;
+          background: rgba(15,9,30,0.92);
+          -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.10);
+          color: #EFE9FF; padding: 13px 22px 13px 16px; border-radius: 14px;
+          font-family:'Montserrat', sans-serif; font-size: .95rem; font-weight: 600;
+          letter-spacing: .2px; z-index: 9999;
+          box-shadow: 0 14px 44px rgba(0,0,0,0.45);
+          animation: toastIn .45s cubic-bezier(.2,.9,.25,1), toastOut .5s ease 4.4s forwards;
         }
+        .form-toast.ok  { border-color: rgba(46,204,113,0.42); }
+        .form-toast.err { border-color: rgba(231,76,60,0.48); }
+        .form-toast .toast-ic {
+          width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; font-size: .78rem;
+        }
+        .form-toast.ok  .toast-ic { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .form-toast.err .toast-ic { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        @keyframes toastIn  { from { opacity:0; transform: translateX(-50%) translateY(18px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { to { opacity:0; transform: translateX(-50%) translateY(10px); } }
+        .contact-form button[disabled] { opacity: .6; cursor: not-allowed; }
         @media (max-width: 768px) {
           .contact-body { grid-template-columns: 1fr; }
           .form-row { grid-template-columns: 1fr; }
