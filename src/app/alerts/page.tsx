@@ -644,7 +644,7 @@ export default function AlertsPage() {
           <section className="al-hero">
             <div className="al-hero-video">
               <video autoPlay muted loop playsInline>
-                <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782938/tilago/alert.mp4" type="video/mp4" />
+                <source src="https://res.cloudinary.com/zazon8ja/video/upload/v1788311341/tilago.mp4" type="video/mp4" />
               </video>
             </div>
             <div className="al-hero-content">
