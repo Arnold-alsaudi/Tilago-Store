@@ -8,8 +8,12 @@ export const dynamic = 'force-dynamic';
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
+  // الرابط بيقبل الـ id أو الـ slug أو الكود — عشان /product/480O4 يفتح على طول
   const product = await prisma.product.findFirst({
-    where: { OR: [{ id }, { slug: id }], active: true },
+    where: {
+      OR: [{ id }, { slug: id }, { code: id.trim().toUpperCase() }],
+      active: true,
+    },
   });
   if (!product) notFound();
 
@@ -17,6 +21,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const p = {
     id: product.id,
     slug: product.slug,
+    code: product.code,
+    colorKey: product.colorKey,
+    comingSoon: product.comingSoon,
     title: product.title,
     description: product.description,
     price: product.price,

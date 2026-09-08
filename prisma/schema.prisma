@@ -68,6 +68,12 @@ enum Role {
 model Product {
   id          String      @id @default(cuid())
   slug        String?     @unique
+  // كود مختصر للمنتج (مثال: 480O4) — للبحث السريع وللوصول للطلب من رسالة البوت
+  code        String?     @unique
+  // حرف اللون السائد (R/O/Y/G/C/B/P/K/W/D) — يستخدم في الكود وفي الفلترة بالألوان
+  colorKey    String?
+  // المنتج معروض لكن لسه مش جاهز للبيع — بيظهر عليه شارة وميتشريش
+  comingSoon  Boolean     @default(false)
   title       String
   description String      @db.Text
   price       Float

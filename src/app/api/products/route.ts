@@ -13,12 +13,19 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(products);
 }
 
+// الكود بيتخزّن دايماً كابيتال ومن غير مسافات عشان البحث والمقارنة يبقوا متسقين
+const codeField = z.string().trim().toUpperCase().max(16).nullable().optional()
+  .transform(v => (v ? v : null));
+
 const productSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   price: z.number().min(0),
   category: z.enum(['ALERTS', 'STREAM', 'PACKAGE', 'THREE_D', 'VIDEO']),
   subCategory: z.string().optional().nullable(),
+  code: codeField,
+  colorKey: z.string().trim().toUpperCase().max(2).nullable().optional().transform(v => (v ? v : null)),
+  comingSoon: z.boolean().default(false),
   priceLabel: z.string().nullable().optional(),
   imageUrl: z.string().default(''),
   images: z.array(z.string()).default([]),
@@ -45,6 +52,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const product = await prisma.product.create({ data: parsed.data });
-  return NextResponse.json(product, { status: 201 });
+  try {
+    const product = await prisma.product.create({ data: parsed.data });
+    return NextResponse.json(product, { status: 201 });
+  } catch (err: unknown) {
+    // P2002 = تعارض في حقل مميّز — غالباً كود متكرر. نرد برسالة مفهومة بدل 500
+    if ((err as { code?: string })?.code === 'P2002') {
+      return NextResponse.json(
+        { error: `الكود "${parsed.data.code}" مستخدم في منتج تاني — اختار كود غيره` },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 }

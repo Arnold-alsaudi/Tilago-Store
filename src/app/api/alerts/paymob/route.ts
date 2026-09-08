@@ -18,30 +18,52 @@ async function computeTrustedOrder(
       return { amount: 0, productName: '', error: 'Cart items required' };
     }
     const ids = cartItems.map(i => String(i?.productId));
-    // المنتج في السلة ممكن يتخزن بالـ id أو الـ slug — ندوّر بالاتنين
+    const upper = ids.map(i => i.toUpperCase());
+    // المنتج في السلة ممكن يتخزن بالـ id أو الـ slug أو الكود — ندوّر بالتلاتة
     const products = await prisma.product.findMany({
-      where: { OR: [{ id: { in: ids } }, { slug: { in: ids } }], active: true },
+      where: {
+        OR: [{ id: { in: ids } }, { slug: { in: ids } }, { code: { in: upper } }],
+        active: true,
+      },
     });
     const byId = new Map<string, (typeof products)[number]>();
-    products.forEach(p => { byId.set(p.id, p); if (p.slug) byId.set(p.slug, p); });
+    products.forEach(p => {
+      byId.set(p.id, p);
+      if (p.slug) byId.set(p.slug, p);
+      if (p.code) byId.set(p.code, p);
+    });
 
     let total = 0;
     const names: string[] = [];
     for (const i of cartItems) {
       const product = byId.get(String(i?.productId));
       if (!product) return { amount: 0, productName: '', error: 'Invalid product in cart' };
+      // منتج لسه مخلصش ماينفعش يتباع حتى لو اتحط في السلة بطريقة ما
+      if (product.comingSoon) {
+        return { amount: 0, productName: '', error: `"${product.title}" لسه مش متاح للشراء` };
+      }
       const quantity = Math.max(1, Math.floor(Number(i?.quantity) || 1));
       total += product.price * quantity;
-      names.push(`${product.title} ×${quantity}`);
+      // الكود بيتحط قدام الاسم عشان يوصل في إشعار البوت ونلاقي الشغل بسرعة
+      names.push(`${product.code ? `[${product.code}] ` : ''}${product.title} ×${quantity}`);
     }
     return { amount: total, productName: names.join('، ') };
   }
 
   const product = await prisma.product.findFirst({
-    where: { OR: [{ id: alertId }, { slug: alertId }], active: true },
+    where: {
+      OR: [{ id: alertId }, { slug: alertId }, { code: alertId.toUpperCase() }],
+      active: true,
+    },
   });
   if (!product) return { amount: 0, productName: '', error: 'Product not found' };
-  return { amount: product.price, productName: product.title };
+  if (product.comingSoon) {
+    return { amount: 0, productName: '', error: 'المنتج ده لسه مش متاح للشراء' };
+  }
+  return {
+    amount: product.price,
+    productName: `${product.code ? `[${product.code}] ` : ''}${product.title}`,
+  };
 }
 
 export async function POST(req: NextRequest) {

@@ -9,6 +9,10 @@ const patchSchema = z.object({
   price:       z.number().min(0).optional(),
   category:    z.enum(['ALERTS','STREAM','PACKAGE','THREE_D','VIDEO']).optional(),
   subCategory: z.string().nullable().optional(),
+  // الكود بيتخزّن كابيتال ومن غير مسافات عشان البحث والمقارنة يبقوا متسقين
+  code:        z.string().trim().toUpperCase().max(16).nullable().optional().transform(v => (v ? v : null)),
+  colorKey:    z.string().trim().toUpperCase().max(2).nullable().optional().transform(v => (v ? v : null)),
+  comingSoon:  z.boolean().optional(),
   priceLabel:  z.string().nullable().optional(),
   imageUrl:    z.string().optional(),
   images:      z.array(z.string()).optional(),
@@ -42,6 +46,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     );
   }
 
-  const product = await prisma.product.update({ where: { id }, data: parsed.data });
-  return NextResponse.json(product);
+  try {
+    const product = await prisma.product.update({ where: { id }, data: parsed.data });
+    return NextResponse.json(product);
+  } catch (err: unknown) {
+    // P2002 = كود متكرر — رسالة مفهومة بدل 500
+    if ((err as { code?: string })?.code === 'P2002') {
+      return NextResponse.json(
+        { error: `الكود "${parsed.data.code}" مستخدم في منتج تاني — اختار كود غيره` },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 }

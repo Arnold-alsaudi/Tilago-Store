@@ -1,17 +1,21 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
 import { youtubeEmbedUrl } from '@/lib/youtube';
 import { mediaKind, videoPoster } from '@/lib/media';
+import { colorMeta, DEFAULT_UNAVAILABLE_LABEL } from '@/lib/alertCode';
 import type { Product } from '@/types';
 
 export interface PProduct {
   id: string;
   slug: string | null;
+  code: string | null;
+  colorKey: string | null;
+  comingSoon: boolean;
   title: string;
   description: string;
   price: number;
@@ -56,7 +60,17 @@ export function ProductClient({ product }: { product: PProduct }) {
   const [custName, setCustName] = useState('');
   const [contact, setContact] = useState('');
   const [dragOver, setDragOver] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [soonLabel, setSoonLabel] = useState(DEFAULT_UNAVAILABLE_LABEL);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!product.comingSoon) return;
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(s => { if (s.unavailableLabel) setSoonLabel(s.unavailableLabel); })
+      .catch(() => {});
+  }, [product.comingSoon]);
 
   const cat = CAT[product.category] ?? { label: product.category, href: '/' };
 
@@ -213,6 +227,27 @@ export function ProductClient({ product }: { product: PProduct }) {
           background:rgba(0,0,0,.4);color:#fff;font-size:1rem;}
 
         /* ── Details (left) ── */
+        /* صف الكود واللون فوق اسم المنتج */
+        .pd-tagrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.5rem;}
+        .pd-code{font-family:'Oxanium',monospace;font-size:.72rem;font-weight:800;letter-spacing:1px;
+          background:rgba(84,22,181,.24);border:1px solid rgba(155,89,208,.45);color:#c8b8f0;
+          border-radius:7px;padding:.22rem .6rem;cursor:pointer;transition:all .2s;direction:ltr;
+          display:inline-flex;align-items:center;gap:5px;}
+        .pd-code:hover{background:rgba(84,22,181,.45);color:#fff;}
+        .pd-code.copied{background:rgba(46,204,113,.18);border-color:rgba(46,204,113,.5);color:#7ef0a8;}
+        .pd-colortag{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;
+          color:rgba(200,190,225,.7);background:rgba(255,255,255,.04);
+          border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:.22rem .6rem;}
+        .pd-colortag span{width:10px;height:10px;border-radius:50%;display:inline-block;}
+        /* شارة "لم يكتمل بعد" في صفحة المنتج */
+        .pd-soon{display:flex;align-items:flex-start;gap:12px;margin:.9rem 0 1.1rem;
+          background:rgba(240,131,11,.08);border:1px solid rgba(240,131,11,.4);
+          border-radius:13px;padding:.9rem 1.1rem;}
+        .pd-soon > i{color:#ffcf7a;font-size:1.1rem;margin-top:2px;flex-shrink:0;}
+        .pd-soon div{display:flex;flex-direction:column;gap:3px;}
+        .pd-soon b{color:#ffcf7a;font-size:.92rem;}
+        .pd-soon span{color:rgba(200,190,225,.65);font-size:.8rem;line-height:1.6;}
+
         .pd-cat{display:inline-block;font-family:'Oxanium',sans-serif;font-size:.66rem;font-weight:700;
           letter-spacing:3px;text-transform:uppercase;color:rgba(196,160,224,.8);padding:.32rem 1rem;
           border-radius:50px;border:1px solid rgba(155,89,208,.25);background:rgba(84,22,181,.08);margin-bottom:1rem;}
@@ -357,8 +392,40 @@ export function ProductClient({ product }: { product: PProduct }) {
 
           {/* Details */}
           <div className="pd-details">
-            <span className="pd-cat">{product.subCategory || cat.label}</span>
+            <div className="pd-tagrow">
+              <span className="pd-cat">{product.subCategory || cat.label}</span>
+              {product.code && (
+                <button
+                  className={`pd-code${codeCopied ? ' copied' : ''}`}
+                  onClick={() => {
+                    navigator.clipboard?.writeText(product.code!).then(
+                      () => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1400); },
+                      () => {},
+                    );
+                  }}
+                  title="اضغط لنسخ الكود"
+                >
+                  <i className="fas fa-hashtag" /> {codeCopied ? 'اتنسخ' : product.code}
+                </button>
+              )}
+              {colorMeta(product.colorKey) && (
+                <span className="pd-colortag">
+                  <span style={{ background: colorMeta(product.colorKey)!.hex }} />
+                  {colorMeta(product.colorKey)!.label}
+                </span>
+              )}
+            </div>
             <h1 className="pd-title">{product.title}</h1>
+
+            {product.comingSoon && (
+              <div className="pd-soon">
+                <i className="fas fa-clock" />
+                <div>
+                  <b>{soonLabel}</b>
+                  <span>الاليرت ده لسه بيتجهّز — تقدر تشوفه دلوقتي وهنفتحه للشراء قريب.</span>
+                </div>
+              </div>
+            )}
 
             <div className="pd-rating">
               <span className="pd-stars">{'★'.repeat(rating)}{'☆'.repeat(5 - rating)}</span>
@@ -433,12 +500,20 @@ export function ProductClient({ product }: { product: PProduct }) {
 
             {/* Buy buttons */}
             <div className="pd-actions">
-              <button className="pd-buynow" onClick={buyNow}>
-                <i className="fas fa-bolt" /> اشتري الآن
-              </button>
-              <button className={`pd-cart${added ? ' added' : ''}`} onClick={addToCart}>
-                {added ? <>✓ تمت الإضافة</> : <><i className="fas fa-cart-plus" /> أضف للسلة</>}
-              </button>
+              {product.comingSoon ? (
+                <button className="pd-buynow" disabled style={{ opacity: .5, cursor: 'not-allowed' }}>
+                  <i className="fas fa-clock" /> {soonLabel}
+                </button>
+              ) : (
+                <>
+                  <button className="pd-buynow" onClick={buyNow}>
+                    <i className="fas fa-bolt" /> اشتري الآن
+                  </button>
+                  <button className={`pd-cart${added ? ' added' : ''}`} onClick={addToCart}>
+                    {added ? <>✓ تمت الإضافة</> : <><i className="fas fa-cart-plus" /> أضف للسلة</>}
+                  </button>
+                </>
+              )}
               <button className={`pd-icon-btn${wished ? ' on' : ''}`} onClick={() => setWished(w => !w)} aria-label="المفضلة">
                 <i className={wished ? 'fas fa-heart' : 'far fa-heart'} />
               </button>

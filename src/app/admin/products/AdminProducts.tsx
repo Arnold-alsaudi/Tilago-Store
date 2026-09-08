@@ -8,17 +8,12 @@ import { formatPrice } from '@/lib/utils';
 import { youtubeThumbnail } from '@/lib/youtube';
 import { mediaKind } from '@/lib/media';
 import { uploadVideoDirect } from '@/lib/uploadClient';
+import { ALERT_SUBS } from '@/lib/alertCode';
 
 const CATEGORIES = ['ALERTS', 'STREAM', 'PACKAGE', 'THREE_D'] as const;
+// الأسماء موحّدة مع اللي بيظهر في الموقع وفي /admin/alerts — المصدر واحد
 const SUB_CATEGORIES: Record<string, { value: string; label: string }[]> = {
-  ALERTS: [
-    { value: 'diamond',  label: 'الأليرتات الماسية' },
-    { value: 'golden',   label: 'الأليرتات الذهبية' },
-    { value: 'platinum', label: 'الأليرتات البلاتينية' },
-    { value: 'anime',    label: 'الأليرتات الأنمي' },
-    { value: 'snow',     label: 'الأليرتات الثلجية' },
-    { value: 'fire',     label: 'الأليرتات ثري دي' },
-  ],
+  ALERTS: ALERT_SUBS.map(s => ({ value: s.value, label: `الاليرتات ${s.label}` })),
   STREAM: [],
   PACKAGE: [],
   THREE_D: [],

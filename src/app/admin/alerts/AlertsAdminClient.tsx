@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Reorder, motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit2, Trash2, X, Upload, GripVertical,
@@ -9,17 +9,10 @@ import {
 import { isYouTubeUrl } from '@/lib/youtube';
 import { mediaKind, videoPoster } from '@/lib/media';
 import { uploadVideoDirect } from '@/lib/uploadClient';
-
-/* ── Subcategories (color-coded) ───────────────────────────── */
-const SUBS = [
-  { value: 'diamond',  label: 'ماسية',    color: '#5EC8F0', icon: 'fa-gem' },
-  { value: 'golden',   label: 'ذهبية',    color: '#F5C542', icon: 'fa-crown' },
-  { value: 'platinum', label: 'بلاتينية', color: '#C7CBE0', icon: 'fa-trophy' },
-  { value: 'anime',    label: 'أنمي',     color: '#FF6FA5', icon: 'fa-star' },
-  { value: 'snow',     label: 'ثلجية',    color: '#8FE3F5', icon: 'fa-snowflake' },
-  { value: 'fire',     label: 'ثري دي',   color: '#FF8A3D', icon: 'fa-fire' },
-];
-const subMeta = (v?: string | null) => SUBS.find(s => s.value === v) ?? { value: v ?? '', label: v ?? '—', color: '#9B59D0', icon: 'fa-bell' };
+import {
+  ALERT_SUBS as SUBS, subMeta, SUB_CODE, COLORS, colorMeta,
+  buildCode, normalizeCode, DEFAULT_UNAVAILABLE_LABEL,
+} from '@/lib/alertCode';
 
 /* ── Types ─────────────────────────────────────────────────── */
 type MediaType = 'image' | 'video';
@@ -30,17 +23,20 @@ interface AlertItem {
   subCategory: string | null; imageUrl: string; images: string[]; videos: string[];
   videoUrl: string | null; tags: string[]; rating: number; ratingCount: number;
   featured: boolean; active: boolean;
+  code: string | null; colorKey: string | null; comingSoon: boolean;
 }
 interface FormState {
   title: string; description: string; price: string; priceLabel: string;
   subCategory: string; imageUrl: string; media: MediaItem[]; tags: string[];
   rating: number; featured: boolean; active: boolean;
+  code: string; colorKey: string; comingSoon: boolean;
 }
 
 const uid = () => Math.random().toString(36).slice(2);
 const empty = (): FormState => ({
   title: '', description: '', price: '', priceLabel: '', subCategory: 'diamond',
   imageUrl: '', media: [], tags: [], rating: 5, featured: false, active: true,
+  code: '', colorKey: '', comingSoon: false,
 });
 
 async function uploadFile(file: File): Promise<string> {
@@ -65,15 +61,58 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [newTag, setNewTag]   = useState('');
   const [uploadErr, setUploadErr] = useState('');
+  const [search, setSearch]   = useState('');
+  // نص شارة "لم يكتمل بعد" — محفوظ في إعدادات الموقع وبيتغيّر من هنا
+  const [soonLabel, setSoonLabel] = useState(DEFAULT_UNAVAILABLE_LABEL);
+  const [labelSaved, setLabelSaved] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(s => { if (s.unavailableLabel) setSoonLabel(s.unavailableLabel); })
+      .catch(() => {});
+  }, []);
+
+  async function saveSoonLabel() {
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ unavailableLabel: soonLabel.trim() || DEFAULT_UNAVAILABLE_LABEL }),
+    }).catch(() => null);
+    if (res?.ok) { setLabelSaved(true); setTimeout(() => setLabelSaved(false), 1600); }
+  }
 
   const coverRef = useRef<HTMLInputElement>(null);
   const imgRef   = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
 
-  const shown = useMemo(
-    () => filter === 'all' ? alerts : alerts.filter(a => a.subCategory === filter),
-    [alerts, filter],
+  // فلترة بالقسم + بحث بالكود أو الاسم — عشان لما يوصلك طلب بالكود تلاقيه فوراً
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return alerts.filter(a => {
+      if (filter !== 'all' && a.subCategory !== filter) return false;
+      if (!q) return true;
+      return (a.code ?? '').toLowerCase().includes(q) || a.title.toLowerCase().includes(q);
+    });
+  }, [alerts, filter, search]);
+
+  // الأكواد المستخدمة (غير الاليرت اللي بنعدّله) — عشان نمنع التكرار قبل الحفظ
+  const takenCodes = useMemo(
+    () => new Set(alerts.filter(a => a.id !== editId && a.code).map(a => a.code!.toUpperCase())),
+    [alerts, editId],
   );
+  const codeDuplicate = !!form.code && takenCodes.has(normalizeCode(form.code));
+
+  /** أول رقم فاضي للنوع + اللون المختارين — عشان الكود يتولّد لوحده */
+  function suggestCode(sub: string, color: string): string {
+    if (!color) return '';
+    const prefix = SUB_CODE[sub] ?? '';
+    if (!prefix) return '';
+    for (let n = 1; n < 999; n++) {
+      const candidate = buildCode(sub, color, n);
+      if (!takenCodes.has(candidate)) return candidate;
+    }
+    return '';
+  }
 
   function openAdd() { setEditId(null); setForm(empty()); setShowReorder(false); setNewVideoUrl(''); setNewTag(''); setUploadErr(''); setModal(true); }
 
@@ -85,6 +124,7 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
       priceLabel: a.priceLabel ?? '', subCategory: a.subCategory ?? 'diamond',
       imageUrl: a.imageUrl, media, tags: a.tags ?? [], rating: a.rating ?? 5,
       featured: a.featured, active: a.active,
+      code: a.code ?? '', colorKey: a.colorKey ?? '', comingSoon: a.comingSoon ?? false,
     });
     setShowReorder(false); setNewVideoUrl(''); setNewTag(''); setUploadErr(''); setModal(true);
   }
@@ -137,7 +177,9 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
 
   async function save() {
     if (!form.title.trim()) return;
+    if (codeDuplicate) { setUploadErr('الكود ده مستخدم في اليرت تاني — غيّره'); return; }
     setSaving(true);
+    setUploadErr('');
     const orderedUrls = form.media.map(m => m.url);
     const videoUrls   = form.media.filter(m => m.type === 'video').map(m => m.url);
     const body = {
@@ -146,6 +188,9 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
       price: parseFloat(form.price) || 0,
       priceLabel: form.priceLabel.trim() || null,
       category: 'ALERTS', subCategory: form.subCategory,
+      code: normalizeCode(form.code) || null,
+      colorKey: form.colorKey || null,
+      comingSoon: form.comingSoon,
       imageUrl: form.imageUrl || orderedUrls.find(u => mediaKind(u) === 'image') || '',
       images: orderedUrls,
       videos: videoUrls,
@@ -155,16 +200,24 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
       featured: form.featured, active: form.active,
     };
     try {
+      const url = editId ? `/api/products/${editId}` : '/api/products';
+      const res = await fetch(url, {
+        method: editId ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => null);
+      // كان بيتجاهل فشل الحفظ تماماً — دلوقتي بيوريك السبب (زي تكرار الكود)
+      if (!res.ok) { setUploadErr(data?.error ?? 'فشل الحفظ، حاول تاني'); return; }
+
       if (editId) {
-        const res = await fetch(`/api/products/${editId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        const updated = await res.json().catch(() => null);
-        setAlerts(as => as.map(a => a.id === editId ? ({ ...a, ...(updated ?? body), id: editId } as AlertItem) : a));
+        setAlerts(as => as.map(a => a.id === editId ? ({ ...a, ...(data ?? body), id: editId } as AlertItem) : a));
       } else {
-        const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        const created = await res.json();
-        setAlerts(as => [{ ...body, id: created.id, ratingCount: 0 } as AlertItem, ...as]);
+        setAlerts(as => [{ ...body, id: data.id, ratingCount: 0 } as AlertItem, ...as]);
       }
       closeModal();
+    } catch {
+      setUploadErr('تعذّر الاتصال بالسيرفر');
     } finally { setSaving(false); }
   }
 
@@ -262,6 +315,88 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
         .al-input::placeholder { color:rgba(180,170,210,.35); }
         .al-row2 { display:flex; gap:12px; flex-wrap:wrap; }
         .al-field { flex:1; min-width:130px; }
+
+        /* رقم النوع جوه زرار القسم */
+        .al-subnum { font-family:'Oxanium',monospace; font-size:.68rem; opacity:.65; margin-inline-start:4px; direction:ltr; }
+
+        /* مربعات الألوان */
+        .al-swatches { display:flex; flex-wrap:wrap; gap:8px; }
+        .al-swatch {
+          display:flex; flex-direction:column; align-items:center; gap:3px;
+          background:rgba(0,0,0,.25); border:2px solid transparent; border-radius:11px;
+          padding:.4rem .55rem; cursor:pointer; transition:all .2s;
+        }
+        .al-swatch span { width:20px; height:20px; border-radius:50%; background:var(--c); display:block; }
+        .al-swatch b { font-family:'Oxanium',monospace; font-size:.64rem; color:rgba(200,190,225,.6); }
+        .al-swatch:hover { background:rgba(84,22,181,.16); }
+        .al-swatch.on { border-color:var(--c); background:rgba(84,22,181,.22); }
+        .al-swatch.on b { color:#f0ecff; }
+
+        .al-code-hint { font-size:.72rem; color:rgba(180,168,215,.5); margin:.5rem 0 0; line-height:1.6; }
+        .al-code-warn { font-size:.75rem; color:#e06a6a; margin:.5rem 0 0; display:flex; align-items:center; gap:6px; }
+
+        /* مفتاح "لم يكتمل بعد" */
+        .al-soon-toggle {
+          width:100%; display:flex; align-items:center; gap:12px; text-align:right;
+          background:rgba(0,0,0,.25); border:1px solid rgba(84,22,181,.3);
+          border-radius:13px; padding:.8rem 1rem; cursor:pointer; transition:all .22s;
+          color:#c8b8f0; font-family:'Cairo',sans-serif;
+        }
+        .al-soon-toggle.on { background:rgba(240,131,11,.09); border-color:rgba(240,131,11,.45); color:#ffcf7a; }
+        .al-soon-toggle > i { font-size:1.05rem; flex-shrink:0; }
+        .al-soon-toggle span { flex:1; display:flex; flex-direction:column; gap:2px; }
+        .al-soon-toggle b { font-size:.86rem; font-weight:800; }
+        .al-soon-toggle em { font-style:normal; font-size:.72rem; color:rgba(180,168,215,.55); }
+        .al-switch {
+          width:40px; height:22px; border-radius:50px; flex:0 0 40px;
+          background:rgba(255,255,255,.1); position:relative; transition:background .22s;
+        }
+        .al-switch i {
+          position:absolute; top:3px; right:3px; width:16px; height:16px; border-radius:50%;
+          background:#c8b8f0; transition:transform .22s;
+        }
+        .al-switch.on { background:rgba(240,131,11,.5); }
+        .al-switch.on i { transform:translateX(-18px); background:#ffcf7a; }
+
+        /* بحث الأدمن + تعديل نص الشارة */
+        .al-tools { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:1rem; }
+        .al-search-admin {
+          display:flex; align-items:center; gap:8px; flex:1; min-width:210px;
+          background:rgba(0,0,0,.3); border:1px solid rgba(84,22,181,.32);
+          border-radius:50px; padding:.45rem 1rem;
+        }
+        .al-search-admin:focus-within { border-color:#7F3AA1; }
+        .al-search-admin input {
+          flex:1; min-width:0; background:none; border:none; outline:none; color:#f0ecff;
+          font-family:'Cairo',sans-serif; font-size:.85rem;
+        }
+        .al-search-admin i { color:rgba(155,89,208,.7); font-size:.82rem; }
+        .al-labelbox {
+          display:flex; align-items:center; gap:8px;
+          background:rgba(0,0,0,.3); border:1px solid rgba(240,131,11,.32);
+          border-radius:50px; padding:.45rem .5rem .45rem 1rem;
+        }
+        .al-labelbox input {
+          background:none; border:none; outline:none; color:#ffcf7a; width:120px;
+          font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700;
+        }
+        .al-labelbox button {
+          background:rgba(240,131,11,.18); border:1px solid rgba(240,131,11,.4);
+          color:#ffcf7a; border-radius:50px; padding:.25rem .8rem; cursor:pointer;
+          font-family:'Cairo',sans-serif; font-size:.74rem; font-weight:700; white-space:nowrap;
+        }
+        .al-labelbox button:hover { background:rgba(240,131,11,.34); }
+
+        /* كود + حالة على كارت القائمة */
+        .al-card-code {
+          font-family:'Oxanium',monospace; font-size:.68rem; font-weight:800; letter-spacing:1px;
+          background:rgba(84,22,181,.25); border:1px solid rgba(155,89,208,.4);
+          color:#c8b8f0; border-radius:6px; padding:.1rem .45rem; direction:ltr;
+        }
+        .al-card-soon {
+          font-size:.66rem; font-weight:800; border-radius:50px; padding:.1rem .55rem;
+          background:rgba(240,131,11,.15); color:#ffcf7a; border:1px solid rgba(240,131,11,.4);
+        }
         .al-fl { font-size:.72rem; color:rgba(180,168,215,.6); font-weight:700; margin-bottom:.4rem; display:block; }
 
         /* Subcategory pills */
@@ -348,6 +483,24 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
           ))}
         </div>
 
+        {/* Search + coming-soon label */}
+        <div className="al-tools">
+          <div className="al-search-admin">
+            <i className="fas fa-magnifying-glass" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="ابحث بالكود اللي جالك في الطلب أو بالاسم…"
+            />
+            {search && <button type="button" onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: 'rgba(180,168,215,.6)', cursor: 'pointer' }}><X size={14} /></button>}
+          </div>
+          <div className="al-labelbox" title="النص اللي بيظهر على الاليرتات اللي لسه مخلصتش">
+            <i className="fas fa-clock" style={{ color: '#ffcf7a', fontSize: '.8rem' }} />
+            <input value={soonLabel} onChange={e => setSoonLabel(e.target.value)} maxLength={40} />
+            <button type="button" onClick={saveSoonLabel}>{labelSaved ? '✓ اتحفظ' : 'حفظ'}</button>
+          </div>
+        </div>
+
         {/* Filters */}
         <div className="al-filters">
           <button className={`al-btn al-pill${filter === 'all' ? ' on' : ''}`}
@@ -390,6 +543,18 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
                     {!a.active && <span className="al-hidden-tag">مخفي</span>}
                   </div>
                   <div className="al-card-body">
+                    {(a.code || a.comingSoon || a.colorKey) && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                        {a.code && <span className="al-card-code">{a.code}</span>}
+                        {colorMeta(a.colorKey) && (
+                          <span title={colorMeta(a.colorKey)!.label} style={{
+                            width: 11, height: 11, borderRadius: '50%',
+                            background: colorMeta(a.colorKey)!.hex, display: 'inline-block',
+                          }} />
+                        )}
+                        {a.comingSoon && <span className="al-card-soon">{soonLabel}</span>}
+                      </div>
+                    )}
                     <div className="al-card-title">{a.title}</div>
                     <div className="al-card-desc">{a.description}</div>
                     <div className="al-card-row">
@@ -487,13 +652,77 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
                       {SUBS.map(s => {
                         const on = form.subCategory === s.value;
                         return (
-                          <button key={s.value} type="button" className="al-btn al-subpill" onClick={() => setForm(f => ({ ...f, subCategory: s.value }))}
+                          <button key={s.value} type="button" className="al-btn al-subpill"
+                            onClick={() => setForm(f => ({
+                              ...f, subCategory: s.value,
+                              // الكود بيتولّد من جديد لما النوع يتغيّر (طالما مش متكتب بالإيد)
+                              code: f.colorKey ? suggestCode(s.value, f.colorKey) : f.code,
+                            }))}
                             style={on ? { background: `${s.color}22`, borderColor: `${s.color}99`, color: s.color } : undefined}>
                             <i className={`fas ${s.icon}`} style={{ color: s.color }} /> {s.label}
+                            <span className="al-subnum">{SUB_CODE[s.value]}</span>
                           </button>
                         );
                       })}
                     </div>
+                  </div>
+
+                  {/* Colour + code */}
+                  <div className="al-sec">
+                    <div className="al-sec-label"><i className="fas fa-palette" style={{ fontSize: 12 }} /> اللون والكود</div>
+
+                    <div className="al-swatches">
+                      {COLORS.map(c => (
+                        <button key={c.key} type="button" title={c.label}
+                          className={`al-swatch${form.colorKey === c.key ? ' on' : ''}`}
+                          style={{ ['--c' as string]: c.hex }}
+                          onClick={() => setForm(f => ({
+                            ...f, colorKey: c.key, code: suggestCode(f.subCategory, c.key),
+                          }))}>
+                          <span />
+                          <b>{c.key}</b>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="al-row" style={{ marginTop: 10 }}>
+                      <div className="al-field">
+                        <label className="al-fl">الكود</label>
+                        <input
+                          className="al-input"
+                          dir="ltr"
+                          placeholder="480O1"
+                          value={form.code}
+                          onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                          style={codeDuplicate ? { borderColor: '#e06a6a', color: '#ffb0b0' } : undefined}
+                        />
+                      </div>
+                      <div className="al-field" style={{ display: 'flex', alignItems: 'flex-end' }}>
+                        <button type="button" className="al-btn al-up"
+                          onClick={() => setForm(f => ({ ...f, code: suggestCode(f.subCategory, f.colorKey) }))}
+                          disabled={!form.colorKey}>
+                          <i className="fas fa-wand-magic-sparkles" /> ولّد كود
+                        </button>
+                      </div>
+                    </div>
+                    {codeDuplicate
+                      ? <p className="al-code-warn"><i className="fas fa-triangle-exclamation" /> الكود ده مستخدم في اليرت تاني</p>
+                      : <p className="al-code-hint">النوع ({SUB_CODE[form.subCategory] ?? '—'}) + حرف اللون + الترتيب. العميل يقدر يدوّر بيه، وهيوصلك في إشعار الطلب.</p>}
+                  </div>
+
+                  {/* Not ready yet */}
+                  <div className="al-sec">
+                    <button type="button" className={`al-soon-toggle${form.comingSoon ? ' on' : ''}`}
+                      onClick={() => setForm(f => ({ ...f, comingSoon: !f.comingSoon }))}>
+                      <i className={`fas ${form.comingSoon ? 'fa-clock' : 'fa-circle-check'}`} />
+                      <span>
+                        <b>{form.comingSoon ? soonLabel : 'متاح للشراء'}</b>
+                        <em>{form.comingSoon
+                          ? 'هيظهر في الموقع بس عليه شارة ومش هيتباع'
+                          : 'الاليرت جاهز والعميل يقدر يشتريه'}</em>
+                      </span>
+                      <span className={`al-switch${form.comingSoon ? ' on' : ''}`}><i /></span>
+                    </button>
                   </div>
 
                   {/* Tags */}

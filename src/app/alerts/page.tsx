@@ -1,11 +1,12 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { youtubeEmbedUrl } from '@/lib/youtube';
 import { PayPalLogo } from '@/components/PayPalLogo';
 import { CardBrands } from '@/components/CardBrands';
+import { COLORS, colorMeta, looksLikeCode, DEFAULT_UNAVAILABLE_LABEL } from '@/lib/alertCode';
 import type { Product } from '@/types';
 
 /* ─── Types ─── */
@@ -15,6 +16,9 @@ interface AlertItem {
   // priceNum = السعر الحقيقي بالجنيه من قاعدة البيانات — ده اللي بيتحاسب عليه.
   price: string; priceNum: number; desc: string; category: string;
   imgs?: string[]; video?: string;
+  code?: string | null;       // كود الاليرت (مثال 480O4) — للبحث السريع
+  colorKey?: string | null;   // حرف اللون — للفلترة بالألوان
+  comingSoon?: boolean;       // لسه مخلصش: يتعرض وعليه شارة ومايتشريش
 }
 
 /* ─── Data ─── */
@@ -27,7 +31,7 @@ const CATEGORIES = [
   { id: 'golden',   title: 'الاليرتات جيفت',    desc: 'إيرتات جيفت متنوعة ومميزة',                 img: '/photo/alert-gift.png'    },
   { id: 'platinum', title: 'الاليرتات التكبيس', desc: 'اليرت تكبيس للفولو والريد',                 img: '/photo/alert-follow.png'  },
   { id: 'anime',    title: 'الأليرتات الأنمي',     desc: 'مخصصة لعشاق الأنمي',                        img: '/photo/anime.png'         },
-  { id: 'snow',     title: 'الاليرتات الدعم',    desc: 'افضل لعشاق الأنمي والثلج',                  img: '/photo/venom-cover.png'   },
+  { id: 'snow',     title: 'الاليرتات الدعم',    desc: 'افضل لعشاق الأنمي والثلج',                  img: '/photo/Da3m.png'   },
   { id: 'fire',     title: 'الأليرتات ثري دي',     desc: 'اليرتات ثري دي بتصميم مبهر',               img: '/photo/alert-3d.png'      },
 ];
 
@@ -36,10 +40,12 @@ interface DbProduct {
   price: number; priceLabel: string | null; subCategory: string | null;
   imageUrl: string; images: string[]; videoUrl: string | null;
   rating: number; ratingCount: number; tags: string[];
+  code: string | null; colorKey: string | null; comingSoon: boolean;
 }
 
 const toAlertItem = (p: DbProduct): AlertItem => ({
-  id: p.slug ?? p.id,
+  // الكود هو أنضف رابط للمنتج (/product/480O4) — ونقع على الـ slug ثم الـ id
+  id: p.code ?? p.slug ?? p.id,
   name: p.title,
   rating: String(p.rating),
   ratingCount: p.ratingCount,
@@ -49,6 +55,9 @@ const toAlertItem = (p: DbProduct): AlertItem => ({
   category: p.tags?.[0] ?? '',
   imgs: p.images?.length ? p.images : [p.imageUrl],
   video: p.videoUrl ?? undefined,
+  code: p.code,
+  colorKey: p.colorKey,
+  comingSoon: p.comingSoon,
 });
 
 const CONTACT_BTNS = [
@@ -74,6 +83,12 @@ export default function AlertsPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [addedCardId, setAddedCardId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
+  // ── بحث + فلترة بالألوان ──
+  const [query, setQuery] = useState('');
+  const [colorFilter, setColorFilter] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [unavailableLabel, setUnavailableLabel] = useState(DEFAULT_UNAVAILABLE_LABEL);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const validPhone = () => {
     if (phone.replace(/\D/g, '').length < 8) {
@@ -117,11 +132,27 @@ export default function AlertsPage() {
       .catch(() => {})
       .finally(() => setLoadingProducts(false));
 
-    // التحقق من حالة الشراء
+    // التحقق من حالة الشراء + نص شارة "لم يكتمل بعد"
     fetch('/api/settings')
       .then(r => r.json())
-      .then(s => { setStorePaused(!!s.storePaused); setPauseMessage(s.pauseMessage ?? ''); })
+      .then(s => {
+        setStorePaused(!!s.storePaused);
+        setPauseMessage(s.pauseMessage ?? '');
+        if (s.unavailableLabel) setUnavailableLabel(s.unavailableLabel);
+      })
       .catch(() => {});
+  }, []);
+
+  // اختصار "/" يوديك على خانة البحث على طول
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement;
+      if (e.key === '/' && !typing) { e.preventDefault(); searchRef.current?.focus(); }
+      if (e.key === 'Escape' && typing) searchRef.current?.blur();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   useEffect(() => {
@@ -179,8 +210,46 @@ export default function AlertsPage() {
   };
 
   const catData  = activeCat ? CATEGORIES.find(c => c.id === activeCat) : null;
-  const alerts   = activeCat ? alertsData[activeCat] ?? [] : [];
   const total    = CATEGORIES.length;
+
+  // كل الاليرتات في قسم مسطّحة — البحث بالكود بيدوّر في الأقسام كلها مش القسم الحالي بس
+  const allAlerts = useMemo(() => Object.values(alertsData).flat(), [alertsData]);
+
+  const catAlerts = activeCat ? alertsData[activeCat] ?? [] : [];
+
+  // الفلترة كلها في المتصفح — المنتجات محمّلة أصلاً فالنتيجة فورية من غير أي انتظار
+  const alerts = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    // كود كامل مكتوب؟ ندوّر في كل الأقسام عشان العميل ما يحتاجش يعرف القسم
+    const searchPool = q && looksLikeCode(q) ? allAlerts : catAlerts;
+
+    return searchPool.filter(a => {
+      if (colorFilter && (a.colorKey ?? '').toUpperCase() !== colorFilter) return false;
+      if (!q) return true;
+      return (
+        (a.code ?? '').toLowerCase().includes(q) ||
+        a.name.toLowerCase().includes(q) ||
+        a.desc.toLowerCase().includes(q) ||
+        (colorMeta(a.colorKey)?.label ?? '').includes(q)
+      );
+    });
+  }, [query, colorFilter, catAlerts, allAlerts]);
+
+  // الألوان الموجودة فعلاً في القسم ده — مانعرضش فلتر للون مفيش منه حاجة
+  const availableColors = useMemo(() => {
+    const present = new Set(catAlerts.map(a => (a.colorKey ?? '').toUpperCase()).filter(Boolean));
+    return COLORS.filter(c => present.has(c.key));
+  }, [catAlerts]);
+
+  const copyCode = (code: string) => {
+    navigator.clipboard?.writeText(code).then(
+      () => { setCopiedCode(code); setTimeout(() => setCopiedCode(null), 1200); },
+      () => {},
+    );
+  };
+
+  // نصفّي البحث والفلتر لما نغيّر القسم عشان النتيجة ما تبقاش مضلّلة
+  useEffect(() => { setQuery(''); setColorFilter(null); }, [activeCat]);
 
   useEffect(() => {
     if (activeCat) return;
@@ -323,7 +392,12 @@ export default function AlertsPage() {
         /* ── Category Page ── */
         .al-cat-header {
           display:flex; justify-content:space-between; align-items:center;
-          margin-bottom:2rem; flex-wrap:wrap; gap:1rem; padding:1rem 5% 0;
+          margin-bottom:1.4rem; flex-wrap:wrap; gap:1rem; padding:1rem 5% 0;
+        }
+        @media(max-width:768px){
+          /* الموبايل: البحث ياخد سطر لوحده تحت العنوان وزر العودة */
+          .al-cat-header { gap:.8rem; }
+          .al-cat-header .al-search { order:3; flex-basis:100%; }
         }
         .al-back-btn {
           background:rgba(84,22,181,0.25); color:#c4a0e0; padding:.5rem 1.2rem;
@@ -342,6 +416,97 @@ export default function AlertsPage() {
           display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
           gap:1.4rem; text-align:center; padding:0 5%; margin-top:1rem;
         }
+
+        /* ── Search box ── */
+        .al-search {
+          display:flex; align-items:center; gap:9px;
+          background:rgba(10,4,22,0.6); border:1px solid rgba(84,22,181,0.35);
+          border-radius:50px; padding:.42rem .95rem;
+          width:230px; transition:all .28s cubic-bezier(.25,.8,.25,1);
+        }
+        .al-search:focus-within {
+          width:300px; border-color:#7F3AA1; background:rgba(10,4,22,0.85);
+          box-shadow:0 0 0 3px rgba(127,58,161,0.18);
+        }
+        .al-search-ic { color:rgba(155,89,208,0.7); font-size:.85rem; flex-shrink:0; }
+        .al-search input {
+          flex:1; min-width:0; background:none; border:none; outline:none;
+          color:#f0ecff; font-family:'Cairo','29LtBukra',sans-serif; font-size:.88rem;
+        }
+        .al-search input::placeholder { color:rgba(180,168,215,0.45); }
+        .al-search-kbd {
+          font-family:'Oxanium',monospace; font-size:.7rem; color:rgba(180,168,215,0.5);
+          border:1px solid rgba(155,89,208,0.3); border-radius:5px;
+          padding:1px 6px; flex-shrink:0; line-height:1.4;
+        }
+        .al-search-x {
+          background:none; border:none; cursor:pointer; flex-shrink:0;
+          color:rgba(180,168,215,0.6); font-size:.85rem; padding:2px; transition:color .2s;
+        }
+        .al-search-x:hover { color:#e06a6a; }
+        @media(max-width:768px){
+          .al-search, .al-search:focus-within { width:100%; }
+        }
+
+        /* ── Colour filter ── */
+        .al-colors {
+          display:flex; align-items:center; justify-content:center; gap:9px;
+          flex-wrap:wrap; padding:0 5%; margin:.2rem 0 1.4rem;
+        }
+        .al-color-all {
+          background:rgba(84,22,181,0.12); border:1px solid rgba(155,89,208,0.3);
+          color:rgba(200,190,225,0.75); border-radius:50px; cursor:pointer;
+          font-family:'Cairo',sans-serif; font-size:.76rem; font-weight:700;
+          padding:.34rem 1rem; transition:all .22s;
+        }
+        .al-color-all:hover { background:rgba(84,22,181,0.28); color:#fff; }
+        .al-color-all.on { background:rgba(84,22,181,0.5); border-color:#7F3AA1; color:#fff; }
+        .al-color {
+          width:30px; height:30px; border-radius:50%; cursor:pointer; padding:0;
+          background:transparent; border:2px solid transparent;
+          display:flex; align-items:center; justify-content:center;
+          transition:transform .2s, border-color .2s;
+        }
+        .al-color span {
+          width:19px; height:19px; border-radius:50%; background:var(--c);
+          box-shadow:0 0 10px color-mix(in srgb, var(--c) 55%, transparent);
+          transition:width .2s, height .2s;
+        }
+        .al-color:hover { transform:scale(1.12); }
+        .al-color.on { border-color:var(--c); }
+        .al-color.on span { width:13px; height:13px; }
+
+        .al-empty {
+          text-align:center; color:rgba(180,168,215,0.55); font-size:.9rem;
+          padding:2.5rem 5%; display:flex; align-items:center; justify-content:center; gap:10px;
+        }
+
+        /* ── Code badge + colour dot on card ── */
+        .al-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:.5rem; }
+        .al-code {
+          font-family:'Oxanium',monospace; font-size:.7rem; font-weight:800; letter-spacing:1px;
+          background:rgba(84,22,181,0.22); border:1px solid rgba(155,89,208,0.4);
+          color:#c8b8f0; border-radius:6px; padding:.16rem .55rem; cursor:pointer;
+          transition:all .2s; direction:ltr;
+        }
+        .al-code:hover { background:rgba(84,22,181,0.45); color:#fff; }
+        .al-code.copied { background:rgba(46,204,113,0.18); border-color:rgba(46,204,113,0.5); color:#7ef0a8; }
+        .al-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; box-shadow:0 0 8px currentColor; }
+
+        /* ── Coming soon ── */
+        .al-small-card.soon .al-card-header img { filter:grayscale(0.55) brightness(0.62); }
+        .al-soon-tag {
+          position:absolute; top:22px; right:22px; z-index:3;
+          background:rgba(12,5,22,0.9); border:1px solid rgba(240,131,11,0.55);
+          color:#ffcf7a; border-radius:50px; padding:.24rem .8rem;
+          font-family:'Cairo',sans-serif; font-size:.7rem; font-weight:800;
+          backdrop-filter:blur(6px); box-shadow:0 4px 14px rgba(0,0,0,0.4);
+        }
+        .al-btn-cart.disabled {
+          background:rgba(255,255,255,0.05); color:rgba(180,168,215,0.5);
+          box-shadow:none; cursor:not-allowed;
+        }
+        .al-btn-cart.disabled:hover { transform:none; box-shadow:none; }
         @media(min-width:769px) { .al-cat-grid { grid-template-columns:repeat(3,1fr); } }
 
         /* ── Alert Card ── */
@@ -716,18 +881,79 @@ export default function AlertsPage() {
               <button className="al-back-btn" onClick={() => setActiveCat(null)}>
                 <i className="fas fa-arrow-right" /> العودة
               </button>
+
+              {/* البحث بالكود أو بالاسم — الفلترة فورية وإنت بتكتب */}
+              <div className="al-search">
+                <i className="fas fa-magnifying-glass al-search-ic" />
+                <input
+                  ref={searchRef}
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="ابحث بالكود أو الاسم…"
+                  aria-label="ابحث بالكود أو الاسم"
+                  dir="rtl"
+                />
+                {query
+                  ? <button className="al-search-x" onClick={() => setQuery('')} aria-label="مسح البحث"><i className="fas fa-xmark" /></button>
+                  : <kbd className="al-search-kbd">/</kbd>}
+              </div>
+
               <h2 className="al-cat-title">{catData.title}</h2>
             </div>
 
+            {/* فلتر الألوان — العميل بيفكر بلون الثيم مش باسم الاليرت */}
+            {availableColors.length > 1 && (
+              <div className="al-colors">
+                <button
+                  className={`al-color-all${colorFilter === null ? ' on' : ''}`}
+                  onClick={() => setColorFilter(null)}
+                >الكل</button>
+                {availableColors.map(c => (
+                  <button
+                    key={c.key}
+                    className={`al-color${colorFilter === c.key ? ' on' : ''}`}
+                    style={{ ['--c' as string]: c.hex }}
+                    onClick={() => setColorFilter(colorFilter === c.key ? null : c.key)}
+                    title={c.label}
+                    aria-label={c.label}
+                    aria-pressed={colorFilter === c.key}
+                  ><span /></button>
+                ))}
+              </div>
+            )}
+
+            {alerts.length === 0 && (
+              <p className="al-empty">
+                <i className="fas fa-magnifying-glass" />
+                مفيش نتائج{query ? ` لـ "${query}"` : ''} — جرّب كود تاني أو امسح الفلتر
+              </p>
+            )}
+
             <div className="al-cat-grid">
               {alerts.map(alert => (
-                <div key={alert.id} className="al-small-card">
+                <div key={alert.id} className={`al-small-card${alert.comingSoon ? ' soon' : ''}`}>
                   <Link href={`/product/${alert.id}`} className="al-card-header">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={alert.imgs?.[0] ?? FALLBACK_IMG} alt={alert.name} />
                     <div className="al-card-overlay" />
+                    {alert.comingSoon && <span className="al-soon-tag">{unavailableLabel}</span>}
                   </Link>
                   <div className="al-card-content">
+                    <div className="al-card-top">
+                      {alert.code && (
+                        <button
+                          className={`al-code${copiedCode === alert.code ? ' copied' : ''}`}
+                          onClick={e => { e.stopPropagation(); copyCode(alert.code!); }}
+                          title="اضغط لنسخ الكود"
+                        >
+                          {copiedCode === alert.code ? '✓ اتنسخ' : alert.code}
+                        </button>
+                      )}
+                      {colorMeta(alert.colorKey) && (
+                        <span className="al-dot" style={{ background: colorMeta(alert.colorKey)!.hex }}
+                          title={colorMeta(alert.colorKey)!.label} />
+                      )}
+                    </div>
                     <h3 className="al-card-name"><Link href={`/product/${alert.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{alert.name}</Link></h3>
                     <div className="al-card-meta">
                       <span className="al-rating">★ {alert.rating} ({alert.ratingCount})</span>
@@ -735,17 +961,23 @@ export default function AlertsPage() {
                     </div>
                     <p className="al-card-desc">{alert.desc}</p>
                     <div className="al-card-btns">
-                      <button
-                        className={`al-btn-cart${addedCardId === alert.id ? ' added' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addAlertToCart(alert);
-                          setAddedCardId(alert.id);
-                          setTimeout(() => setAddedCardId(null), 1500);
-                        }}
-                      >
-                        {addedCardId === alert.id ? '✓ تمت الإضافة' : <><i className="fas fa-plus" /> أضف للسلة</>}
-                      </button>
+                      {alert.comingSoon ? (
+                        <button className="al-btn-cart disabled" disabled>
+                          <i className="fas fa-clock" /> {unavailableLabel}
+                        </button>
+                      ) : (
+                        <button
+                          className={`al-btn-cart${addedCardId === alert.id ? ' added' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addAlertToCart(alert);
+                            setAddedCardId(alert.id);
+                            setTimeout(() => setAddedCardId(null), 1500);
+                          }}
+                        >
+                          {addedCardId === alert.id ? '✓ تمت الإضافة' : <><i className="fas fa-plus" /> أضف للسلة</>}
+                        </button>
+                      )}
                       <Link href={`/product/${alert.id}`} className="al-btn-preview">عرض</Link>
                     </div>
                   </div>

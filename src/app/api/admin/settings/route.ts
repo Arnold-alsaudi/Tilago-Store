@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { storePaused, pauseMessage } = await req.json();
+  const { storePaused, pauseMessage, unavailableLabel } = await req.json();
 
   const updates: { key: string; value: string }[] = [];
   if (typeof storePaused === 'boolean') {
@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
   }
   if (typeof pauseMessage === 'string') {
     updates.push({ key: 'pauseMessage', value: pauseMessage });
+  }
+  // نص الشارة اللي بتظهر على المنتجات اللي لسه مخلصتش
+  if (typeof unavailableLabel === 'string') {
+    updates.push({ key: 'unavailableLabel', value: unavailableLabel.trim().slice(0, 60) });
   }
 
   for (const { key, value } of updates) {
