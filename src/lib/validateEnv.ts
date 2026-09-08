@@ -10,7 +10,6 @@ const REQUIRED = [
   'RESEND_FROM_EMAIL',
   'PAYMOB_SECRET_KEY',
   'PAYMOB_PUBLIC_KEY',
-  'PAYMOB_INTEGRATION_ID',
   'PAYMOB_HMAC_SECRET',
   'TELEGRAM_BOT_TOKEN',
   'TELEGRAM_CHAT_ID',
@@ -20,6 +19,14 @@ const REQUIRED = [
 
 export function validateEnv() {
   const missing = REQUIRED.filter(k => !process.env[k]);
+
+  // بايموب بيقبل واحد من الاتنين — الكود بيقرأ IDS الأول وبيقع على ID.
+  // كان مكتوب PAYMOB_INTEGRATION_ID كمطلوب بينما .env.example فيه IDS بس،
+  // فأي نشر جديد يتبع الـ example كان بيرمي exception وقت الإقلاع.
+  if (!process.env.PAYMOB_INTEGRATION_IDS && !process.env.PAYMOB_INTEGRATION_ID) {
+    missing.push('PAYMOB_INTEGRATION_IDS (أو PAYMOB_INTEGRATION_ID)');
+  }
+
   if (missing.length > 0) {
     console.error('[Security] Missing required env vars:', missing.join(', '));
     if (process.env.NODE_ENV === 'production') {

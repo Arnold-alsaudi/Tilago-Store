@@ -4,6 +4,44 @@ import { isAdminAuthorized } from '@/lib/adminAuth';
 
 const ADMIN_ROUTES = ['/api/admin'];
 
+// الطلب جايّ من نفس الموقع؟
+//
+// المقارنة بـ NEXTAUTH_URL لوحدها كانت هشّة: أي دومين تاني للنشر نفسه (www،
+// دومين مخصص، أو رابط preview على Vercel) بيخلّي كل نداءات الـ API من المتصفح
+// ترجع 403. الأساس الصح هو مقارنة الـ Origin بالمضيف اللي الطلب نفسه وصل عليه،
+// وبعدها NEXTAUTH_URL و ALLOWED_ORIGINS كإضافات.
+function isSameSite(req: NextRequest, origin: string): boolean {
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    return false; // Origin مش رابط صالح — نرفض
+  }
+
+  const selfHosts = [
+    req.headers.get('x-forwarded-host'),
+    req.headers.get('host'),
+    req.nextUrl.host,
+  ].filter(Boolean) as string[];
+
+  if (selfHosts.includes(originHost)) return true;
+
+  const extra = [
+    process.env.NEXTAUTH_URL,
+    ...(process.env.ALLOWED_ORIGINS ?? '').split(','),
+  ]
+    .map(s => (s ?? '').trim())
+    .filter(Boolean);
+
+  return extra.some(entry => {
+    try {
+      return new URL(entry).host === originHost;
+    } catch {
+      return entry === originHost; // مسموح كتابة المضيف من غير بروتوكول
+    }
+  });
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -56,16 +94,7 @@ export async function middleware(req: NextRequest) {
   // ── CORS — منع الـ API من خارج الموقع ──────────────────────
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth')) {
     const origin = req.headers.get('origin');
-    // الدومين الأساسي من NEXTAUTH_URL — وأي دومينات إضافية من ALLOWED_ORIGINS
-    // (مفصولة بفواصل) — مفيش دومين مكتوب ثابت هنا
-    const allowedOrigins = [
-      process.env.NEXTAUTH_URL ?? 'http://localhost:3000',
-      ...(process.env.ALLOWED_ORIGINS ?? '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean),
-    ];
-    if (origin && !allowedOrigins.includes(origin)) {
+    if (origin && !isSameSite(req, origin)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }

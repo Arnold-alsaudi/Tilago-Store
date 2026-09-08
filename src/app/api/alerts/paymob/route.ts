@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { rateLimit } from '@/lib/rateLimit';
 import { getClientIp } from '@/lib/getClientIp';
 import { prisma } from '@/lib/prisma';
 
 const PAYMOB_API = 'https://accept.paymob.com/v1';
 
-// السعر الحقيقي بييجي من قاعدة البيانات دايماً — أي amount جاي من العميل بيتجاهل
-async function computeTrustedAmount(
+// السعر الحقيقي بييجي من قاعدة البيانات دايماً — أي amount جاي من العميل بيتجاهل.
+// بنرجّع كمان أسماء المنتجات عشان تتسجّل في الطلب وتوصل في الإشعار (بدل رقم مبهم).
+async function computeTrustedOrder(
   alertId: string,
   cartItems: { productId: string; quantity: number }[] | undefined,
-): Promise<{ amount: number; error?: string }> {
+): Promise<{ amount: number; productName: string; error?: string }> {
   if (alertId === 'cart') {
     if (!Array.isArray(cartItems) || cartItems.length === 0) {
-      return { amount: 0, error: 'Cart items required' };
+      return { amount: 0, productName: '', error: 'Cart items required' };
     }
     const ids = cartItems.map(i => String(i?.productId));
     // المنتج في السلة ممكن يتخزن بالـ id أو الـ slug — ندوّر بالاتنين
@@ -23,20 +26,22 @@ async function computeTrustedAmount(
     products.forEach(p => { byId.set(p.id, p); if (p.slug) byId.set(p.slug, p); });
 
     let total = 0;
+    const names: string[] = [];
     for (const i of cartItems) {
       const product = byId.get(String(i?.productId));
-      if (!product) return { amount: 0, error: 'Invalid product in cart' };
+      if (!product) return { amount: 0, productName: '', error: 'Invalid product in cart' };
       const quantity = Math.max(1, Math.floor(Number(i?.quantity) || 1));
       total += product.price * quantity;
+      names.push(`${product.title} ×${quantity}`);
     }
-    return { amount: total };
+    return { amount: total, productName: names.join('، ') };
   }
 
   const product = await prisma.product.findFirst({
     where: { OR: [{ id: alertId }, { slug: alertId }], active: true },
   });
-  if (!product) return { amount: 0, error: 'Product not found' };
-  return { amount: product.price };
+  if (!product) return { amount: 0, productName: '', error: 'Product not found' };
+  return { amount: product.price, productName: product.title };
 }
 
 export async function POST(req: NextRequest) {
@@ -61,10 +66,16 @@ export async function POST(req: NextRequest) {
   }
 
   // ── السعر الحقيقي من قاعدة البيانات — نتجاهل أي amount جاي من العميل ──
-  const { amount, error: amountError } = await computeTrustedAmount(String(alertId), cartItems);
+  const { amount, productName, error: amountError } = await computeTrustedOrder(String(alertId), cartItems);
   if (amountError || amount <= 0) {
     return NextResponse.json({ error: amountError ?? 'Invalid amount' }, { status: 400 });
   }
+
+  // إيميل العميل الحقيقي من الجلسة — من غيره الدفعة بتتسجّل على إيميل وهمي
+  // وصفحة "طلباتي" (اللي بتفلتر بإيميل المستخدم) بتفضل فاضية للأبد.
+  const session = await getServerSession(authOptions);
+  const customerEmail = session?.user?.email ?? 'customer@tilago.io';
+  const customerName = session?.user?.name ?? String(name).slice(0, 40);
 
   const secretKey = process.env.PAYMOB_SECRET_KEY!;
   // كل طرق الدفع والمحافظ المفعّلة على الحساب: كروت / ميزة / فودافون كاش / انستاباي...
@@ -97,12 +108,12 @@ export async function POST(req: NextRequest) {
       quantity: 1,
     }],
     billing_data: {
-      first_name: name.slice(0, 40) || 'Customer',
+      first_name: (customerName || 'Customer').slice(0, 40),
       last_name: 'Tilago',
-      email: 'customer@tilago.io',
+      email: customerEmail,
       phone_number: customerPhone,
     },
-    extras: { alertId },
+    extras: { alertId, productName, customerEmail },
     redirection_url: returnUrl,
   };
 

@@ -34,8 +34,17 @@ const productSchema = z.object({
 export async function POST(req: NextRequest) {
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await req.json();
-  const data = productSchema.parse(body);
-  const product = await prisma.product.create({ data });
+  // safeParse بدل parse — مدخلات غلط (مثلاً سعر فاضي بيتحوّل NaN) كانت بترمي
+  // استثناء وترجع 500 مبهم بدل 400 برسالة تقول إيه الغلط بالظبط
+  const parsed = productSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    const issue = parsed.error.errors[0];
+    return NextResponse.json(
+      { error: `${issue.path.join('.') || 'body'}: ${issue.message}` },
+      { status: 400 },
+    );
+  }
+
+  const product = await prisma.product.create({ data: parsed.data });
   return NextResponse.json(product, { status: 201 });
 }

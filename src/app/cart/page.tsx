@@ -139,7 +139,7 @@ export default function CartPage() {
 
   const startCheckout = (method: PayMethod) => {
     if (storePaused) { alert(pauseMsg || 'الطلبات متوقفة مؤقتاً، سنعود قريباً'); return; }
-    if (!session) { router.push('/auth/signin'); return; }
+    if (!session) { router.push('/auth/signin?callbackUrl=/cart'); return; }
     if (needing.length > 0) {
       // فيه منتجات بدون بيانات — نطلبها الأول
       setPendingPay(method);

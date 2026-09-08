@@ -73,6 +73,18 @@ h1, h2, h3, h4, h5, h6 { font-family: '29LtBukra', 'Cairo', 'Montserrat', sans-s
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 3px; }
 
+/* Gradient text — مستخدم في لوحة التحكم وصفحات الحساب/الطلبات.
+   كان مش معرّف في أي مكان: tailwind.config فيه backgroundImage['gradient-text']
+   اللي بيولّد الكلاس `bg-gradient-text` مش `gradient-text`، فالعناوين كانت
+   بتطلع بلون عادي بدل التدرّج. */
+.gradient-text {
+  background: linear-gradient(90deg, #7F3AA1, #5416B5, #F0830B);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
 /* Glass card */
 .glass-card {
   background: var(--card-bg);

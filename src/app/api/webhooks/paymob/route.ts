@@ -48,10 +48,16 @@ export async function POST(req: NextRequest) {
   const amountCents: number = Number(obj.amount_cents ?? 0);
   const currency: string = obj.currency ?? 'EGP';
   const billing = obj.order?.billing_data ?? obj.payment_key_claims?.billing_data ?? {};
-  const extras = obj.order?.merchant_order_id ?? obj.payment_key_claims?.extra?.alertId ?? '';
+
+  // البيانات اللي بعتناها إحنا في `extras` بترجع تحت payment_key_claims.extra.
+  // لازم تيجي **الأول** — `merchant_order_id` بتملاه بايموب برقمها هي، فلو
+  // قدّمناه هيطلع اسم المنتج رقم مبهم بدل اسم حقيقي.
+  const extra = obj.payment_key_claims?.extra ?? {};
+  const productName =
+    extra.productName || extra.alertId || obj.order?.merchant_order_id || 'طلب Tilago';
 
   const customerName = `${billing.first_name ?? ''} ${billing.last_name ?? ''}`.trim() || 'عميل Tilago';
-  const customerEmail = billing.email ?? 'unknown@tilago.io';
+  const customerEmail = extra.customerEmail || billing.email || 'unknown@tilago.io';
   const customerPhone = String(billing.phone_number ?? '').trim();
   const paidAt = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
 
@@ -68,7 +74,7 @@ export async function POST(req: NextRequest) {
       currency,
       method: 'paymob',
       status: 'success',
-      productName: extras,
+      productName,
     },
   });
 
@@ -77,7 +83,7 @@ export async function POST(req: NextRequest) {
     customerName,
     customerEmail,
     customerPhone,
-    productName: extras || 'Alert',
+    productName,
     amount: amountCents / 100,
     currency,
     referenceId,

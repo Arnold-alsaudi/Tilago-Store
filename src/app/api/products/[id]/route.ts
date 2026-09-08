@@ -31,8 +31,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const body = await req.json();
-  const data = patchSchema.parse(body);
-  const product = await prisma.product.update({ where: { id }, data });
+
+  // safeParse بدل parse — عشان المدخلات الغلط ترجع 400 برسالة واضحة مش 500
+  const parsed = patchSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    const issue = parsed.error.errors[0];
+    return NextResponse.json(
+      { error: `${issue.path.join('.') || 'body'}: ${issue.message}` },
+      { status: 400 },
+    );
+  }
+
+  const product = await prisma.product.update({ where: { id }, data: parsed.data });
   return NextResponse.json(product);
 }

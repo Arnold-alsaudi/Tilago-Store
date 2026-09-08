@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { rateLimit } from '@/lib/rateLimit';
 import { getClientIp } from '@/lib/getClientIp';
 import { prisma } from '@/lib/prisma';
@@ -32,11 +34,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid phone' }, { status: 400 });
   }
 
+  // إيميل العميل من الجلسة لو مسجّل دخول — عشان الطلب يظهر له في "طلباتي".
+  // الزائر غير المسجّل بيفضل على الإيميل الوهمي (مفيش طريقة نعرفه بيها).
+  const session = await getServerSession(authOptions);
+  const sessionEmail = session?.user?.email ?? null;
+  const sessionName = session?.user?.name ?? null;
+
   try {
     await prisma.payment.create({
       data: {
-        userEmail: 'paypal@tilago.io',
-        userName: 'عميل PayPal (غير مؤكد)',
+        userEmail: sessionEmail ?? 'paypal@tilago.io',
+        userName: sessionName ?? 'عميل PayPal (غير مؤكد)',
         userPhone: digits,
         productName: name.slice(0, 120),
         amount,

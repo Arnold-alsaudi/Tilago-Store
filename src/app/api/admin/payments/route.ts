@@ -4,9 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rateLimit';
 import { getClientIp } from '@/lib/getClientIp';
 import * as XLSX from 'xlsx';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendMail, escapeHtml as esc, NOTIFY_EMAILS } from '@/lib/mailer';
 
 export async function POST(req: NextRequest) {
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -20,10 +18,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
-  // حفظ في قاعدة البيانات
+  // حفظ في قاعدة البيانات — كان بيتجاهل الاسم والمنتج ورقم الطلب رغم إنه بيقراهم
   await prisma.payment.create({
     data: {
+      orderId: orderId ?? null,
       userEmail,
+      userName: userName ?? null,
+      productName: productName ?? null,
       amount,
       method,
       status: 'success',
@@ -46,18 +47,17 @@ export async function POST(req: NextRequest) {
   XLSX.utils.book_append_sheet(wb, ws, 'دفعة جديدة');
   const buf = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
 
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
-    to: 'mohammedhany01290@gmail.com',
-    subject: `💰 دفعة جديدة — ${productName} — ${amount} EGP`,
+  await sendMail({
+    to: NOTIFY_EMAILS,
+    subject: `💰 دفعة جديدة — ${productName ?? 'منتج'} — ${amount} EGP`,
     html: `
       <div style="font-family: Arial; direction: rtl; padding: 20px;">
         <h2 style="color: #7A00FF;">دفعة جديدة على Tilago</h2>
-        <p><strong>العميل:</strong> ${userName ?? '-'}</p>
-        <p><strong>الإيميل:</strong> ${userEmail}</p>
-        <p><strong>المنتج:</strong> ${productName ?? '-'}</p>
-        <p><strong>المبلغ:</strong> ${amount} EGP</p>
-        <p><strong>الطريقة:</strong> ${method}</p>
+        <p><strong>العميل:</strong> ${esc(String(userName ?? '-'))}</p>
+        <p><strong>الإيميل:</strong> ${esc(String(userEmail))}</p>
+        <p><strong>المنتج:</strong> ${esc(String(productName ?? '-'))}</p>
+        <p><strong>المبلغ:</strong> ${esc(String(amount))} EGP</p>
+        <p><strong>الطريقة:</strong> ${esc(String(method))}</p>
         <p><strong>التاريخ:</strong> ${new Date().toLocaleString('ar-EG')}</p>
       </div>
     `,

@@ -31,7 +31,7 @@ const CAT: Record<string, { label: string; href: string }> = {
   STREAM:  { label: 'الستريم',   href: '/stream' },
   PACKAGE: { label: 'الباكدج',   href: '/stream' },
   THREE_D: { label: 'ثري دي',    href: '/3d' },
-  VIDEO:   { label: 'فيديو',     href: '/video' },
+  VIDEO:   { label: 'فيديو',     href: '/videos' },
 };
 
 const CONTACTS = [

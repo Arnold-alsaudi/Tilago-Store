@@ -5,9 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rateLimit';
 import { getClientIp } from '@/lib/getClientIp';
 import { secureHash } from '@/lib/crypto';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendMail } from '@/lib/mailer';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -46,24 +44,27 @@ export async function POST(req: NextRequest) {
     data: { email, codeHash, name, password: passwordHash, expiresAt },
   });
 
-  // ابعت الكود بالإيميل
-  try {
-    await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL!,
-      to: email,
-      subject: `كود التحقق من Tilago: ${code}`,
-      html: `
+  // ابعت الكود بالإيميل.
+  // ملاحظة: Resend مابيرميش استثناء لما الـ API يرفض — لازم نفحص نتيجة sendMail،
+  // وإلا هنقول للمستخدم "تم الإرسال" وهو مستنّي كود مش جايّ.
+  const mail = await sendMail({
+    to: email,
+    subject: `كود التحقق من Tilago: ${code}`,
+    html: `
         <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 32px; background: #0F083B; border-radius: 16px; text-align: center;">
           <h2 style="color: #9B59D0; margin-bottom: 8px;">مرحباً بك في Tilago</h2>
           <p style="color: #b0a0d0; font-size: 14px; margin-bottom: 24px;">استخدم الكود التالي لتفعيل حسابك:</p>
           <div style="background: #5416B5; color: #fff; font-size: 34px; font-weight: bold; letter-spacing: 10px; padding: 18px; border-radius: 12px; margin-bottom: 20px;">
             ${code}
           </div>
-          <p style="color: #8070a0; font-size: 12px;">الكود صالح لمدة 10 دقائق. إذا لم تطلب هذا الكود تجاهل الرسالة.</p>
-        </div>
-      `,
-    });
-  } catch {
+        <p style="color: #8070a0; font-size: 12px;">الكود صالح لمدة 10 دقائق. إذا لم تطلب هذا الكود تجاهل الرسالة.</p>
+      </div>
+    `,
+  });
+
+  if (!mail.ok) {
+    // الكود اتخزّن بس الإيميل مفشوش — نمسحه عشان المستخدم يقدر يعيد المحاولة نضيف
+    await prisma.emailVerification.deleteMany({ where: { email } });
     return NextResponse.json({ error: 'تعذر إرسال الكود، حاول لاحقاً' }, { status: 500 });
   }
 

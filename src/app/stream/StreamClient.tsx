@@ -438,7 +438,7 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
       <nav className="sp-nav">
         <div className="sp-nav-row">
           <Link href="/3d"     className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-cube"/></div>ثري دي</Link>
-          <Link href="/video"  className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-film"/></div>فيديو</Link>
+          <Link href="/videos"  className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-film"/></div>فيديو</Link>
           <Link href="/stream" className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-video"/></div>ستريم</Link>
           <Link href="/alerts" className="sp-nav-btn"><div className="sp-nav-btn-icon"><i className="fas fa-bell"/></div>اليرت</Link>
         </div>

@@ -216,7 +216,7 @@ export default function HomePage() {
             </div>
             3D
           </Link>
-          <Link href="/video" className="quick-nav-btn" data-reveal="up" data-delay="2">
+          <Link href="/videos" className="quick-nav-btn" data-reveal="up" data-delay="2">
             <div className="quick-nav-icon">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>

@@ -1,15 +1,7 @@
-import { Resend } from 'resend';
+import { sendMail, escapeHtml as esc, NOTIFY_EMAILS } from './mailer';
 
-function esc(s: string): string {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// الإيميلات اللي تستقبل الرسائل والطلبات والإشعارات (في كل الصفحات)
-// ملاحظة: حساب Resend في الوضع التجريبي يسمح بالإرسال فقط لإيميل صاحب الحساب.
-// لإضافة tilagoesport@gmail.com لازم تفعيل دومين في resend.com/domains أولاً.
-export const NOTIFY_EMAILS = ['mohamed8abdalhamed@gmail.com'];
+// نعيد تصدير قائمة المستقبلين عشان الكود القديم اللي بيستوردها من هنا يفضل شغال
+export { NOTIFY_EMAILS };
 
 export interface PaymentNotification {
   customerName: string;
@@ -46,15 +38,22 @@ export async function sendTelegram(data: PaymentNotification) {
     '✅ <b>الدفع مؤكد — يرجى التسليم خلال 24 ساعة</b>',
   ].join('\n');
 
-  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: msg,
-      parse_mode: 'HTML',
-    }),
-  });
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: msg,
+        parse_mode: 'HTML',
+      }),
+    });
+    if (!res.ok) {
+      console.error('[Telegram] فشل الإرسال — الحالة %s: %s', res.status, (await res.text()).slice(0, 200));
+    }
+  } catch (e: unknown) {
+    console.error('[Telegram] خطأ شبكة:', e instanceof Error ? e.message : String(e));
+  }
 }
 
 // ─── WhatsApp عبر CallMeBot (مجاني) ─────────────────────────
@@ -76,23 +75,23 @@ export async function sendWhatsApp(data: PaymentNotification) {
     '✅ الدفع مؤكد — يرجى التسليم خلال 24 ساعة',
   ].join('\n');
 
-  const encoded = encodeURIComponent(msg);
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encoded}&apikey=${apiKey}`;
+  // لازم encode للرقم كمان — الـ "+" في أول الرقم بتتفك كمسافة لو اتحطت خام في الـ query
+  const params = new URLSearchParams({ phone, text: msg, apikey: apiKey });
+  const url = `https://api.callmebot.com/whatsapp.php?${params.toString()}`;
 
   try {
     const res = await fetch(url);
     const text = await res.text();
-    console.log('[WhatsApp] Status:', res.status, '| Response:', text.slice(0, 200));
+    if (!res.ok) console.error('[WhatsApp] فشل الإرسال — الحالة %s: %s', res.status, text.slice(0, 200));
+    else console.log('[WhatsApp] Status:', res.status, '| Response:', text.slice(0, 200));
   } catch (e: unknown) {
-    const msg2 = e instanceof Error ? e.message : String(e);
-    console.error('[WhatsApp] Fetch error:', msg2);
+    console.error('[WhatsApp] Fetch error:', e instanceof Error ? e.message : String(e));
   }
 }
 
 // ─── Email عبر Resend ────────────────────────────────────────
 export async function sendEmailNotification(data: PaymentNotification) {
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+  return sendMail({
     to: NOTIFY_EMAILS,
     subject: `💰 دفعة جديدة — ${data.productName} — ${data.amount} ${data.currency}`,
     html: `
@@ -188,16 +187,19 @@ export async function notifyCustomOrder(d: CustomOrderNotification) {
       '',
       '⏳ <i>بانتظار تأكيد الدفع</i>',
     ].filter(Boolean).join('\n');
-    jobs.push(fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' }),
-    }));
+    jobs.push(
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' }),
+      }).then(async res => {
+        if (!res.ok) console.error('[Telegram] فشل إشعار التخصيص — الحالة %s', res.status);
+      }),
+    );
   }
 
   // Email (فيه معاينة صورة الشعار)
-  jobs.push(resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+  jobs.push(sendMail({
     to: NOTIFY_EMAILS,
     subject: `🎨 طلب مع تخصيص — ${d.productName}`,
     html: `
@@ -212,7 +214,7 @@ export async function notifyCustomOrder(d: CustomOrderNotification) {
         <p style="color:#6b7280;font-size:12px;">${esc(at)} — بانتظار تأكيد الدفع</p>
       </div>
     `,
-  }).catch(() => {}));
+  }));
 
   await Promise.allSettled(jobs);
 }

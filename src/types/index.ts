@@ -1,5 +1,6 @@
-export type Category = 'ALERTS' | 'STREAM' | 'PACKAGE' | 'THREE_D';
-export type OrderStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+// لازم تفضل متطابقة مع enums في prisma/schema.prisma
+export type Category = 'ALERTS' | 'STREAM' | 'PACKAGE' | 'THREE_D' | 'VIDEO';
+export type OrderStatus = 'PENDING' | 'PAID' | 'IN_PROGRESS' | 'DELIVERED' | 'FAILED' | 'REFUNDED';
 export type Role = 'USER' | 'ADMIN';
 
 export interface Product {

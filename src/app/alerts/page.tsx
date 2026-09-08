@@ -11,17 +11,23 @@ import type { Product } from '@/types';
 /* ─── Types ─── */
 interface AlertItem {
   id: string; name: string; rating: string; ratingCount: number;
-  price: string; desc: string; category: string;
+  // price = نص العرض بس (ممكن يكون priceLabel زي "5$" أو "مجاني").
+  // priceNum = السعر الحقيقي بالجنيه من قاعدة البيانات — ده اللي بيتحاسب عليه.
+  price: string; priceNum: number; desc: string; category: string;
   imgs?: string[]; video?: string;
 }
 
 /* ─── Data ─── */
+// صورة بديلة للمنتجات اللي لسه من غير صورة.
+// (كانت '/caf.png' وهي مش موجودة في public/ — يعني صورة مكسورة في كل مكان)
+const FALLBACK_IMG = '/photo/venom-cover.png';
+
 const CATEGORIES = [
   { id: 'diamond',  title: 'الاليرتات الخاصة',    desc: 'اليرت خاص تقدر تحط أسهمك أو شعارك',        img: '/photo/alert-special.png' },
   { id: 'golden',   title: 'الاليرتات جيفت',    desc: 'إيرتات جيفت متنوعة ومميزة',                 img: '/photo/alert-gift.png'    },
   { id: 'platinum', title: 'الاليرتات التكبيس', desc: 'اليرت تكبيس للفولو والريد',                 img: '/photo/alert-follow.png'  },
   { id: 'anime',    title: 'الأليرتات الأنمي',     desc: 'مخصصة لعشاق الأنمي',                        img: '/photo/anime.png'         },
-  { id: 'snow',     title: 'الاليرتات الدعم',    desc: 'افضل لعشاق الأنمي والثلج',                  img: '/caf.png'                 },
+  { id: 'snow',     title: 'الاليرتات الدعم',    desc: 'افضل لعشاق الأنمي والثلج',                  img: '/photo/venom-cover.png'   },
   { id: 'fire',     title: 'الأليرتات ثري دي',     desc: 'اليرتات ثري دي بتصميم مبهر',               img: '/photo/alert-3d.png'      },
 ];
 
@@ -38,6 +44,7 @@ const toAlertItem = (p: DbProduct): AlertItem => ({
   rating: String(p.rating),
   ratingCount: p.ratingCount,
   price: p.priceLabel ?? `${p.price} جنيه`,
+  priceNum: p.price,
   desc: p.description,
   category: p.tags?.[0] ?? '',
   imgs: p.images?.length ? p.images : [p.imageUrl],
@@ -68,8 +75,6 @@ export default function AlertsPage() {
   const [addedCardId, setAddedCardId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
 
-  const priceValue = (price: string) => Number(price.replace(/[^\d.]/g, '')) || 0;
-
   const validPhone = () => {
     if (phone.replace(/\D/g, '').length < 8) {
       alert('من فضلك اكتب رقم موبايلك الصحيح للتواصل معك وتسليم المنتج');
@@ -83,7 +88,7 @@ export default function AlertsPage() {
       id: item.id,
       title: item.name,
       description: item.desc,
-      price: priceValue(item.price),
+      price: item.priceNum,
       category: 'ALERTS',
       imageUrl: item.imgs?.[0] ?? '',
       videoUrl: item.video ?? null,
@@ -139,11 +144,11 @@ export default function AlertsPage() {
     fetch('/api/lead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: item.name, amount: priceValue(item.price), phone: phone.trim(), method: 'PayPal' }),
+      body: JSON.stringify({ name: item.name, amount: item.priceNum, phone: phone.trim(), method: 'PayPal' }),
     }).catch(() => {});
     const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
     // PayPal مبيدعمش الجنيه — نحوّل بسعر الدولار الحيّ (جنيه ÷ سعر الدولار = دولار)
-    const egp = priceValue(item.price);
+    const egp = item.priceNum;
     let egpPerUsd = 50;
     try {
       const r = await fetch('/api/fx');
@@ -161,7 +166,7 @@ export default function AlertsPage() {
       const res = await fetch('/api/alerts/paymob', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: item.name, amount: priceValue(item.price), alertId: item.id, phone: phone.trim() }),
+        body: JSON.stringify({ name: item.name, amount: item.priceNum, alertId: item.id, phone: phone.trim() }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -719,7 +724,7 @@ export default function AlertsPage() {
                 <div key={alert.id} className="al-small-card">
                   <Link href={`/product/${alert.id}`} className="al-card-header">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={alert.imgs?.[0] ?? '/caf.png'} alt={alert.name} />
+                    <img src={alert.imgs?.[0] ?? FALLBACK_IMG} alt={alert.name} />
                     <div className="al-card-overlay" />
                   </Link>
                   <div className="al-card-content">
@@ -920,7 +925,7 @@ export default function AlertsPage() {
                   <div className="al-media-box">
                     {mediaTab==='image' || !youtubeEmbedUrl(modal.video) ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={modal.imgs?.[0] ?? '/caf.png'} alt={modal.name} />
+                      <img src={modal.imgs?.[0] ?? FALLBACK_IMG} alt={modal.name} />
                     ) : (
                       <iframe
                         src={youtubeEmbedUrl(modal.video, { autoplay: true })!}

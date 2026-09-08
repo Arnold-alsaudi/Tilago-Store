@@ -13,6 +13,16 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // الرجوع للصفحة اللي المستخدم كان فيها (مثلاً السلة لما يضغط ادفع وهو مش مسجّل).
+  // بنقراه من window مباشرةً بدل useSearchParams عشان منحتاجش Suspense boundary.
+  // ومسموح بمسارات داخلية بس — منعاً لتحويل المستخدم لموقع خارجي عبر الرابط.
+  const getCallbackUrl = () => {
+    if (typeof window === 'undefined') return '/alerts';
+    const raw = new URLSearchParams(window.location.search).get('callbackUrl');
+    if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    return '/alerts';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -20,7 +30,7 @@ export default function SignInPage() {
     const result = await signIn('credentials', { email, password, redirect: false });
     setLoading(false);
     if (result?.error) setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
-    else router.push('/alerts');
+    else router.push(getCallbackUrl());
   };
 
   return (
@@ -38,7 +48,7 @@ export default function SignInPage() {
         {/* Google */}
         <button
           type="button"
-          onClick={() => signIn('google', { callbackUrl: '/alerts' })}
+          onClick={() => signIn('google', { callbackUrl: getCallbackUrl() })}
           className="si-google"
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
