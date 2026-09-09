@@ -372,9 +372,11 @@ export default function AlertsPage() {
         .al-feature-desc { color:rgba(160,150,190,0.65); font-size:.82rem; line-height:1.6; }
 
         /* ── Products Grid ── */
+        /* auto-fill مش auto-fit: auto-fit بتطبّق الأعمدة الفاضية وتمطّط الكروت
+           الموجودة على الشاشات العريضة — وده نفس التشويه اللي بنصلحه. */
         .al-products {
           padding:4rem 5%; display:grid;
-          grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; text-align:center;
+          grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr)); gap:1.5rem; text-align:center;
         }
         .al-product-card {
           background:radial-gradient(ellipse at 50% 12%, rgba(84,22,181,0.16), transparent 55%), rgba(15,8,59,0.5);
@@ -427,8 +429,13 @@ export default function AlertsPage() {
           padding:.45rem 1.4rem; border-radius:12px;
           backdrop-filter:blur(6px); box-shadow:0 0 18px rgba(84,22,181,0.2);
         }
+        /* عدد الأعمدة بيتحدد من عرض الشاشة لوحده — مفيش رقم ثابت.
+           المتغيّر هو عدد الكروت، مش حجم الكارت: auto-fill بتضيف عمود جديد
+           كل ما فيه مساحة تكفي 280px، فالكارت بيفضل في نطاق ضيق (280–370px)
+           على أي شاشة بدل ما يتمطّط. min(100%,280px) بتمنع الطفح على الشاشات
+           الأصغر من 280px. */
         .al-cat-grid {
-          display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+          display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));
           gap:1.4rem; text-align:center; padding:0 5%; margin-top:1rem;
         }
 
@@ -540,7 +547,8 @@ export default function AlertsPage() {
           box-shadow:none; cursor:not-allowed;
         }
         .al-btn-cart.disabled:hover { transform:none; box-shadow:none; }
-        @media(min-width:769px) { .al-cat-grid { grid-template-columns:repeat(3,1fr); } }
+        /* اتشال: كان بيثبّت 3 أعمدة فوق 769px، فالكارت كان بيتمطّط لـ~765px
+           على شاشة 2560. الشبكة فوق بتحسبها لوحدها دلوقتي. */
 
         /* ── Alert Card ── */
         .al-small-card {
@@ -784,8 +792,7 @@ export default function AlertsPage() {
         /* Tablet */
         @media(max-width:1024px){
           .al-hero { padding:3rem 4%; }
-          .al-products { grid-template-columns:repeat(2,1fr); padding:3rem 4%; }
-          .al-cat-grid { grid-template-columns:repeat(2,1fr) !important; }
+          .al-products { padding:3rem 4%; }
           .al-modal-box { padding:1.5rem; width:95%; }
           .al-modal-head h2 { font-size:1.4rem; }
         }
@@ -800,10 +807,10 @@ export default function AlertsPage() {
           .al-stats { flex-wrap:wrap; }
           .al-stat-item { min-width:50%; border-left:none; border-bottom:1px solid rgba(84,22,181,0.1); padding:1.2rem .5rem; }
           .al-stat-num { font-size:1.5rem; }
-          .al-products { grid-template-columns:repeat(2,1fr); padding:2rem 4%; gap:1rem; }
+          .al-products { padding:2rem 4%; gap:1rem; }
           .al-features { padding:2.5rem 4%; gap:1rem; }
           .al-cat-header { padding:.8rem 4% 0; }
-          .al-cat-grid { grid-template-columns:repeat(2,1fr) !important; padding:0 4%; gap:1rem; }
+          .al-cat-grid { padding:0 4%; gap:1rem; }
           .al-modal-body { flex-direction:column; }
           .al-modal-right { margin-top:0; }
           .al-media-box { height:260px; }
@@ -817,9 +824,8 @@ export default function AlertsPage() {
         /* Small mobile */
         @media(max-width:480px){
           .al-hero-content h2 { font-size:1.3rem; }
-          .al-products { grid-template-columns:1fr; padding:1.5rem 4%; }
+          .al-products { padding:1.5rem 4%; }
           .al-product-img { height:150px; }
-          .al-cat-grid { grid-template-columns:1fr !important; }
           .al-features { grid-template-columns:repeat(2,1fr); gap:.8rem; }
           .al-feature-card { padding:1.3rem 1rem; }
           .al-stat-item { min-width:50%; }
