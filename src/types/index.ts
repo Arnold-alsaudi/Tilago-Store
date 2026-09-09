@@ -54,19 +54,27 @@ export interface RecentOrder {
   id: string;
   productName: string | null;
   userName: string | null;
+  userEmail: string;
+  userPhone: string | null;
   amount: number;
   currency: string;
   method: string;
+  /** حالة الدفع: success | pending | failed | refunded */
+  status: string;
   deliveryStatus: string;
   createdAt: string;
 }
 
 export interface DashboardStats {
+  /** إيراد مؤكد فقط (status=success) — ده الرقم الحقيقي */
   totalRevenue: number;
+  /** مبلغ طلبات لسه محتاجة تأكيد وصول الفلوس (PayPal بالذات) */
+  awaitingConfirmAmount: number;
+  awaitingConfirmCount: number;
   totalOrders: number;
   totalUsers: number;
   totalProducts: number;
-  /** طلبات مدفوعة ولسه متسلّمتش — أهم رقم في اللوحة لأنه بيتطلب تصرّف */
+  /** طلبات مدفوعة ولسه متسلّمتش — بيتطلب تصرّف */
   pendingDelivery: number;
   /** إيراد آخر 30 يوم مقارنة بالـ30 اللي قبلهم — للاتجاه */
   revenueLast30: number;

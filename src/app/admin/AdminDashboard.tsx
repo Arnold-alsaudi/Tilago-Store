@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-import type { DashboardStats } from '@/types';
+import type { DashboardStats, RecentOrder } from '@/types';
 import { formatPrice, formatPriceAscii } from '@/lib/utils';
 
 interface Props { stats: DashboardStats; }
@@ -76,6 +76,10 @@ const SECTIONS = [
 ];
 
 export function AdminDashboard({ stats }: Props) {
+  // الطلبات محليّة عشان التعديل يبان فوراً من غير إعادة تحميل الصفحة
+  const [orders, setOrders] = useState<RecentOrder[]>(stats.recentOrders);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState('');
   const [storePaused, setStorePaused] = useState(false);
   const [pauseMessage, setPauseMessage] = useState('المتجر مغلق مؤقتاً، سيعود قريباً.');
   const [toggling, setToggling] = useState(false);
@@ -151,6 +155,28 @@ export function AdminDashboard({ stats }: Props) {
     XLSX.utils.book_append_sheet(wb, ws, 'الملخص');
     XLSX.writeFile(wb, 'tilago-report.xlsx');
   };
+
+  /** تحديث حالة طلب (دفع أو تسليم) — تفاؤلي مع رجوع للحالة القديمة لو فشل */
+  async function patchOrder(id: string, patch: Partial<Pick<RecentOrder, 'status' | 'deliveryStatus'>>) {
+    const prev = orders;
+    setBusy(id); setErr('');
+    setOrders(os => os.map(o => (o.id === id ? { ...o, ...patch } : o)));
+    try {
+      const res = await fetch(`/api/admin/payments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setOrders(prev);
+        setErr(d.error ?? 'فشل الحفظ');
+      }
+    } catch {
+      setOrders(prev);
+      setErr('تعذّر الاتصال بالسيرفر');
+    } finally { setBusy(null); }
+  }
 
   // اتجاه الإيراد: آخر 30 يوم مقابل الـ30 اللي قبلهم
   const trend = useMemo(() => {
@@ -274,6 +300,41 @@ export function AdminDashboard({ stats }: Props) {
         .ad-chip{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;
           padding:.18rem .55rem;border-radius:50px;white-space:nowrap;}
         .ad-chip i{font-size:.6rem;}
+        .ad-chip.ad-paid{background:rgba(46,204,113,.14);color:#7ef0a8;border:1px solid rgba(46,204,113,.4);}
+        .ad-row.busy{opacity:.55;pointer-events:none;}
+        .ad-err{color:#ff9b8f;font-size:.8rem;margin:0 0 var(--s2);display:flex;align-items:center;gap:7px;}
+
+        /* زرار تأكيد وصول الفلوس */
+        .ad-confirm{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 var(--s2);
+          border-radius:10px;cursor:pointer;white-space:nowrap;font-family:'Cairo',sans-serif;
+          font-size:.76rem;font-weight:800;background:rgba(46,204,113,.12);
+          border:1px solid rgba(46,204,113,.45);color:#7ef0a8;transition:background .2s;}
+        .ad-confirm:hover{background:rgba(46,204,113,.26);}
+        .ad-confirm:focus-visible{outline:2px solid #2ECC71;outline-offset:2px;}
+
+        /* مجموعة أزرار حالة التسليم */
+        .ad-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-shrink:0;}
+        .ad-seg-b{min-height:44px;padding:0 var(--s2);border:none;border-inline-start:1px solid var(--line);
+          background:transparent;color:var(--ink-50);cursor:pointer;white-space:nowrap;
+          font-family:'Cairo',sans-serif;font-size:.74rem;font-weight:700;transition:background .2s,color .2s;}
+        .ad-seg-b:first-child{border-inline-start:none;}
+        .ad-seg-b:hover{background:rgba(84,22,181,.2);color:var(--ink);}
+        .ad-seg-b:focus-visible{outline:2px solid var(--v);outline-offset:-2px;}
+        .ad-seg-b.on{border-style:solid;}
+        @media(max-width:760px){
+          .ad-row{flex-wrap:wrap;}
+          .ad-row-m{flex-basis:100%;}
+          .ad-seg{margin-inline-start:auto;}
+        }
+
+        /* لوح "بانتظار تأكيد الدفع" */
+        .ad-await{background:rgba(240,160,48,.07);border:1px solid rgba(240,160,48,.35);
+          border-radius:16px;padding:var(--s3);}
+        .ad-await-m{display:flex;flex-direction:column;gap:5px;}
+        .ad-await-l{display:flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;color:#F0A030;}
+        .ad-await-v{font-family:'Oxanium',sans-serif;font-weight:800;font-size:1.5rem;
+          color:#F0A030;font-variant-numeric:tabular-nums;}
+        .ad-await-n{font-size:.78rem;color:var(--ink-50);line-height:1.7;max-width:62ch;}
 
         /* ── أقسام الإدارة ── */
         .ad-sec{display:flex;flex-direction:column;gap:var(--s2);}
@@ -359,11 +420,25 @@ export function AdminDashboard({ stats }: Props) {
           </div>
 
           <div className="ad-kpi">
-            <span className="ad-kpi-l"><i className="fas fa-receipt" /> عدد الطلبات</span>
+            <span className="ad-kpi-l"><i className="fas fa-receipt" /> طلبات مؤكدة</span>
             <span className="ad-kpi-v">{stats.totalOrders}</span>
             <span className="ad-kpi-note">{stats.totalUsers} مستخدم · {stats.totalProducts} منتج</span>
           </div>
         </section>
+
+        {/* فلوس مش داخلة في الإيراد لأنها لسه مش مؤكدة — لازم تبان مش تتخبّى */}
+        {stats.awaitingConfirmCount > 0 && (
+          <section className="ad-await ad-rise" style={{ animationDelay: '.06s' }}>
+            <div className="ad-await-m">
+              <span className="ad-await-l"><i className="fas fa-circle-question" /> بانتظار تأكيد الدفع</span>
+              <span className="ad-await-v">{formatPrice(stats.awaitingConfirmAmount)}</span>
+              <span className="ad-await-n">
+                {stats.awaitingConfirmCount} طلب — مش محسوبين في الإيراد. PayPal مابيبلّغش
+                الموقع تلقائياً، فلازم تشوف الفلوس وصلت وتأكّد بنفسك.
+              </span>
+            </div>
+          </section>
+        )}
 
         {/* Charts */}
         <section className="ad-cols">
@@ -447,25 +522,52 @@ export function AdminDashboard({ stats }: Props) {
             <h2 className="ad-card-t">أحدث الطلبات</h2>
             <Link href="/admin/orders" className="ad-card-s" style={{ color: 'var(--ink-50)' }}>عرض الكل ←</Link>
           </div>
-          {stats.recentOrders.length > 0 ? (
+          {err && <p className="ad-err"><i className="fas fa-triangle-exclamation" /> {err}</p>}
+          {orders.length > 0 ? (
             <div className="ad-rows">
-              {stats.recentOrders.map(o => {
-                const d = delivery(o.deliveryStatus);
+              {orders.map(o => {
+                const paid = o.status === 'success';
+                const working = busy === o.id;
                 return (
-                  <div key={o.id} className="ad-row">
+                  <div key={o.id} className={`ad-row${working ? ' busy' : ''}`}>
                     <div className="ad-row-m">
                       <div className="ad-row-t">{o.productName ?? 'طلب'}</div>
                       <div className="ad-row-s">
                         {o.userName ?? 'عميل'} · {methodLabel(o.method)} ·{' '}
                         {new Date(o.createdAt).toLocaleDateString('ar-EG')}
+                        {o.userPhone ? ` · ${o.userPhone}` : ''}
                       </div>
                     </div>
+
                     <span className="ad-row-a">{formatPrice(o.amount)}</span>
-                    <span className="ad-chip" style={{
-                      background: `${d.color}1f`, color: d.color, border: `1px solid ${d.color}55`,
-                    }}>
-                      <i className="fas fa-circle" /> {d.label}
-                    </span>
+
+                    {/* تأكيد وصول الفلوس — الخطوة اللي كانت ناقصة تماماً */}
+                    {paid ? (
+                      <span className="ad-chip ad-paid"><i className="fas fa-circle-check" /> مؤكد</span>
+                    ) : (
+                      <button className="ad-confirm" disabled={working}
+                        onClick={() => patchOrder(o.id, { status: 'success' })}
+                        title="أكّد إن الفلوس وصلت — هيتحسب في الإيراد">
+                        <i className="fas fa-check" /> أكّد الدفع
+                      </button>
+                    )}
+
+                    {/* حالة التسليم */}
+                    <div className="ad-seg" role="group" aria-label="حالة التسليم">
+                      {(Object.keys(DELIVERY) as (keyof typeof DELIVERY)[]).map(k => {
+                        const on = o.deliveryStatus === k;
+                        return (
+                          <button key={k} disabled={working}
+                            className={`ad-seg-b${on ? ' on' : ''}`}
+                            style={on ? { background: `${DELIVERY[k].color}26`, color: DELIVERY[k].color,
+                              borderColor: `${DELIVERY[k].color}66` } : undefined}
+                            onClick={() => patchOrder(o.id, { deliveryStatus: k })}
+                            aria-pressed={on}>
+                            {DELIVERY[k].label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}

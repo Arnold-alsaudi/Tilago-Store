@@ -10,7 +10,8 @@ export default async function AdminPage() {
   if (!session || (session.user as any)?.role !== 'ADMIN') redirect('/');
 
   let stats: DashboardStats = {
-    totalRevenue: 0, totalOrders: 0, totalUsers: 0, totalProducts: 0,
+    totalRevenue: 0, awaitingConfirmAmount: 0, awaitingConfirmCount: 0,
+    totalOrders: 0, totalUsers: 0, totalProducts: 0,
     pendingDelivery: 0, revenueLast30: 0, revenuePrev30: 0,
     revenueByMonth: [], paymentsByMethod: [], recentOrders: [],
   };
@@ -18,25 +19,35 @@ export default async function AdminPage() {
   try {
     // الدفع الحقيقي كله في جدول Payment. جدول Order موجود في الـ schema بس
     // مفيش كود بيكتب فيه، فمابنعتمدش عليه في الأرقام.
-    const [payments, users, products, recent] = await Promise.all([
-      prisma.payment.findMany({ where: { status: 'success' } }),
+    const [all, users, products, recent] = await Promise.all([
+      prisma.payment.findMany(),
       prisma.user.count(),
       prisma.product.count(),
       prisma.payment.findMany({
         orderBy: { createdAt: 'desc' },
-        take: 6,
+        take: 8,
         select: {
-          id: true, productName: true, userName: true, amount: true,
-          currency: true, method: true, deliveryStatus: true, createdAt: true,
+          id: true, productName: true, userName: true, userEmail: true, userPhone: true,
+          amount: true, currency: true, method: true, status: true,
+          deliveryStatus: true, createdAt: true,
         },
       }),
     ]);
 
-    stats.totalRevenue = payments.reduce((s, p) => s + p.amount, 0);
-    stats.totalOrders = payments.length;
+    // الإيراد = المؤكد فقط. الباقي بيتعرض لوحده كـ"بانتظار التأكيد" عشان
+    // مايبقاش فيه فلوس مخبية عن الأدمن ولا مضافة للإيراد وهي لسه مش مؤكدة.
+    const paid = all.filter(p => p.status === 'success');
+    const awaiting = all.filter(p => p.status === 'pending');
+
+    stats.totalRevenue = paid.reduce((s, p) => s + p.amount, 0);
+    stats.awaitingConfirmAmount = awaiting.reduce((s, p) => s + p.amount, 0);
+    stats.awaitingConfirmCount = awaiting.length;
+    stats.totalOrders = paid.length;
     stats.totalUsers = users;
     stats.totalProducts = products;
-    stats.pendingDelivery = payments.filter(p => p.deliveryStatus !== 'delivered').length;
+    stats.pendingDelivery = paid.filter(p => p.deliveryStatus !== 'delivered').length;
+
+    const payments = paid;
 
     // اتجاه آخر 30 يوم مقابل الـ30 اللي قبلهم
     const now = Date.now();
@@ -69,6 +80,7 @@ export default async function AdminPage() {
       .map(([method, count]) => ({ method, count }))
       .sort((a, b) => b.count - a.count);
 
+    // أحدث الطلبات بتشمل المؤكد وغير المؤكد — الأدمن محتاج يشوف الاتنين ويتصرّف
     stats.recentOrders = recent.map(r => ({
       ...r,
       createdAt: new Date(r.createdAt).toISOString(),
