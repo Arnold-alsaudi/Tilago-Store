@@ -9,9 +9,13 @@ export function cn(...inputs: ClassValue[]) {
 export const CURRENCY = 'EGP';
 
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('ar-EG', {
+  // أرقام لاتينية (u-nu-latn) بدل الهندية — أوضح للقراءة وأنسب لجمهور الجيمنج،
+  // ومع ذلك بنحتفظ برمز العملة العربي "ج.م".
+  // minimumFractionDigits: 0 عشان السعر الصحيح يطلع "94 ج.م" مش "94.00 ج.م".
+  return new Intl.NumberFormat('ar-EG-u-nu-latn', {
     style: 'currency',
     currency: CURRENCY,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(price);
 }

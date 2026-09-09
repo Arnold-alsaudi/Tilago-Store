@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { storePaused, pauseMessage, unavailableLabel } = await req.json();
+  const { storePaused, pauseMessage, unavailableLabel, lockedAlertCats } = await req.json();
 
   const updates: { key: string; value: string }[] = [];
   if (typeof storePaused === 'boolean') {
@@ -26,6 +26,15 @@ export async function POST(req: NextRequest) {
   // نص الشارة اللي بتظهر على المنتجات اللي لسه مخلصتش
   if (typeof unavailableLabel === 'string') {
     updates.push({ key: 'unavailableLabel', value: unavailableLabel.trim().slice(0, 60) });
+  }
+  // أقسام الاليرتات المقفولة يدوياً — بتتخزّن مفصولة بفواصل
+  if (Array.isArray(lockedAlertCats)) {
+    const clean = lockedAlertCats
+      .filter((c): c is string => typeof c === 'string')
+      .map(c => c.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+    updates.push({ key: 'lockedAlertCats', value: clean.join(',') });
   }
 
   for (const { key, value } of updates) {

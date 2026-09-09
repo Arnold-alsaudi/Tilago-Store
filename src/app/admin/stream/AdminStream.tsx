@@ -16,7 +16,7 @@ interface MediaItem { id: string; url: string; type: MediaType; }
 
 interface PkgItem {
   id: string; title: string; description: string; price: number;
-  imageUrl: string; images: string[]; videos: string[]; tags: string[];
+  imageUrl: string; images: string[]; videos: string[]; videoUrl?: string | null; tags: string[];
   featured: boolean; active: boolean;
 }
 interface FormState {
@@ -62,8 +62,12 @@ export function AdminStream({ packages: init }: { packages: PkgItem[] }) {
 
   function openEdit(p: PkgItem) {
     setEditId(p.id);
-    // rebuild combined media list from images[] — نكتشف النوع (يوتيوب/فيديو محلي/صورة)
-    const media: MediaItem[] = p.images.map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
+    // نجمع images + videos + videoUrl ونشيل المكرر. الاعتماد على images[] لوحدها
+    // كان بيخفي الفيديو المتخزّن في videoUrl — وأول حفظ يكتب videoUrl=null ويمسحه.
+    const urls = [...(p.images ?? []), ...(p.videos ?? []), ...(p.videoUrl ? [p.videoUrl] : [])];
+    const seen = new Set<string>();
+    const media: MediaItem[] = urls.filter(u => u && !seen.has(u) && seen.add(u))
+      .map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
     setForm({ title: p.title, description: p.description ?? '', price: String(p.price ?? ''), imageUrl: p.imageUrl, media, featured: p.featured, active: p.active, available: !(p.tags ?? []).includes(UNAVAILABLE_TAG) });
     setShowReorder(false); setNewVideoUrl(''); setUploadErr(''); setModal(true);
   }

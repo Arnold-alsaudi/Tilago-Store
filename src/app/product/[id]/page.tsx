@@ -38,9 +38,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     tags: product.tags ?? [],
   };
 
-  // منتجات مرتبطة من نفس الفئة — للـ cross-sell
+  // منتجات مرتبطة من نفس الفئة — للـ cross-sell.
+  // بنستثني اللي لسه مش جاهز: كان بيظهر بزرار "أضف للسلة" شغّال وبعدين الدفع
+  // يرفضه، فالعميل كان بياخد مفاجأة وحشة عند الدفع.
   const related = await prisma.product.findMany({
-    where: { category: product.category, active: true, id: { not: product.id } },
+    where: {
+      category: product.category,
+      active: true,
+      comingSoon: false,
+      id: { not: product.id },
+    },
     orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
     take: 10,
   });

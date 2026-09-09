@@ -65,11 +65,16 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
   // نص شارة "لم يكتمل بعد" — محفوظ في إعدادات الموقع وبيتغيّر من هنا
   const [soonLabel, setSoonLabel] = useState(DEFAULT_UNAVAILABLE_LABEL);
   const [labelSaved, setLabelSaved] = useState(false);
+  const [lockedCats, setLockedCats] = useState<string[]>([]);
+  const [lockBusy, setLockBusy] = useState(false);
 
   useEffect(() => {
     fetch('/api/settings')
       .then(r => r.json())
-      .then(s => { if (s.unavailableLabel) setSoonLabel(s.unavailableLabel); })
+      .then(s => {
+        if (s.unavailableLabel) setSoonLabel(s.unavailableLabel);
+        if (Array.isArray(s.lockedAlertCats)) setLockedCats(s.lockedAlertCats);
+      })
       .catch(() => {});
   }, []);
 
@@ -80,6 +85,26 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
     }).catch(() => null);
     if (res?.ok) { setLabelSaved(true); setTimeout(() => setLabelSaved(false), 1600); }
   }
+
+  /** قفل/فتح قسم كامل — الزائر هيلاقيه مقفول من برّه ومش هيقدر يدخله */
+  async function toggleCatLock(cat: string) {
+    const next = lockedCats.includes(cat) ? lockedCats.filter(c => c !== cat) : [...lockedCats, cat];
+    const prev = lockedCats;
+    setLockedCats(next);
+    setLockBusy(true);
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lockedAlertCats: next }),
+    }).catch(() => null);
+    if (!res?.ok) setLockedCats(prev); // رجّع القديم لو الحفظ فشل
+    setLockBusy(false);
+  }
+
+  /** القسم مقفول تلقائياً لما مايبقاش فيه ولا اليرت جاهز */
+  const autoLocked = (cat: string) => {
+    const list = alerts.filter(a => a.subCategory === cat && a.active);
+    return list.length === 0 || list.every(a => a.comingSoon);
+  };
 
   const coverRef = useRef<HTMLInputElement>(null);
   const imgRef   = useRef<HTMLInputElement>(null);
@@ -118,7 +143,16 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
 
   function openEdit(a: AlertItem) {
     setEditId(a.id);
-    const media: MediaItem[] = (a.images ?? []).map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
+
+    // الميديا كانت بتتقرا من images[] بس. ودي كارثة صامتة: كل الاليرتات فيديوهاتها
+    // متخزّنة في videoUrl/videos وبرّه images[]، فالفيديو مكانش بيظهر هنا خالص —
+    // وأول ما تحفظ، الحفظ بيكتب videoUrl من الميديا الفاضية ويمسح الفيديو.
+    // دلوقتي بنجمع الاتنين ونشيل المكرر عشان الفيديو يظهر ويترجع مكانه بأمان.
+    const urls = [...(a.images ?? []), ...(a.videos ?? []), ...(a.videoUrl ? [a.videoUrl] : [])];
+    const seen = new Set<string>();
+    const media: MediaItem[] = urls
+      .filter(u => u && !seen.has(u) && seen.add(u))
+      .map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
     setForm({
       title: a.title, description: a.description ?? '', price: String(a.price ?? ''),
       priceLabel: a.priceLabel ?? '', subCategory: a.subCategory ?? 'diamond',
@@ -358,6 +392,31 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
         .al-switch.on { background:rgba(240,131,11,.5); }
         .al-switch.on i { transform:translateX(-18px); background:#ffcf7a; }
 
+        /* لوحة قفل الأقسام */
+        .al-locks {
+          background:rgba(0,0,0,.22); border:1px solid rgba(84,22,181,.28);
+          border-radius:16px; padding:1rem 1.1rem; margin-bottom:1rem;
+        }
+        .al-locks-h {
+          display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+          font-size:.86rem; font-weight:800; color:#c8b8f0; margin-bottom:.8rem;
+        }
+        .al-locks-h > i { color:#9B59D0; }
+        .al-locks-h span { font-weight:400; font-size:.74rem; color:rgba(180,168,215,.5); }
+        .al-locks-row { display:flex; flex-wrap:wrap; gap:8px; }
+        .al-lockpill {
+          display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+          background:rgba(46,204,113,.08); border:1px solid rgba(46,204,113,.32); color:#7ef0a8;
+          border-radius:50px; padding:.42rem 1rem; font-family:'Cairo',sans-serif;
+          font-size:.8rem; font-weight:700; transition:all .2s;
+        }
+        .al-lockpill:hover { background:rgba(46,204,113,.18); }
+        .al-lockpill.locked { background:rgba(231,76,60,.08); border-color:rgba(231,76,60,.4); color:#ff9b8f; }
+        .al-lockpill.locked:hover { background:rgba(231,76,60,.18); }
+        .al-lockpill.manual { border-style:solid; box-shadow:0 0 0 1px rgba(231,76,60,.25) inset; }
+        .al-lockpill em { font-style:normal; font-size:.64rem; opacity:.6; }
+        .al-lockpill:disabled { opacity:.55; cursor:wait; }
+
         /* بحث الأدمن + تعديل نص الشارة */
         .al-tools { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:1rem; }
         .al-search-admin {
@@ -498,6 +557,31 @@ export function AlertsAdminClient({ alerts: init }: { alerts: AlertItem[] }) {
             <i className="fas fa-clock" style={{ color: '#ffcf7a', fontSize: '.8rem' }} />
             <input value={soonLabel} onChange={e => setSoonLabel(e.target.value)} maxLength={40} />
             <button type="button" onClick={saveSoonLabel}>{labelSaved ? '✓ اتحفظ' : 'حفظ'}</button>
+          </div>
+        </div>
+
+        {/* قفل الأقسام */}
+        <div className="al-locks">
+          <div className="al-locks-h">
+            <i className="fas fa-lock" /> قفل الأقسام على الزائر
+            <span>القسم اللي كل اليرتاته «{soonLabel}» بيتقفل لوحده — وتقدر تقفل أي قسم يدوي</span>
+          </div>
+          <div className="al-locks-row">
+            {SUBS.map(s => {
+              const manual = lockedCats.includes(s.value);
+              const auto = autoLocked(s.value);
+              const locked = manual || auto;
+              return (
+                <button key={s.value} type="button" disabled={lockBusy}
+                  className={`al-lockpill${locked ? ' locked' : ''}${manual ? ' manual' : ''}`}
+                  onClick={() => toggleCatLock(s.value)}
+                  title={auto && !manual ? 'مقفول تلقائياً — مفيش اليرت جاهز فيه' : manual ? 'مقفول يدوي — اضغط للفتح' : 'مفتوح — اضغط للقفل'}>
+                  <i className={`fas ${locked ? 'fa-lock' : 'fa-lock-open'}`} />
+                  {s.label}
+                  {auto && !manual && <em>تلقائي</em>}
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -88,6 +88,7 @@ export default function AlertsPage() {
   const [colorFilter, setColorFilter] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [unavailableLabel, setUnavailableLabel] = useState(DEFAULT_UNAVAILABLE_LABEL);
+  const [lockedCats, setLockedCats] = useState<string[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const validPhone = () => {
@@ -139,6 +140,7 @@ export default function AlertsPage() {
         setStorePaused(!!s.storePaused);
         setPauseMessage(s.pauseMessage ?? '');
         if (s.unavailableLabel) setUnavailableLabel(s.unavailableLabel);
+        if (Array.isArray(s.lockedAlertCats)) setLockedCats(s.lockedAlertCats);
       })
       .catch(() => {});
   }, []);
@@ -250,6 +252,15 @@ export default function AlertsPage() {
 
   // نصفّي البحث والفلتر لما نغيّر القسم عشان النتيجة ما تبقاش مضلّلة
   useEffect(() => { setQuery(''); setColorFilter(null); }, [activeCat]);
+
+  // القسم بيتقفل من برّه لو مفيهوش ولا اليرت جاهز للبيع — العميل مايدخلش على فاضي.
+  // الأدمن يقدر يقفل قسم يدوي كمان من لوحة التحكم (lockedAlertCats).
+  const isCatLocked = (catId: string) => {
+    if (lockedCats.includes(catId)) return true;
+    if (loadingProducts) return false;
+    const list = alertsData[catId] ?? [];
+    return list.length === 0 || list.every(a => a.comingSoon);
+  };
 
   useEffect(() => {
     if (activeCat) return;
@@ -493,15 +504,33 @@ export default function AlertsPage() {
         .al-code.copied { background:rgba(46,204,113,0.18); border-color:rgba(46,204,113,0.5); color:#7ef0a8; }
         .al-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; box-shadow:0 0 8px currentColor; }
 
-        /* ── Coming soon ── */
-        .al-small-card.soon .al-card-header img { filter:grayscale(0.55) brightness(0.62); }
-        .al-soon-tag {
-          position:absolute; top:22px; right:22px; z-index:3;
-          background:rgba(12,5,22,0.9); border:1px solid rgba(240,131,11,0.55);
-          color:#ffcf7a; border-radius:50px; padding:.24rem .8rem;
-          font-family:'Cairo',sans-serif; font-size:.7rem; font-weight:800;
-          backdrop-filter:blur(6px); box-shadow:0 4px 14px rgba(0,0,0,0.4);
+        /* ── غير متاح — نفس ستايل صفحة الستريم بالظبط ── */
+        .al-small-card.soon { cursor:not-allowed; }
+        .al-small-card.soon:hover { transform:none; box-shadow:0 4px 14px rgba(0,0,0,0.3); border-color:rgba(84,22,181,0.2); }
+        .al-small-card.soon .al-card-header img { filter:grayscale(.7) brightness(.5); transform:none; }
+        .al-small-card.soon:hover .al-card-header img { transform:none; }
+        .al-unavail-layer {
+          position:absolute; inset:14px 14px 6px; border-radius:16px; z-index:4;
+          display:flex; align-items:center; justify-content:center;
+          background:rgba(6,2,16,0.55); backdrop-filter:blur(1px);
         }
+        .al-unavail-badge {
+          display:inline-flex; align-items:center; gap:8px; padding:.5rem 1.1rem; border-radius:50px;
+          background:rgba(10,4,22,0.85); border:1px solid rgba(255,255,255,0.18); color:#f0ecff;
+          font-family:'Cairo','29LtBukra',sans-serif; font-weight:700; font-size:.85rem; letter-spacing:.5px;
+        }
+        .al-unavail-badge i { font-size:.78rem; opacity:.85; }
+
+        /* ── القسم كله مقفول (من برّه) ── */
+        .al-product-card.locked { cursor:not-allowed; }
+        .al-product-card.locked:hover { transform:none; box-shadow:0 4px 16px rgba(0,0,0,0.3); border-color:rgba(84,22,181,0.2); }
+        .al-product-card.locked .al-product-img { filter:grayscale(.7) brightness(.5); transform:none; }
+        .al-product-card.locked:hover .al-product-img { transform:none; }
+        .al-cat-lock {
+          position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:center;
+          background:rgba(6,2,16,0.5); backdrop-filter:blur(1px); border-radius:14px;
+        }
+        .al-product-card { position:relative; }
         .al-btn-cart.disabled {
           background:rgba(255,255,255,0.05); color:rgba(180,168,215,0.5);
           box-shadow:none; cursor:not-allowed;
@@ -867,14 +896,23 @@ export default function AlertsPage() {
         {/* ── Products Grid ── */}
         {!activeCat && (
           <section id="products" className="al-products">
-            {CATEGORIES.map(cat => (
-              <div key={cat.id} className="al-product-card" onClick={() => setActiveCat(cat.id)}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={cat.img} alt={cat.title} className="al-product-img" />
-                <div className="al-product-title">{cat.title}</div>
-                <div className="al-product-desc">({cat.desc})</div>
-              </div>
-            ))}
+            {CATEGORIES.map(cat => {
+              const locked = isCatLocked(cat.id);
+              return (
+                <div key={cat.id} className={`al-product-card${locked ? ' locked' : ''}`}
+                  onClick={() => { if (!locked) setActiveCat(cat.id); }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cat.img} alt={cat.title} className="al-product-img" />
+                  {locked && (
+                    <div className="al-cat-lock">
+                      <span className="al-unavail-badge"><i className="fas fa-lock" /> {unavailableLabel}</span>
+                    </div>
+                  )}
+                  <div className="al-product-title">{cat.title}</div>
+                  <div className="al-product-desc">({cat.desc})</div>
+                </div>
+              );
+            })}
           </section>
         )}
 
@@ -958,7 +996,11 @@ export default function AlertsPage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={alert.imgs?.[0] ?? FALLBACK_IMG} alt={alert.name} />
                     <div className="al-card-overlay" />
-                    {alert.comingSoon && <span className="al-soon-tag">{unavailableLabel}</span>}
+                    {alert.comingSoon && (
+                      <div className="al-unavail-layer">
+                        <span className="al-unavail-badge"><i className="fas fa-lock" /> {unavailableLabel}</span>
+                      </div>
+                    )}
                   </Link>
                   <div className="al-card-content">
                     <div className="al-card-top">

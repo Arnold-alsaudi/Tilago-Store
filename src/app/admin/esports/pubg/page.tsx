@@ -13,7 +13,7 @@ export default async function AdminPubgPage() {
     packages = await prisma.product.findMany({
       where: { category: 'PACKAGE', subCategory: 'pubg' },
       orderBy: { createdAt: 'desc' },
-      select: { id:true, title:true, imageUrl:true, images:true, videos:true, featured:true, active:true },
+      select: { id:true, title:true, imageUrl:true, images:true, videos:true, videoUrl:true, featured:true, active:true },
     });
   } catch {}
 

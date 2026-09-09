@@ -13,7 +13,7 @@ export default async function AdminTdmPage() {
     packages = await prisma.product.findMany({
       where: { category: 'PACKAGE', subCategory: 'tdm' },
       orderBy: { createdAt: 'desc' },
-      select: { id:true, title:true, imageUrl:true, images:true, videos:true, featured:true, active:true },
+      select: { id:true, title:true, imageUrl:true, images:true, videos:true, videoUrl:true, featured:true, active:true },
     });
   } catch {}
 

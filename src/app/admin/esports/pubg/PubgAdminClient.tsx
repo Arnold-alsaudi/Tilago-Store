@@ -16,7 +16,7 @@ interface MediaItem { id: string; url: string; type: MediaType; }
 
 interface PkgItem {
   id: string; title: string; imageUrl: string;
-  images: string[]; videos: string[];
+  images: string[]; videos: string[]; videoUrl?: string | null;
   featured: boolean; active: boolean;
 }
 interface FormState {
@@ -58,8 +58,11 @@ export default function PubgAdminClient({ packages: init }: { packages: PkgItem[
 
   function openEdit(p: PkgItem) {
     setEditId(p.id);
-    // rebuild combined media list from images[] — نكتشف النوع (يوتيوب/فيديو محلي/صورة)
-    const media: MediaItem[] = p.images.map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
+    // نجمع images + videos + videoUrl ونشيل المكرر — عشان الفيديو مايختفيش ومايتمسحش عند الحفظ
+    const urls = [...(p.images ?? []), ...(p.videos ?? []), ...(p.videoUrl ? [p.videoUrl] : [])];
+    const seen = new Set<string>();
+    const media: MediaItem[] = urls.filter(u => u && !seen.has(u) && seen.add(u))
+      .map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
     setForm({ title: p.title, imageUrl: p.imageUrl, media, featured: p.featured, active: p.active });
     setShowReorder(false); setNewVideoUrl(''); setModal(true);
   }

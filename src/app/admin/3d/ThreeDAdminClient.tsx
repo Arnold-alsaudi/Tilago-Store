@@ -18,7 +18,7 @@ interface MediaItem { id: string; url: string; type: MediaType; }
 
 interface TDItem {
   id: string; title: string; description: string; subCategory: string | null;
-  imageUrl: string; images: string[]; videos: string[]; tags: string[];
+  imageUrl: string; images: string[]; videos: string[]; videoUrl?: string | null; tags: string[];
   featured: boolean; active: boolean;
 }
 interface FormState {
@@ -58,7 +58,11 @@ export function ThreeDAdminClient({ items: init }: { items: TDItem[] }) {
   function openAdd() { setEditId(null); setForm(empty()); setShowReorder(false); setNewVideoUrl(''); setUploadErr(''); setModal(true); }
   function openEdit(it: TDItem) {
     setEditId(it.id);
-    const media: MediaItem[] = (it.images ?? []).map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
+    // نجمع images + videos + videoUrl ونشيل المكرر — عشان الفيديو مايختفيش ومايتمسحش عند الحفظ
+    const urls = [...(it.images ?? []), ...(it.videos ?? []), ...(it.videoUrl ? [it.videoUrl] : [])];
+    const seen = new Set<string>();
+    const media: MediaItem[] = urls.filter(u => u && !seen.has(u) && seen.add(u))
+      .map(u => ({ id: uid(), url: u, type: mediaKind(u) === 'image' ? 'image' : 'video' }));
     setForm({ name: it.title, desc: it.description ?? '', badge: it.tags?.[0] ?? '', imageUrl: it.imageUrl, media, featured: it.featured, active: it.active });
     setShowReorder(false); setNewVideoUrl(''); setUploadErr(''); setModal(true);
   }
