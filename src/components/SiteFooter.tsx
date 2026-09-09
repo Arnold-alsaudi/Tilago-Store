@@ -54,18 +54,35 @@ export function SiteFooter() {
         /* ألوان الموقع الأربعة + درجات نص من لون فاتح واحد. حدود وتعبئة
            بدل التوهّج — مفيش أي box-shadow ملوّن هنا. */
         .ft{
-          --v:#7F3AA1; --d:#5416B5; --bg2:#0C0516;
+          --v:#7F3AA1; --d:#5416B5; --bg1:#0F083B; --bg2:#0C0516;
           --ink:#EDE9F7;
           --ink-65:rgba(237,233,247,.65);
-          --ink-45:rgba(237,233,247,.45);
+          --ink-45:rgba(237,233,247,.58);  /* 5.9:1 — كانت .45 = 3.91:1 وراسبة في AA */
           --line:rgba(127,58,161,.22);
-          background:var(--bg2);
-          border-top:1px solid var(--line);
-          padding:56px 5% 28px;
+          position:relative;isolation:isolate;overflow:hidden;
+          padding:60px 5% 28px;
           font-family:'Cairo','29LtBukra','Montserrat',sans-serif;
           color:var(--ink-65);
+          /* ثلاث طبقات للعمق بدل لون مسطّح:
+             1) توهّج بنفسجي ناعم من فوق (radial) — إحساس بمصدر ضوء مش هالة نيون
+             2) تعتيم قوي فوق الخامة عشان تباين النص يفضل مضمون
+             3) خامة الستورم نفسها — نفس اللي على أزرار التواصل، فالفوتر بيبقى
+                من نفس عائلة الموقع مش عنصر غريب */
+          background:
+            radial-gradient(120% 80% at 50% 0%, rgba(84,22,181,.30), transparent 62%),
+            linear-gradient(rgba(10,4,22,.93), rgba(10,4,22,.97)),
+            url('/photo/contact-storm.webp');
+          background-size:auto, auto, 140% auto;
+          background-position:center top, center, center 28%;
+          background-repeat:no-repeat, no-repeat, no-repeat;
+          background-color:var(--bg2);
         }
-        .ft-in{max-width:1240px;margin:0 auto;}
+        /* الشريط العلوي — خط تدرّج رفيع يفصل الفوتر عن الصفحة */
+        .ft::before{
+          content:'';position:absolute;inset:0 0 auto;height:2px;
+          background:linear-gradient(90deg,transparent,var(--d) 22%,var(--v) 50%,var(--d) 78%,transparent);
+        }
+        .ft-in{max-width:1240px;margin:0 auto;position:relative;z-index:1;}
 
         /* العلامة في ناحية والأقسام في شبكة خاصة بيها — كده التلات أقسام
            بيفضلوا متساويين مع بعض بدل ما واحد ينزل لوحده ويسيب فراغ. */
@@ -79,7 +96,7 @@ export function SiteFooter() {
 
         /* العلامة */
         .ft-brand{display:flex;flex-direction:column;gap:14px;align-items:flex-start;}
-        .ft-logo{height:44px;width:auto;object-fit:contain;mix-blend-mode:screen;}
+        .ft-logo{height:52px;width:auto;object-fit:contain;mix-blend-mode:screen;}
         .ft-about{font-size:.86rem;line-height:1.9;color:var(--ink-45);max-width:34ch;margin:0;}
 
         .ft-social{display:flex;gap:9px;flex-wrap:wrap;}
@@ -94,14 +111,23 @@ export function SiteFooter() {
         .ft-social a:focus-visible{outline:2px solid var(--v);outline-offset:2px;}
 
         /* الأعمدة */
+        /* عنوان القسم بشرطة صغيرة بلون العلامة — يفصل العناوين عن الروابط بصرياً */
         .ft-col h3{
           font-family:'Oxanium','29LtBukra',sans-serif;font-size:.82rem;font-weight:800;
           letter-spacing:1px;color:var(--ink);margin:0 0 14px;
+          display:flex;align-items:center;gap:9px;
         }
+        .ft-col h3::after{
+          content:'';flex:1;height:1px;
+          background:linear-gradient(90deg,var(--line),transparent);
+        }
+        /* الرابط بيتحرك ناحية النص عند المرور — إشارة حركة بسيطة بدل توهّج */
+        .ft-col a{position:relative;}
+        .ft-col a:hover{transform:translateX(-3px);}
         .ft-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
         .ft-col a{
           display:block;padding:7px 0;font-size:.86rem;color:var(--ink-45);
-          text-decoration:none;transition:color .2s;
+          text-decoration:none;transition:color .2s,transform .2s;
         }
         .ft-col a:hover{color:var(--ink);}
         .ft-col a:focus-visible{outline:2px solid var(--v);outline-offset:2px;border-radius:4px;}
