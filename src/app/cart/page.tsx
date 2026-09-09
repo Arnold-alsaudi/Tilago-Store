@@ -97,7 +97,12 @@ export default function CartPage() {
     await fetch('/api/product/custom-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productName, quantity: qty, amount, currency: 'EGP', name: custName.trim(), contact: contact.trim(), logoUrl }),
+      body: JSON.stringify({
+        productName, quantity: qty, amount, currency: 'EGP',
+        name: custName.trim(), contact: contact.trim(), logoUrl,
+        // السيرفر بيستخدمها عشان يجيب اسم المنتج بكوده من الداتابيز
+        items: needing.map(i => ({ productId: i.product.id, quantity: i.quantity })),
+      }),
     }).catch(() => {});
   };
 
@@ -106,7 +111,11 @@ export default function CartPage() {
       const names = items.map(i => `${i.product.title} ×${i.quantity}`).join('، ');
       fetch('/api/lead', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: names, amount: total, phone: BILLING_PHONE, method: 'PayPal' }),
+        body: JSON.stringify({
+          name: names, amount: total, phone: BILLING_PHONE, method: 'PayPal',
+          // السيرفر بيبني الاسم بالكود من الداتابيز بدل الاسم اللي فوق
+          items: items.map(i => ({ productId: i.product.id, quantity: i.quantity })),
+        }),
       }).catch(() => {});
       const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
       // PayPal مبيدعمش الجنيه — نحوّل بسعر الدولار الحيّ (جنيه ÷ سعر الدولار = دولار)

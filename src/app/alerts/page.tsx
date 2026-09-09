@@ -177,7 +177,11 @@ export default function AlertsPage() {
     fetch('/api/lead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: item.name, amount: item.priceNum, phone: phone.trim(), method: 'PayPal' }),
+      body: JSON.stringify({
+        name: item.name, amount: item.priceNum, phone: phone.trim(), method: 'PayPal',
+        // item.id هو الكود (أو الـ slug) — السيرفر بيجيب الاسم والكود من الداتابيز
+        items: [{ productId: item.id, quantity: 1 }],
+      }),
     }).catch(() => {});
     const handle = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
     // PayPal مبيدعمش الجنيه — نحوّل بسعر الدولار الحيّ (جنيه ÷ سعر الدولار = دولار)

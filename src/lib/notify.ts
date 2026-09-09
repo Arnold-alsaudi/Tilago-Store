@@ -156,6 +156,51 @@ export async function notifyAllChannels(data: PaymentNotification) {
   ]);
 }
 
+// ─── إشعار نيّة دفع غير مؤكدة (PayPal.me) ────────────────────
+// PayPal.me مافيهوش webhook يأكد الدفع، فبنعلمك إن حد ضغط "ادفع" عشان تتابع
+// وتتأكد إن الفلوس وصلت قبل ما تسلّم. الرسالة موسومة بوضوح إنها غير مؤكدة.
+export interface PendingPaymentNotification {
+  productName: string;
+  amount: number;
+  currency: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  method: string;
+}
+
+export async function notifyPendingPayment(d: PendingPaymentNotification) {
+  const at = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+
+  const msg = [
+    '🟡 <b>طلب بانتظار تأكيد الدفع</b>',
+    '',
+    `🎨 <b>المنتج:</b> ${esc(d.productName)}`,
+    `💵 <b>المبلغ:</b> ${esc(String(d.amount))} ${esc(d.currency)}`,
+    `💳 <b>الطريقة:</b> ${esc(d.method)}`,
+    `👤 <b>العميل:</b> ${esc(d.customerName)}`,
+    `📧 <b>الإيميل:</b> ${esc(d.customerEmail)}`,
+    `📱 <b>الموبايل:</b> ${esc(d.customerPhone)}`,
+    `🕐 <b>الوقت:</b> ${esc(at)}`,
+    '',
+    '⚠️ <b>متسلّمش قبل ما تتأكد إن الفلوس وصلت على PayPal</b>',
+  ].join('\n');
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' }),
+    });
+    if (!res.ok) console.error('[Telegram] فشل إشعار الطلب المعلّق — الحالة %s', res.status);
+  } catch (e: unknown) {
+    console.error('[Telegram] خطأ شبكة:', e instanceof Error ? e.message : String(e));
+  }
+}
+
 // ─── إشعار طلب مع تخصيص (شعار + رقم تواصل) عند الشراء ─────────
 export interface CustomOrderNotification {
   productName: string;

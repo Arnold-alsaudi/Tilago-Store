@@ -123,6 +123,8 @@ export function ProductClient({ product }: { product: PProduct }) {
         name: custName.trim(),
         contact: contact.trim(),
         logoUrl,
+        // السيرفر بيبني الاسم بكود المنتج من الداتابيز
+        items: [{ productId: product.code ?? product.slug ?? product.id, quantity }],
       }),
     }).catch(() => {});
   };
