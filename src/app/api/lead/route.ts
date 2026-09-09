@@ -53,10 +53,33 @@ export async function POST(req: NextRequest) {
     name,
   )).slice(0, 200);
 
+  const userEmail = sessionEmail ?? 'paypal@tilago.io';
+
+  // منع التكرار: العميل بيرجع من PayPal أو بيضغط الزرار تاني، فكان بيتسجّل صف
+  // جديد كل مرة — لقينا نفس الطلب مسجّل مرتين وتلاتة. لو نفس الشخص طلب نفس
+  // المنتج بنفس المبلغ خلال 10 دقايق، بنعتبرها نفس المحاولة ومابنسجّلش تاني.
+  const DEDUPE_WINDOW_MS = 10 * 60 * 1000;
+  const duplicate = await prisma.payment.findFirst({
+    where: {
+      userEmail,
+      userPhone: digits,
+      productName,
+      amount,
+      status: 'pending',
+      createdAt: { gte: new Date(Date.now() - DEDUPE_WINDOW_MS) },
+    },
+    select: { id: true },
+  }).catch(() => null);
+
+  if (duplicate) {
+    // نرجّع نجاح عشان تجربة العميل ماتتكسرش — الطلب متسجّل أصلاً
+    return NextResponse.json({ success: true, duplicate: true });
+  }
+
   try {
     await prisma.payment.create({
       data: {
-        userEmail: sessionEmail ?? 'paypal@tilago.io',
+        userEmail,
         userName: sessionName ?? 'عميل PayPal (غير مؤكد)',
         userPhone: digits,
         productName,
@@ -78,7 +101,7 @@ export async function POST(req: NextRequest) {
     amount,
     currency: 'EGP',
     customerName: sessionName ?? 'زائر',
-    customerEmail: sessionEmail ?? 'غير مسجّل',
+    customerEmail: userEmail,
     customerPhone: digits,
     method: method ?? 'PayPal',
   });

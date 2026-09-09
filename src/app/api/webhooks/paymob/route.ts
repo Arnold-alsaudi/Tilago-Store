@@ -3,24 +3,54 @@ import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { notifyAllChannels } from '@/lib/notify';
 
-function verifyPaymobHmac(data: Record<string, string>, receivedHmac: string): boolean {
+// ترتيب الحقول اللي بايموب بيوقّع عليه — بالترتيب ده بالظبط ومن غير أي تغيير.
+// لاحظ المسارات المتداخلة: order.id و source_data.* — مش order ولا source_data_pan.
+const HMAC_FIELDS = [
+  'amount_cents', 'created_at', 'currency', 'error_occured',
+  'has_parent_transaction', 'id', 'integration_id', 'is_3d_secure',
+  'is_auth', 'is_capture', 'is_refunded', 'is_standalone_payment',
+  'is_voided', 'order.id', 'owner', 'pending',
+  'source_data.pan', 'source_data.sub_type', 'source_data.type', 'success',
+];
+
+/**
+ * بيقرأ قيمة بمسار متداخل ("order.id") مع دعم الشكل المسطّح ("order" كرقم،
+ * أو "source_data_pan") — بايموب بيبعت الـ POST متداخل والـ redirect مسطّح،
+ * فبندعم الاتنين بدل ما نفترض شكل واحد.
+ */
+function pick(obj: Record<string, unknown>, path: string): string {
+  const nested = path.split('.').reduce<unknown>(
+    (acc, part) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[part] : undefined),
+    obj,
+  );
+  if (nested !== undefined && nested !== null && typeof nested !== 'object') return String(nested);
+
+  // احتياطي: "order" لوحده لو كان رقم، و"source_data_pan" بالشرطة السفلية
+  const flat = obj[path.replace(/\./g, '_')] ?? obj[path.split('.')[0]];
+  if (flat !== undefined && flat !== null && typeof flat !== 'object') return String(flat);
+
+  return '';
+}
+
+function verifyPaymobHmac(data: Record<string, unknown>, receivedHmac: string): boolean {
   const hmacSecret = process.env.PAYMOB_HMAC_SECRET;
-  if (!hmacSecret) return false; // بدون سر مُعدّ، نرفض بدل ما نثق تلقائياً
+  if (!hmacSecret) {
+    console.error('[Webhook] PAYMOB_HMAC_SECRET غير مضبوط — كل الإشعارات هتترفض');
+    return false; // بدون سر مُعدّ، نرفض بدل ما نثق تلقائياً
+  }
   if (!receivedHmac) return false;
 
-  const keys = [
-    'amount_cents', 'created_at', 'currency', 'error_occured',
-    'has_parent_transaction', 'id', 'integration_id', 'is_3d_secure',
-    'is_auth', 'is_capture', 'is_refunded', 'is_standalone_payment',
-    'is_voided', 'order', 'owner', 'pending',
-    'source_data_pan', 'source_data_sub_type', 'source_data_type', 'success',
-  ];
-
-  const concatenated = keys.map(k => data[k] ?? '').join('');
+  const concatenated = HMAC_FIELDS.map(f => pick(data, f)).join('');
   const expected = crypto.createHmac('sha512', hmacSecret).update(concatenated).digest('hex');
 
   try {
-    return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(receivedHmac, 'hex'));
+    const ok = crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(receivedHmac, 'hex'));
+    if (!ok) {
+      // من غير اللوج ده، فشل التوقيع كان بيعدّي صامت والدفعة بتضيع
+      console.error('[Webhook] التوقيع مش مطابق — راجع PAYMOB_HMAC_SECRET. الحقول المقروءة:',
+        JSON.stringify(Object.fromEntries(HMAC_FIELDS.map(f => [f, pick(data, f)]))));
+    }
+    return ok;
   } catch {
     return false;
   }
