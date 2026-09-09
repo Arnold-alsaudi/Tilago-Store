@@ -527,3 +527,25 @@ html, body { overflow-x: hidden; max-width: 100vw; }
   .services-section { max-width: 1400px; }
   .wt-inner         { max-width: 1380px; }
 }
+
+/* ── Storm texture on contact buttons (site-wide) ────────────────
+   نفس الزرار متكرر في 8 صفحات ببادئات مختلفة؛ القاعدة دي بتغطيهم كلهم
+   من مكان واحد. !important ضروري لأن كل صفحة بتعرّف `background` بالاختصار
+   جوه styled-jsx بأولوية أعلى، والاختصار بيمسح background-image. */
+:is(.al-contact-btn,.pg-contact-btn,.td-contact-btn,.sp-contact-btn,.pd-contact,.vp-contact-btn,.tdp-contact-btn,.contact-btn) {
+  background-image:
+    linear-gradient(rgba(8,3,18,0.80), rgba(8,3,18,0.80)),
+    url('/photo/contact-storm.webp') !important;
+  background-size: 200% auto !important;
+  background-repeat: no-repeat !important;
+  background-position: var(--storm-x, 45%) top !important;
+}
+:is(.al-contact-btn,.pg-contact-btn,.td-contact-btn,.sp-contact-btn,.pd-contact,.vp-contact-btn,.tdp-contact-btn,.contact-btn):nth-child(1) { --storm-x: 30%; }
+:is(.al-contact-btn,.pg-contact-btn,.td-contact-btn,.sp-contact-btn,.pd-contact,.vp-contact-btn,.tdp-contact-btn,.contact-btn):nth-child(2) { --storm-x: 45%; }
+:is(.al-contact-btn,.pg-contact-btn,.td-contact-btn,.sp-contact-btn,.pd-contact,.vp-contact-btn,.tdp-contact-btn,.contact-btn):nth-child(3) { --storm-x: 60%; }
+:is(.al-contact-btn,.pg-contact-btn,.td-contact-btn,.sp-contact-btn,.pd-contact,.vp-contact-btn,.tdp-contact-btn,.contact-btn):nth-child(4) { --storm-x: 75%; }
+:is(.al-contact-btn,.pg-contact-btn,.td-contact-btn,.sp-contact-btn,.pd-contact,.vp-contact-btn,.tdp-contact-btn,.contact-btn):hover {
+  background-image:
+    linear-gradient(rgba(8,3,18,0.68), rgba(8,3,18,0.68)),
+    url('/photo/contact-storm.webp') !important;
+}

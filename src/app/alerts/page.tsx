@@ -625,28 +625,6 @@ export default function AlertsPage() {
           transform:translateY(-2px);
           box-shadow:0 6px 20px rgba(0,0,0,0.2);
         }
-        /* -- storm texture inside each contact button -- */
-        .al-contact-btns--storm .al-contact-btn {
-          background-image:
-            linear-gradient(rgba(8,3,18,0.80), rgba(8,3,18,0.80)),
-            url('/photo/contact-storm.webp');
-          background-size:200% auto;
-          background-repeat:no-repeat;
-          border-color:rgba(255,255,255,0.12);
-          backdrop-filter:none;
-          overflow:hidden;
-        }
-        .al-contact-btns--storm .al-contact-btn:nth-child(1) { background-position:30% top; }
-        .al-contact-btns--storm .al-contact-btn:nth-child(2) { background-position:45% top; }
-        .al-contact-btns--storm .al-contact-btn:nth-child(3) { background-position:60% top; }
-        .al-contact-btns--storm .al-contact-btn:nth-child(4) { background-position:75% top; }
-        .al-contact-btns--storm .al-contact-btn:hover {
-          background-image:
-            linear-gradient(rgba(8,3,18,0.68), rgba(8,3,18,0.68)),
-            url('/photo/contact-storm.webp');
-          border-color:rgba(255,255,255,0.22);
-        }
-
         .al-modal-box .al-contact-btns {
           margin-top:1.2rem; padding-bottom:0;
           grid-template-columns:repeat(2,1fr);
@@ -1049,7 +1027,7 @@ export default function AlertsPage() {
               ))}
             </div>
 
-            <div className="al-contact-btns al-contact-btns--storm" style={{ maxWidth:'480px', margin:'2rem auto' }}>
+            <div className="al-contact-btns" style={{ maxWidth:'480px', margin:'2rem auto' }}>
               {CONTACT_BTNS.map(btn => (
                 <a key={btn.label} href={btn.href} target="_blank" rel="noreferrer" className="al-contact-btn">
                   <div className="al-contact-btn-icon" style={{ background: `${btn.color}18`, color: btn.color }}>
