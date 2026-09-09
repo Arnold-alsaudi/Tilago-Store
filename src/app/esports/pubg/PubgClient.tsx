@@ -200,7 +200,7 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         /* ── Grid ── */
         .pg-products {
           padding:0 5% 4rem;
-          display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem;
+          display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr)); gap:1.5rem;
         }
 
         /* ── Card ── */
@@ -370,17 +370,16 @@ export default function PubgClient({ packages }: { packages: PubgPkg[] }) {
         @media(max-width:768px){ .pg-contacts-panel{display:none} }
 
         /* ── Responsive ── */
-        @media(max-width:1024px){ .pg-products { grid-template-columns:repeat(2,1fr); } }
         @media(max-width:768px){
           .pg-nav-row { gap:8px; }
           .pg-nav-btn { padding:22px 8px 18px; gap:10px; border-radius:16px; font-size:.85rem; }
           .pg-nav-btn-icon { width:44px; height:44px; font-size:1.2rem; border-radius:13px; }
-          .pg-products { grid-template-columns:repeat(2,1fr); padding:0 4% 3rem; gap:1rem; }
+          .pg-products { padding:0 4% 3rem; gap:1rem; }
           .pg-contact-btns { grid-template-columns:1fr; padding:1.5rem 5%; }
           .pg-features { padding:2.5rem 4%; gap:1rem; }
         }
         @media(max-width:480px){
-          .pg-products { grid-template-columns:1fr; }
+          
           .pg-nav-row { grid-template-columns:repeat(2,1fr); }
           .pg-card { height:220px; }
         }

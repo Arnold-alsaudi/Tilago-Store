@@ -201,7 +201,9 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         /* ── Products Grid ── */
         .sp-products {
           padding:0 5% 4rem;
-          display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem;
+          /* عدد الأعمدة من عرض الشاشة — الكارت هو الثابت مش العكس.
+             auto-fill مش auto-fit: auto-fit بتمطّط الكروت لما ماتملاش الصف. */
+          display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr)); gap:1.5rem;
         }
 
         /* ── Card ── */
@@ -389,17 +391,15 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         @media(max-width:768px){ .sp-contacts-panel{display:none} }
 
         /* ── Responsive ── */
-        @media(max-width:1024px){ .sp-products { grid-template-columns:repeat(2,1fr); } }
         @media(max-width:768px){
           .sp-nav-row { gap:8px; }
           .sp-nav-btn { padding:22px 8px 18px; gap:10px; border-radius:16px; font-size:.85rem; }
           .sp-nav-btn-icon { width:44px; height:44px; font-size:1.2rem; border-radius:13px; }
-          .sp-products { grid-template-columns:repeat(2,1fr); padding:0 4% 3rem; gap:1rem; }
+          .sp-products { padding:0 4% 3rem; gap:1rem; }
           .sp-contact-btns { grid-template-columns:1fr; padding:1.5rem 5%; }
           .sp-features { padding:2.5rem 4%; gap:1rem; }
         }
         @media(max-width:480px){
-          .sp-products { grid-template-columns:1fr; }
           .sp-nav-row { grid-template-columns:repeat(2,1fr); }
           .sp-card { height:220px; }
         }

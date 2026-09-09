@@ -92,7 +92,7 @@ export default function VideosPage() {
         .vp-stat-label { font-size:.8rem; color:rgba(255,255,255,0.55); margin-top:2px; }
 
         /* ── GRID ── */
-        .vp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.4rem; padding:2rem 5% 3rem; }
+        .vp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr)); gap:1.4rem; padding:2rem 5% 3rem; }
 
         /* ── CARD ── */
         .vp-card { background:rgba(15,8,59,0.5); border:1px solid rgba(84,22,181,0.12); border-radius:16px; overflow:hidden; cursor:pointer; transition:transform .28s,border-color .28s,box-shadow .28s; position:relative; }
