@@ -764,29 +764,6 @@ export default function AlertsPage() {
         .al-video-close-btn { display:flex; align-items:center; gap:6px; background:rgba(84,22,181,0.15); border:1px solid rgba(84,22,181,0.25); color:rgba(255,255,255,0.7); border-radius:8px; padding:.4rem .9rem; font-family:'29LtBukra','Montserrat',sans-serif; font-size:.82rem; cursor:pointer; width:fit-content; transition:all .2s; }
         .al-video-close-btn:hover { background:rgba(84,22,181,0.3); color:#fff; }
 
-        /* ── Footer ── */
-        .al-footer {
-          margin-top:5rem; padding:3rem 5% 2rem;
-          background:rgba(12,5,22,0.85); border-top:1px solid rgba(84,22,181,0.2); text-align:center;
-        }
-        .al-footer-content {
-          display:flex; flex-wrap:wrap; justify-content:space-between;
-          gap:2rem; margin-bottom:2rem; text-align:right;
-        }
-        .al-footer-col h4 { color:#e8e4f8; margin-bottom:1rem; font-family:'Oxanium',sans-serif; }
-        .al-footer-col ul { list-style:none; }
-        .al-footer-col li { margin:.5rem 0; }
-        .al-footer-col a { color:#9090b0; text-decoration:none; transition:.3s; }
-        .al-footer-col a:hover { color:#c4a0e0; }
-        .al-social { display:flex; gap:1.2rem; justify-content:center; flex-wrap:wrap; }
-        .al-social a {
-          display:inline-flex; align-items:center; justify-content:center;
-          width:42px; height:42px; background:rgba(122,0,255,0.2);
-          border-radius:50%; color:#5416B5; font-size:1.3rem; transition:all .3s;
-        }
-        .al-social a:hover { background:#5416B5; color:#fff; box-shadow:0 0 18px rgba(122,0,255,0.6); }
-        .al-copyright { color:#888; font-size:.9rem; margin-top:2rem; }
-
         /* ── RESPONSIVE ── */
 
         /* Tablet */
@@ -1239,35 +1216,6 @@ export default function AlertsPage() {
             </div>
           </div>
         )}
-
-        {/* ── Footer ── */}
-        <footer className="al-footer">
-          <div className="al-footer-content">
-            <div className="al-footer-col">
-              <h4>Tilago</h4>
-              <p style={{ color: '#aaa', maxWidth: 300 }}>
-                أفضل تنبيهات جاهزة لقنواتك، تصميم مستقبلي، أداء عالي، ودعم احترافي.
-              </p>
-            </div>
-            <div className="al-footer-col">
-              <h4>روابط سريعة</h4>
-              <ul>
-                <li><Link href="/">الرئيسية</Link></li>
-                <li><a href="#products">المنتجات</a></li>
-              </ul>
-            </div>
-            <div className="al-footer-col">
-              <h4>تواصل معنا</h4>
-              <div className="al-social">
-                <a href="#"><i className="fab fa-instagram" /></a>
-                <a href="#"><i className="fab fa-tiktok" /></a>
-                <a href="#"><i className="fab fa-youtube" /></a>
-                <a href="#"><i className="fab fa-twitter" /></a>
-              </div>
-            </div>
-          </div>
-          <div className="al-copyright">© 2025 Tilago. جميع الحقوق محفوظة.</div>
-        </footer>
 
       </div>
     </>
