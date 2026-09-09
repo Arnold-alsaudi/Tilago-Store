@@ -50,11 +50,28 @@ export interface User {
   role: Role;
 }
 
+export interface RecentOrder {
+  id: string;
+  productName: string | null;
+  userName: string | null;
+  amount: number;
+  currency: string;
+  method: string;
+  deliveryStatus: string;
+  createdAt: string;
+}
+
 export interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
   totalUsers: number;
   totalProducts: number;
+  /** طلبات مدفوعة ولسه متسلّمتش — أهم رقم في اللوحة لأنه بيتطلب تصرّف */
+  pendingDelivery: number;
+  /** إيراد آخر 30 يوم مقارنة بالـ30 اللي قبلهم — للاتجاه */
+  revenueLast30: number;
+  revenuePrev30: number;
   revenueByMonth: { month: string; revenue: number }[];
   paymentsByMethod: { method: string; count: number }[];
+  recentOrders: RecentOrder[];
 }
