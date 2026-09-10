@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isRequestAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { revalidateProduct } from '@/lib/revalidateProduct';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -54,6 +55,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const product = await prisma.product.create({ data: parsed.data });
+    // المنتج الجديد لازم يبان في صفحة قسمه فوراً بدل ما يستنى المؤقّت
+    revalidateProduct(product);
     return NextResponse.json(product, { status: 201 });
   } catch (err: unknown) {
     // P2002 = تعارض في حقل مميّز — غالباً كود متكرر. نرد برسالة مفهومة بدل 500

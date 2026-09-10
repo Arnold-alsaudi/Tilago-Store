@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isRequestAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { revalidateProduct } from '@/lib/revalidateProduct';
 
 const patchSchema = z.object({
   title:       z.string().min(1).optional(),
@@ -28,7 +29,15 @@ const patchSchema = z.object({
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // بنقرا المنتج *قبل* الحذف — بعد ما يتشال مش هنعرف كوده ولا قسمه عشان
+  // نلغي النسخة المخزّنة لصفحاته
+  const gone = await prisma.product.findUnique({
+    where: { id },
+    select: { id: true, slug: true, code: true, category: true, subCategory: true },
+  }).catch(() => null);
+
   await prisma.product.delete({ where: { id } });
+  revalidateProduct(gone ?? { id });
   return NextResponse.json({ success: true });
 }
 
@@ -46,8 +55,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     );
   }
 
+  // الشكل القديم قبل التعديل — لو الكود أو القسم اتغيّر، لازم نلغي الصفحة
+  // القديمة كمان مش الجديدة بس، وإلا الرابط القديم يفضل شايل بيانات قديمة
+  const before = await prisma.product.findUnique({
+    where: { id },
+    select: { id: true, slug: true, code: true, category: true, subCategory: true },
+  }).catch(() => null);
+
   try {
     const product = await prisma.product.update({ where: { id }, data: parsed.data });
+    revalidateProduct(before, product);
     return NextResponse.json(product);
   } catch (err: unknown) {
     // P2002 = كود متكرر — رسالة مفهومة بدل 500

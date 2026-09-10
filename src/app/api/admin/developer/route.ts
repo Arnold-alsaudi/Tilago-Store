@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isRequestAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { DEFAULT_DEVELOPER_CONTENT, type DeveloperContent } from '@/lib/developerContent';
+import { revalidatePath } from 'next/cache';
 
 export async function GET(req: NextRequest) {
   if (!await isRequestAdmin(req)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -42,6 +43,10 @@ export async function POST(req: NextRequest) {
     update: { value: JSON.stringify(content) },
     create: { key: 'developerContent', value: JSON.stringify(content) },
   });
+
+  // صفحة /developer بقت مخزّنة على الحافة — من غير النداء ده التعديل مكانش
+  // هيبان للعميل إلا بعد ما المؤقّت يخلص
+  try { revalidatePath('/developer'); } catch (err) { console.error('[revalidate] /developer', err); }
 
   return NextResponse.json({ success: true });
 }
