@@ -15,9 +15,9 @@ interface MyOrder {
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: string }> = {
-  pending:     { label: 'قيد المراجعة',  color: '#f39c12', icon: 'fas fa-clock' },
-  in_progress: { label: 'جارٍ التنفيذ',  color: '#3498db', icon: 'fas fa-cog' },
-  delivered:   { label: 'تم التسليم',    color: '#2ecc71', icon: 'fas fa-check-circle' },
+  pending:     { label: 'قيد المراجعة',  color: '#b37e29', icon: 'fas fa-clock' },
+  in_progress: { label: 'جارٍ التنفيذ',  color: '#3480b3', icon: 'fas fa-cog' },
+  delivered:   { label: 'تم التسليم',    color: '#2ea74c', icon: 'fas fa-check-circle' },
 };
 
 export default function OrdersPage() {
