@@ -1,45 +1,68 @@
 import type { Metadata } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import OverlayClient, { type CatalogItem } from './OverlayClient';
+import OverlayApp, { type AppOverlay, type AppSub } from './OverlayApp';
 
 export const metadata: Metadata = {
   title: 'Tilago Overlay',
   description:
-    'تركيبات بث بتتحرك مع كل هدية ومتابع. رابط واحد تحطه في OBS، بألوانك وشعارك، وتركيبات جديدة كل أسبوع.',
+    'تركيبات بث بتتحرك مع كل هدية ومتابع. رابط واحد تحطه في OBS، بألوانك، وتركيبات جديدة كل أسبوع.',
 };
 
-// نفس سياسة باقي الصفحات: مخزّنة على الحافة، ولوحة الأدمن بتلغي الكاش
-// عند أي تعديل. الرقم ده شبكة أمان مش أكتر.
-export const revalidate = 300;
+// اللوحة بتتغيّر حسب حالة اشتراك كل عميل، فمينفعش تتخزّن
+export const dynamic = 'force-dynamic';
 
 export default async function OverlayPage() {
-  let catalog: CatalogItem[] = [];
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email ?? null;
+
+  let overlays: AppOverlay[] = [];
+  let sub: AppSub = null;
+
   try {
-    const rows = await prisma.overlay.findMany({
-      where: { active: true },
-      orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
-      select: {
-        id: true, slug: true, title: true, description: true,
-        category: true, file: true, poster: true, isFree: true,
-        featured: true, createdAt: true,
-      },
-    });
-    catalog = rows.map(r => ({
-      id: r.id,
-      slug: r.slug,
-      title: r.title,
-      description: r.description,
-      category: r.category as CatalogItem['category'],
-      file: r.file,
-      poster: r.poster,
-      isFree: r.isFree,
-      featured: r.featured,
+    const [rows, s] = await Promise.all([
+      prisma.overlay.findMany({
+        where: { active: true },
+        orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
+        select: {
+          id: true, slug: true, title: true, description: true, category: true,
+          file: true, poster: true, isFree: true, featured: true, createdAt: true,
+        },
+      }),
+      email
+        ? prisma.subscription.findUnique({
+            where: { userEmail: email },
+            select: { plan: true, status: true, endsAt: true, token: true, theme: true },
+          })
+        : null,
+    ]);
+
+    overlays = rows.map(r => ({
+      id: r.id, slug: r.slug, title: r.title, description: r.description,
+      category: r.category as AppOverlay['category'], file: r.file,
+      poster: r.poster, isFree: r.isFree, featured: r.featured,
       createdAt: r.createdAt.toISOString(),
     }));
+
+    if (s) {
+      sub = {
+        plan: s.plan, status: s.status,
+        endsAt: s.endsAt?.toISOString() ?? null,
+        token: s.token,
+        theme: (s.theme as Record<string, string> | null) ?? null,
+      };
+    }
   } catch {
-    // الداتابيز مش متاحة: الصفحة بتفضل تشتغل والكتالوج بيقول إنه بيتجهّز،
-    // بدل ما الصفحة كلها تقع
+    // الداتابيز مش متاحة: اللوحة بتفتح وبتقول إن المكتبة بتتجهّز
   }
 
-  return <OverlayClient catalog={catalog} />;
+  return (
+    <OverlayApp
+      name={session?.user?.name ?? null}
+      email={email}
+      sub={sub}
+      overlays={overlays}
+    />
+  );
 }

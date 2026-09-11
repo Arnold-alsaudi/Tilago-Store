@@ -1,0 +1,190 @@
+<meta charset="utf-8">
+<title>Starting Soon — Tilago</title>
+<style>
+/* ============================================================
+   STARTING SOON — شاشة انتظار قبل البث
+   بتشتغل لوحدها بالكامل: مفيش سيرفر ولا اتصال بأي حاجة. تحطها
+   في OBS وتمشي.
+
+   كل حاجة فيها بتتظبط من الرابط:
+     ?title=...&note=...&until=2026-09-12T21:00
+   ============================================================ */
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-semibold.ttf') format('truetype');font-weight:600;font-display:block}
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-bold.ttf') format('truetype');font-weight:700;font-display:block}
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-black.ttf') format('truetype');font-weight:900;font-display:block}
+@font-face{font-family:'Oxanium';src:url('/fonts/oxanium-extrabold.ttf') format('truetype');font-weight:800;font-display:block}
+
+:root{
+  --violet:    #7F3AA1;
+  --grape:     #5416B5;
+  --navy:      #0F083B;
+  --deep:      #0C0516;
+  --ink:       #ffffff;
+  --ink-soft:  rgba(255,255,255,.62);
+  --bar-h:     3px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:transparent;          /* OBS بيركّب فوق البث */
+  font-family:'Cairo',system-ui,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+#stage{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left}
+
+/* ---------- الأرضية ---------------------------------------- */
+/* تدرّج هادي بألوان الموقع. مافيش هالات ولا نيون — العمق جايّ من
+   التدرّج والحدود، مش من التوهّج. */
+#bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(140% 100% at 50% 0%, #1b1040 0%, transparent 58%),
+    linear-gradient(160deg, var(--navy) 0%, var(--deep) 68%);
+}
+
+/* شبكة رفيعة بتدي إحساس بالسطح من غير ما تشد النظر */
+#grid{
+  position:absolute;inset:0;opacity:.14;
+  background-image:
+    linear-gradient(to right, rgba(127,58,161,.5) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(127,58,161,.5) 1px, transparent 1px);
+  background-size:96px 96px;
+  -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 50%, #000 20%, transparent 78%);
+          mask-image:radial-gradient(ellipse 70% 60% at 50% 50%, #000 20%, transparent 78%);
+}
+
+/* ---------- المحتوى ---------------------------------------- */
+#box{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(1180px,82%);
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:30px;
+}
+
+#logo{height:104px;width:auto;object-fit:contain;opacity:.96}
+
+#title{
+  font-family:'Oxanium','Cairo',sans-serif;
+  font-size:92px;font-weight:800;line-height:1.28;
+  color:var(--ink);letter-spacing:-.01em;
+}
+
+/* الشريط الفاصل — خط واحد رفيع بيتنفّس ببطء */
+#rule{
+  width:260px;height:var(--bar-h);border-radius:99px;
+  background:linear-gradient(90deg,transparent,var(--violet),transparent);
+  animation:breathe 4.5s ease-in-out infinite;
+}
+@keyframes breathe{50%{opacity:.42;width:200px}}
+
+#note{font-size:34px;font-weight:600;color:var(--ink-soft);line-height:1.7;max-width:34ch}
+
+/* العدّاد — أرقام ثابتة العرض عشان ماترقصش وهي بتعد */
+#clock{
+  display:none;align-items:center;gap:18px;
+  font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;
+  font-size:76px;font-weight:800;color:var(--ink);
+  background:rgba(12,5,22,.5);
+  border:1px solid rgba(127,58,161,.42);
+  border-radius:20px;padding:18px 42px;
+}
+#clock.on{display:inline-flex}
+#clock i{font-style:normal;color:var(--violet);font-size:.62em;transform:translateY(-.06em)}
+
+/* ثلاث نقط بتتحرك بالتبادل — إشارة إن الشاشة حيّة مش صورة واقفة */
+#dots{display:flex;gap:14px}
+#dots i{
+  width:12px;height:12px;border-radius:50%;background:var(--violet);
+  opacity:.28;animation:blink 1.5s ease-in-out infinite;
+}
+#dots i:nth-child(2){animation-delay:.22s}
+#dots i:nth-child(3){animation-delay:.44s}
+@keyframes blink{40%{opacity:1}}
+
+/* علامة النسخة المجانية */
+#mark{
+  position:absolute;right:34px;bottom:28px;
+  font-size:24px;font-weight:600;letter-spacing:.22em;
+  color:rgba(255,255,255,.42);
+}
+
+@media (prefers-reduced-motion:reduce){*{animation:none !important}}
+</style>
+
+<div id="stage">
+  <div id="bg"></div>
+  <div id="grid"></div>
+
+  <div id="box">
+    <img id="logo" src="/logo-mark.webp" alt="">
+    <div id="title">البث هيبدأ قريب</div>
+    <div id="rule"></div>
+    <div id="clock"><span id="cv">00:00</span><i>باقي</i></div>
+    <div id="note">جهّز نفسك، هنبدأ خلال دقائق</div>
+    <div id="dots"><i></i><i></i><i></i></div>
+  </div>
+
+  <div id="mark" hidden>TILAGO</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STAGE_W = 1920, STAGE_H = 1080;
+  var stage  = document.getElementById("stage");
+  var params = new URLSearchParams(location.search);
+
+  /* المسرح بيتقاس على المقاس اللي OBS بيديهوله، فالشاشة بتطلع مظبوطة
+     سواء المصدر 800 أو 1920 */
+  function fit() {
+    var s = Math.min(innerWidth / STAGE_W, innerHeight / STAGE_H);
+    stage.style.transform =
+      "translate(" + ((innerWidth  - STAGE_W * s) / 2) + "px," +
+                     ((innerHeight - STAGE_H * s) / 2) + "px) scale(" + s + ")";
+  }
+  addEventListener("resize", fit);
+  fit();
+
+  /* النصوص والألوان من الرابط — نفس الملف بيخدم كل العملاء */
+  var t = params.get("title"); if (t) document.getElementById("title").textContent = t;
+  var n = params.get("note");  if (n) document.getElementById("note").textContent  = n;
+  if (params.get("logo") === "0") document.getElementById("logo").style.display = "none";
+  var customLogo = params.get("logoUrl");
+  if (customLogo) document.getElementById("logo").src = customLogo;
+
+  ["violet","grape","navy","deep","ink"].forEach(function (k) {
+    var v = params.get(k);
+    if (v) document.documentElement.style.setProperty("--" + k, v);
+  });
+
+  if (params.get("mark") === "1") document.getElementById("mark").hidden = false;
+
+  /* عدّاد لوقت محدد — لو مفيش until، بيفضل مخفي */
+  var until = params.get("until");
+  if (until) {
+    var target = new Date(until).getTime();
+    if (!isNaN(target)) {
+      var clock = document.getElementById("clock");
+      var out = document.getElementById("cv");
+      clock.classList.add("on");
+
+      (function tick() {
+        var ms = target - Date.now();
+        if (ms <= 0) {
+          /* الوقت خلص: بنشيل العدّاد بدل ما يفضل على الصفر — الشاشة
+             تفضل نضيفة لو المذيع اتأخر شوية */
+          clock.classList.remove("on");
+          return;
+        }
+        var s = Math.floor(ms / 1000);
+        var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+        var p = function (x) { return String(x).padStart(2, "0"); };
+        out.textContent = h > 0 ? p(h) + ":" + p(m) + ":" + p(ss) : p(m) + ":" + p(ss);
+        setTimeout(tick, 500);
+      })();
+    }
+  }
+})();
+</script>
