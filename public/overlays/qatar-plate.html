@@ -1,9 +1,13 @@
 <meta charset="utf-8">
 <title>Qatar Plate — Live</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
 <style>
+/* الخط محلي من نفس الموقع مش من جوجل. التركيبة دي بتشتغل على بث حيّ،
+   فأي ملف بتجيبه من برّه معناه احتمال إن الأسماء تظهر بخط غلط في أول
+   ثواني البث لو نت العميل بطيء. */
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-semibold.ttf') format('truetype');font-weight:600;font-display:block}
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-extrabold.ttf') format('truetype');font-weight:800;font-display:block}
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-black.ttf') format('truetype');font-weight:900;font-display:block}
+
 /* ============================================================
    QATAR PLATE — live nameplate overlay
    نفس فكرة top3: مسرح ثابت 1920x1080 بيتظبط على أي مقاس
@@ -118,6 +122,18 @@ html,body{
 #stage.enter .panel{animation:rise .8s cubic-bezier(.2,.9,.25,1) backwards}
 @keyframes rise{from{opacity:0;transform:translate(-50%,calc(-50% + 18px))}}
 
+
+/* العلامة على النسخة المجانية — صغيرة وبعيدة عن اللوحة عشان ماتزعجش
+   المذيع، بس باينة كفاية إن جمهوره يشوفها. */
+#mark{
+  position:absolute;right:28px;bottom:22px;
+  font-family:'Cairo',system-ui,sans-serif;
+  font-size:26px;font-weight:600;letter-spacing:.22em;
+  color:rgba(255,255,255,.62);
+  text-shadow:0 2px 6px rgba(0,0,0,.9);
+  pointer-events:none;user-select:none;
+}
+
 @media (prefers-reduced-motion:reduce){*{animation:none !important}}
 </style>
 
@@ -129,6 +145,8 @@ html,body{
     <span class="name"  id="name"></span>
     <span class="value" id="value"></span>
   </div>
+
+  <div id="mark" hidden>TILAGO</div>
 </div>
 
 <script>
@@ -288,6 +306,16 @@ html,body{
     if (ev.data.type === "plate") set(ev.data.data);
     if (ev.data.type === "plate-theme") theme(ev.data.vars);
   });
+
+  /* ?ws=wss://... بيوصّل التركيبة بمصدر بيانات حيّ من الرابط، من غير ما
+     نفتح الملف. نفس اختصار top3 بالظبط، عشان أي تركيبة جديدة تتوصّل
+     بالسيرفر بنفس الطريقة. */
+  var feed = params.get("ws");
+  if (feed) window.Plate.connect(feed);
+
+  /* النسخة المجانية بتتبعت بـ mark=1 من مسار الرابط. كل مذيع بيستخدمها
+     بيعلن عن الموقع قدام جمهوره طول البث — وده الغرض منها. */
+  if (params.get("mark") === "1") document.getElementById("mark").hidden = false;
 
   /* ---------- وضع العرض ---------------------------------------
      هنا مفتوح افتراضياً عشان دي نسخة تجريبية للعرض.
