@@ -64,6 +64,7 @@ export function Header() {
                 <Link href="/alerts" onClick={closeMenu}><i className="fas fa-bell" /> Alerts</Link>
                 <Link href="/stream" onClick={closeMenu}><i className="fas fa-video" /> Stream</Link>
                 <Link href="/videos" onClick={closeMenu}><i className="fas fa-play-circle" /> Videos</Link>
+                <Link href="/overlay" onClick={closeMenu}><i className="fas fa-layer-group" /> Overlay</Link>
                 <Link href="/3d" onClick={closeMenu}><i className="fa-solid fa-cube" /> 3D</Link>
                 <Link href="/developer" onClick={closeMenu}><i className="fa fa-code" /> Developer</Link>
               </div>

@@ -19,7 +19,10 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     title: 'المتجر',
     links: [
       { href: '/alerts',  label: 'الاليرتات' },
-      { href: '/stream',  label: 'الاوفرليات' },
+      // "الاوفرليات" كانت رايحة على /stream — وهي بتبيع باكدجات، مش اوفرليات.
+      // الاسم رجع لصاحبه، و/stream اتسمّت بالي بتبيعه فعلاً.
+      { href: '/overlay', label: 'الاوفرليات' },
+      { href: '/stream',  label: 'باكدجات البث' },
       { href: '/3d',      label: 'ثري دي' },
       { href: '/videos',  label: 'الفيديوهات' },
       { href: '/package', label: 'الباقات' },

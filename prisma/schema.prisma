@@ -182,3 +182,64 @@ model Payment {
   deliveryStatus String   @default("pending") // pending | in_progress | delivered
   createdAt      DateTime @default(now())
 }
+
+// ── الأوفرليات ────────────────────────────────────────────────
+// التركيبات مش منتجات: المنتج بيتشتري مرة، والتركيبة بتيجي ضمن اشتراك
+// وبتفضل شغّالة طول ما الاشتراك شغّال. فليها موديل لوحدها بدل ما نحشرها
+// في Product بحقول مالهاش لازمة.
+model Overlay {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  description String?
+  category    OverlayCategory
+  // مسار الملف اللي بيتحط في OBS، مثلاً /overlays/qatar-plate.html
+  file        String
+  // صورة ثابتة للكارت — بتظهر لحد ما الفيديو يحمّل
+  poster      String?
+  // التركيبة المجانية بعلامة Tilago: بتشتغل من غير اشتراك
+  isFree      Boolean         @default(false)
+  featured    Boolean         @default(false)
+  active      Boolean         @default(true)
+  sort        Int             @default(0)
+  // "الجديد" في الكتالوج بيترتب بالتاريخ ده — وهو كمان اللي بيثبت
+  // إن المكتبة فعلاً بتكبر بدل ما ندّعي
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([category, active])
+}
+
+enum OverlayCategory {
+  SUPPORTERS  // داعمين
+  CHALLENGES  // تحديات
+  GOALS       // أهداف
+  DECOR       // تزيين
+}
+
+// ── الاشتراكات ────────────────────────────────────────────────
+// الطلب العادي بيخلص لما يتسلّم. الاشتراك بيفضل شغّال وبيقف لوحده،
+// فمحتاج مدة وحالة ومفتاح.
+model Subscription {
+  id        String    @id @default(cuid())
+  userEmail String    @unique
+  // m1 | m3 | y
+  plan      String
+  // pending: دفع ومستني تأكيدك · active: شغّال · expired: خلص
+  status    String    @default("pending")
+  startsAt  DateTime?
+  // النظام بيحسبه من الخطة وقت التأكيد — مش بالإيد، عشان مايحصلش غلط
+  // يخلي عميل دافع واشتراكه واقف أو العكس
+  endsAt    DateTime?
+  // المفتاح اللي في رابط التركيبة. عشوائي، ويتغيّر لو اتسرّب فكل
+  // روابط العميل تتجدد مرة واحدة.
+  token     String    @unique
+  // ألوانه ولوجوه — بيتحفظوا هنا فالرابط في OBS مايتغيّرش لما يغيّرهم
+  theme     Json?
+  // السعر المقفول للي اشترك في الإطلاق
+  priceLocked Float?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, endsAt])
+}

@@ -54,8 +54,13 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next({ request: { headers: new Headers(req.headers) } });
 
   // ── Security Headers على كل الـ responses ──────────────────
+  // ملفات التركيبات بتتعرض في إطار جوه صفحة الأوفرلي (المعاينة الحيّة)،
+  // فمينفعش نمنع تأطيرها زي باقي الموقع. بنسمح من نفس الموقع بس — أي دومين
+  // تاني لسه ممنوع يحطها عنده. باقي الصفحات فاضلة DENY زي ما هي.
+  const framableAsset = pathname.startsWith('/overlays/');
+
   res.headers.set('X-Content-Type-Options', 'nosniff');
-  res.headers.set('X-Frame-Options', 'DENY');
+  res.headers.set('X-Frame-Options', framableAsset ? 'SAMEORIGIN' : 'DENY');
   res.headers.set('X-XSS-Protection', '1; mode=block');
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
@@ -73,8 +78,11 @@ export async function middleware(req: NextRequest) {
       "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://img.youtube.com https://i.ytimg.com",
       "media-src 'self' blob: https://res.cloudinary.com",
       "connect-src 'self' https://accept.paymob.com https://accounts.google.com https://api.cloudinary.com",
-      "frame-src https://accept.paymob.com https://accounts.google.com https://www.youtube-nocookie.com",
-      "frame-ancestors 'none'",
+      // 'self' لازمة عشان صفحة الأوفرلي تعرض التركيبة الحيّة في إطار من نفس
+      // الموقع. مابتفتحش أي مصدر برّاني — frame-ancestors تحت لسه 'none'،
+      // يعني محدش تاني يقدر يحط موقعنا في إطار عنده.
+      "frame-src 'self' https://accept.paymob.com https://accounts.google.com https://www.youtube-nocookie.com",
+      framableAsset ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self' https://accounts.google.com",
     ].join('; ')
