@@ -47,6 +47,7 @@ const SECTIONS = [
       { label: 'ثري دي',        href: '/admin/3d',        icon: 'fa-cube' },
       { label: 'الفيديوهات',    href: '/admin/videos',    icon: 'fa-film' },
       { label: 'التركيبات',     href: '/admin/overlay',   icon: 'fa-layer-group' },
+      { label: 'الاشتراكات',    href: '/admin/subscriptions', icon: 'fa-id-card' },
       { label: 'كل المنتجات',   href: '/admin/products',  icon: 'fa-box' },
     ],
   },

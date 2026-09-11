@@ -59,6 +59,15 @@ export async function middleware(req: NextRequest) {
   // تاني لسه ممنوع يحطها عنده. باقي الصفحات فاضلة DENY زي ما هي.
   const framableAsset = pathname.startsWith('/overlays/');
 
+  // ws:// و wss:// للسيرفر اللي بيغذّي التركيبات بالأحداث الحيّة.
+  // فاضي دلوقتي لحد ما نقرر الاستضافة — وساعتها متغيّر بيئة وبس.
+  const feedOrigins = (process.env.NEXT_PUBLIC_FEED_ORIGIN ?? '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(o => ' ' + o)
+    .join('');
+
   res.headers.set('X-Content-Type-Options', 'nosniff');
   res.headers.set('X-Frame-Options', framableAsset ? 'SAMEORIGIN' : 'DENY');
   res.headers.set('X-XSS-Protection', '1; mode=block');
@@ -77,7 +86,10 @@ export async function middleware(req: NextRequest) {
       "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
       "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://img.youtube.com https://i.ytimg.com",
       "media-src 'self' blob: https://res.cloudinary.com",
-      "connect-src 'self' https://accept.paymob.com https://accounts.google.com https://api.cloudinary.com",
+      // سيرفر أحداث التيك توك بيتحط في NEXT_PUBLIC_FEED_ORIGIN لما نقرر
+      // استضافته. من غيره التركيبات مش هتقدر تفتح WebSocket عليه لأن
+      // connect-src بيرفض أي مصدر مش مكتوب هنا.
+      `connect-src 'self' https://accept.paymob.com https://accounts.google.com https://api.cloudinary.com${feedOrigins}`,
       // 'self' لازمة عشان صفحة الأوفرلي تعرض التركيبة الحيّة في إطار من نفس
       // الموقع. مابتفتحش أي مصدر برّاني — frame-ancestors تحت لسه 'none'،
       // يعني محدش تاني يقدر يحط موقعنا في إطار عنده.
