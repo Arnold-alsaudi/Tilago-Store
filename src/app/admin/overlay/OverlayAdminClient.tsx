@@ -540,7 +540,7 @@ export default function OverlayAdminClient({ items }: { items: AdminOverlay[] })
                   <input
                     id="f-file" className="ltr" value={form.file}
                     onChange={e => setForm(f => ({ ...f, file: e.target.value }))}
-                    placeholder="/overlays/qatar-plate.html"
+                    placeholder="/overlays/my-overlay.html"
                   />
                   <small>المسار اللي هيتحط في OBS وفي المعاينة</small>
                 </div>

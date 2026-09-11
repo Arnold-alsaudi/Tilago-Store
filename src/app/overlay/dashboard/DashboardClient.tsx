@@ -354,7 +354,7 @@ export default function DashboardClient({
               <div className="dz-screen">
                 <iframe
                   ref={frame}
-                  src={`${overlays[0]?.file ?? '/overlays/qatar-plate.html'}?label=${
+                  src={`${overlays[0].file}?label=${
                     encodeURIComponent('أكبر داعم')}&name=${
                     encodeURIComponent(name || 'اسمك هنا')}&value=12500`}
                   title="معاينة ألوانك"

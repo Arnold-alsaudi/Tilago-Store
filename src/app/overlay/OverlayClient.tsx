@@ -79,8 +79,6 @@ const FAQ = [
   },
 ] as const;
 
-const OVERLAY_SRC = '/overlays/qatar-plate.html';
-
 export default function OverlayClient({ catalog }: { catalog: CatalogItem[] }) {
   const [palette, setPalette] = useState<string>('violet');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -104,6 +102,14 @@ export default function OverlayClient({ catalog }: { catalog: CatalogItem[] }) {
   }, [catalog]);
 
   const tryFrame = useRef<HTMLIFrameElement | null>(null);
+
+  /* التركيبة اللي بنعرضها في قسم التخصيص بتيجي من الكتالوج نفسه.
+     كانت مكتوبة في الكود، فأي تغيير في المكتبة كان بيسيبها بتشاور
+     على ملف مش موجود. المميّزة الأول، وإلا أول واحدة. */
+  const demo = useMemo(
+    () => catalog.find(o => o.featured) ?? catalog[0] ?? null,
+    [catalog],
+  );
 
   const active = useMemo(
     () => PALETTES.find(p => p.key === palette) ?? PALETTES[0],
@@ -549,6 +555,9 @@ export default function OverlayClient({ catalog }: { catalog: CatalogItem[] }) {
       </section>
 
       {/* ── جرّب بألوانك ──────────────────────────────────── */}
+      {/* القسم ده بيعتمد على وجود تركيبة فعلية. لو المكتبة فاضية بيختفي
+          بدل ما يعرض إطار على ملف مش موجود. */}
+      {demo && (
       <section id="try">
         <div className="ov-in ov-try">
           <div>
@@ -582,13 +591,14 @@ export default function OverlayClient({ catalog }: { catalog: CatalogItem[] }) {
             <span className="ov-live"><i />{active.name}</span>
             <iframe
               ref={tryFrame}
-              src={`${OVERLAY_SRC}?label=${encodeURIComponent('أكبر داعم')}&name=${encodeURIComponent('خالد المحترف')}&value=24310`}
+              src={`${demo.file}?label=${encodeURIComponent('أكبر داعم')}&name=${encodeURIComponent('خالد المحترف')}&value=24310`}
               title="تجربة ألوان التركيبة"
               loading="lazy"
             />
           </div>
         </div>
       </section>
+      )}
 
       {/* ── التركيب ───────────────────────────────────────── */}
       <section>
