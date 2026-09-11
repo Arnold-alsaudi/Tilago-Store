@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import OverlayClient from './OverlayClient';
+import { prisma } from '@/lib/prisma';
+import OverlayClient, { type CatalogItem } from './OverlayClient';
 
 export const metadata: Metadata = {
   title: 'Tilago Overlay',
@@ -11,6 +12,34 @@ export const metadata: Metadata = {
 // عند أي تعديل. الرقم ده شبكة أمان مش أكتر.
 export const revalidate = 300;
 
-export default function OverlayPage() {
-  return <OverlayClient />;
+export default async function OverlayPage() {
+  let catalog: CatalogItem[] = [];
+  try {
+    const rows = await prisma.overlay.findMany({
+      where: { active: true },
+      orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
+      select: {
+        id: true, slug: true, title: true, description: true,
+        category: true, file: true, poster: true, isFree: true,
+        featured: true, createdAt: true,
+      },
+    });
+    catalog = rows.map(r => ({
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      description: r.description,
+      category: r.category as CatalogItem['category'],
+      file: r.file,
+      poster: r.poster,
+      isFree: r.isFree,
+      featured: r.featured,
+      createdAt: r.createdAt.toISOString(),
+    }));
+  } catch {
+    // الداتابيز مش متاحة: الصفحة بتفضل تشتغل والكتالوج بيقول إنه بيتجهّز،
+    // بدل ما الصفحة كلها تقع
+  }
+
+  return <OverlayClient catalog={catalog} />;
 }

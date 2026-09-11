@@ -15,12 +15,36 @@ const PALETTES = [
   { key: 'rose',   name: 'وردي',   dot: '#fb7185', vars: { violet: '#fb7185', 'violet-hot': '#ffe0e6' } },
 ] as const;
 
-const CATEGORIES = [
-  { key: 'supporters', name: 'داعمين',  desc: 'ترتيب أكتر ناس بتدعمك، بيتحدّث مع كل هدية' },
-  { key: 'challenges', name: 'تحديات',  desc: 'سباق بين متابعينك يرفع الحماس والتفاعل' },
-  { key: 'goals',      name: 'أهداف',   desc: 'شريط بيتملّي قدام الجمهور لما يقربوا من الهدف' },
-  { key: 'decor',      name: 'تزيين',   desc: 'إطارات وشاشات وفواصل تخلي البث شكله مظبوط' },
-] as const;
+export type OverlayCategory = 'SUPPORTERS' | 'CHALLENGES' | 'GOALS' | 'DECOR';
+
+export interface CatalogItem {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  category: OverlayCategory;
+  file: string;
+  poster: string | null;
+  isFree: boolean;
+  featured: boolean;
+  createdAt: string;
+}
+
+const CATEGORIES: { key: OverlayCategory; name: string; desc: string }[] = [
+  { key: 'SUPPORTERS', name: 'داعمين',  desc: 'ترتيب أكتر ناس بتدعمك، بيتحدّث مع كل هدية' },
+  { key: 'CHALLENGES', name: 'تحديات',  desc: 'سباق بين متابعينك يرفع الحماس والتفاعل' },
+  { key: 'GOALS',      name: 'أهداف',   desc: 'شريط بيتملّي قدام الجمهور لما يقربوا من الهدف' },
+  { key: 'DECOR',      name: 'تزيين',   desc: 'إطارات وشاشات وفواصل تخلي البث شكله مظبوط' },
+];
+
+/* التركيبة تعتبر "جديدة" أول أسبوعين — ده اللي بيخلي وعد المكتبة
+   اللي بتكبر مرئي بدل ما يبقى كلام مكتوب. */
+const NEW_DAYS = 14;
+const isNew = (iso: string) =>
+  Date.now() - new Date(iso).getTime() < NEW_DAYS * 86400000;
+
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
 
 const PLANS = [
   { key: 'm3',  name: '3 شهور', price: 749,   per: 250, note: 'وفّر 16%' },
@@ -57,9 +81,27 @@ const FAQ = [
 
 const OVERLAY_SRC = '/overlays/qatar-plate.html';
 
-export default function OverlayClient() {
+export default function OverlayClient({ catalog }: { catalog: CatalogItem[] }) {
   const [palette, setPalette] = useState<string>('violet');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [cat, setCat] = useState<OverlayCategory | 'ALL'>('ALL');
+
+  /* الجديد الأول دايماً، وبعده المميّز، وبعده الباقي بترتيب الأدمن.
+     الزائر اللي رجع بعد أسبوع بيلاقي الجديد مستنيه فوق. */
+  const shown = useMemo(() => {
+    const list = cat === 'ALL' ? catalog : catalog.filter(o => o.category === cat);
+    return [...list].sort((a, b) => {
+      const n = Number(isNew(b.createdAt)) - Number(isNew(a.createdAt));
+      if (n) return n;
+      return Number(b.featured) - Number(a.featured);
+    });
+  }, [catalog, cat]);
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { ALL: catalog.length };
+    for (const o of catalog) c[o.category] = (c[o.category] ?? 0) + 1;
+    return c;
+  }, [catalog]);
 
   const tryFrame = useRef<HTMLIFrameElement | null>(null);
 
@@ -145,6 +187,9 @@ export default function OverlayClient() {
           margin:0 auto 2.6rem;border-radius:18px;
         }
         .ov-copy{width:min(92%,760px);margin:0 auto}
+        .ov-back{margin:1.3rem 0 0;font-size:.86rem;color:var(--ink-3)}
+        .ov-back a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(155,89,208,.35)}
+        .ov-back a:hover{color:var(--ink);border-bottom-color:var(--ink)}
         .ov-screen{
           position:relative;border-radius:16px;overflow:hidden;
           border:1px solid rgba(155,89,208,0.28);
@@ -228,22 +273,74 @@ export default function OverlayClient() {
         }
         .ov-pay b{color:var(--ink-2);font-weight:600}
 
-        /* ── التصنيفات ──────────────────────────────────────── */
-        .ov-cats{
-          display:grid;gap:1rem;
-          grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));
+        /* ── الكتالوج ───────────────────────────────────────── */
+        .ov-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.8rem}
+        .ov-tab{
+          display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;
+          font-family:'Cairo',sans-serif;font-size:.88rem;
+          padding:.5rem 1.1rem;border-radius:50px;
+          background:rgba(84,22,181,0.12);border:1px solid var(--line);
+          color:var(--ink-2);transition:all .22s;
         }
-        .ov-cat{
-          background:var(--card);
-          border:1px solid var(--line);border-radius:14px;
-          padding:1.5rem 1.4rem;transition:all .3s ease;
+        .ov-tab:hover{background:rgba(84,22,181,0.28);color:var(--ink)}
+        .ov-tab[aria-pressed="true"]{
+          background:rgba(84,22,181,0.36);border-color:var(--line-hot);color:var(--ink);
         }
-        .ov-cat:hover{transform:translateY(-6px);border-color:var(--line-hot);box-shadow:0 8px 24px rgba(0,0,0,0.5)}
-        .ov-cat b{
-          font-family:'Oxanium',sans-serif;color:var(--ink);
-          font-size:1.05rem;display:block;margin-bottom:.5rem;
+        .ov-tab b{
+          font-family:'Oxanium',sans-serif;font-size:.74rem;font-weight:700;
+          background:rgba(0,0,0,.32);padding:.1rem .42rem;border-radius:50px;color:var(--ink-3);
         }
-        .ov-cat p{margin:0;font-size:.88rem;line-height:1.75;color:var(--ink-2)}
+
+        /* عدد الأعمدة بيتحدد من عرض الشاشة لوحده — نفس قاعدة صفحة الاليرتات */
+        .ov-cards{
+          display:grid;gap:1.4rem;
+          grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));
+        }
+        .ov-card{
+          background:var(--card);border:1px solid var(--line);border-radius:14px;
+          overflow:hidden;transition:all .3s ease;display:flex;flex-direction:column;
+        }
+        .ov-card:hover{transform:translateY(-6px);border-color:var(--line-hot);box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+        .ov-card-prev{
+          position:relative;aspect-ratio:16/9;overflow:hidden;
+          border-bottom:1px solid var(--line);
+          background:linear-gradient(160deg,#150c2b,#0a0418);
+        }
+        .ov-card-prev iframe,.ov-card-prev img{
+          position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+        }
+        .ov-card-prev img{object-fit:cover}
+        .ov-card-flags{position:absolute;top:9px;right:9px;z-index:2;display:flex;gap:.35rem}
+        .ov-flag{
+          font-family:'Oxanium',sans-serif;font-size:.64rem;font-weight:700;
+          letter-spacing:.09em;text-transform:uppercase;
+          padding:.22rem .55rem;border-radius:50px;
+          background:rgba(12,5,22,.74);border:1px solid rgba(255,255,255,.14);color:#fff;
+        }
+        .ov-flag.new{color:#d8c4ff;border-color:rgba(155,89,208,.5)}
+        .ov-flag.free{color:#a7f3c8;border-color:rgba(74,222,128,.42)}
+
+        .ov-card-body{padding:1.1rem 1.2rem 1.2rem;display:flex;flex-direction:column;gap:.45rem;flex:1}
+        .ov-card-body h3{
+          font-family:'Oxanium','29LtBukra',sans-serif;font-size:1.02rem;font-weight:700;
+          color:var(--ink);margin:0;
+        }
+        .ov-card-body p{margin:0;font-size:.87rem;line-height:1.75;color:var(--ink-2)}
+        .ov-card-meta{
+          display:flex;justify-content:space-between;gap:.8rem;
+          margin-top:auto;padding-top:.7rem;
+          font-family:'Oxanium',sans-serif;font-size:.74rem;color:var(--ink-3);
+        }
+
+        .ov-none{
+          border:1px dashed var(--line);border-radius:14px;
+          padding:3rem 1.6rem;text-align:center;
+        }
+        .ov-none b{
+          display:block;font-family:'Oxanium','29LtBukra',sans-serif;
+          color:var(--ink);font-size:1.05rem;margin-bottom:.5rem;
+        }
+        .ov-none p{margin:0 auto;max-width:44ch;font-size:.9rem;line-height:1.8;color:var(--ink-2)}
 
         /* ── جرّب بألوانك ───────────────────────────────────── */
         .ov-try{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:3rem;align-items:center}
@@ -323,6 +420,10 @@ export default function OverlayClient() {
             <Link href="#plans" className="ov-cta">ابدأ الاشتراك</Link>
             <Link href="#try" className="ov-cta ov-ghost">جرّب بألوانك</Link>
           </div>
+          {/* العميل اللي مشترك خلاص محتاج يوصل لروابطه، مش يقرا الصفحة تاني */}
+          <p className="ov-back">
+            مشترك بالفعل؟ <Link href="/overlay/dashboard">افتح تركيباتك</Link>
+          </p>
 
           <div className="ov-hero-facts">
             <div className="ov-fact"><b>200</b><span>جنيه في الشهر مع الخطة السنوية</span></div>
@@ -377,22 +478,73 @@ export default function OverlayClient() {
         </div>
       </section>
 
-      {/* ── التصنيفات ─────────────────────────────────────── */}
-      <section>
+      {/* ── الكتالوج ──────────────────────────────────────── */}
+      <section id="catalog">
         <div className="ov-in">
           <span className="ov-kicker">المكتبة</span>
-          <h2>أربع أنواع تغطي بثك كله</h2>
+          <h2>{catalog.length > 0 ? `${catalog.length} تركيبة، وبتزيد كل أسبوع` : 'المكتبة بتتجهّز'}</h2>
           <p className="ov-lede">
             كل تركيبة بتشتغل لوحدها وبتتحدّث لحظياً من بثك. تختار اللي يناسب أسلوبك وتحطه.
           </p>
-          <div className="ov-cats">
-            {CATEGORIES.map(c => (
-              <div className="ov-cat" key={c.key}>
-                <b>{c.name}</b>
-                <p>{c.desc}</p>
-              </div>
-            ))}
-          </div>
+
+          {catalog.length > 0 && (
+            <div className="ov-tabs" role="group" aria-label="تصنيفات التركيبات">
+              <button
+                type="button" className="ov-tab" aria-pressed={cat === 'ALL'}
+                onClick={() => setCat('ALL')}
+              >
+                الكل <b>{counts.ALL}</b>
+              </button>
+              {CATEGORIES.filter(c => counts[c.key]).map(c => (
+                <button
+                  key={c.key} type="button" className="ov-tab"
+                  aria-pressed={cat === c.key} onClick={() => setCat(c.key)}
+                  title={c.desc}
+                >
+                  {c.name} <b>{counts[c.key]}</b>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {catalog.length === 0 ? (
+            /* مفيش تركيبات لسه: بنقول الحقيقة بدل ما نعرض شبكة فاضية */
+            <div className="ov-none">
+              <b>أول التركيبات في الطريق</b>
+              <p>
+                بنجهّز المكتبة دلوقتي. تقدر تشوف تركيبة شغّالة فعلاً في قسم
+                «جرّب بألوانك» تحت.
+              </p>
+            </div>
+          ) : (
+            <div className="ov-cards">
+              {shown.map(o => {
+                const catName = CATEGORIES.find(c => c.key === o.category)?.name ?? '';
+                return (
+                  <article className="ov-card" key={o.id}>
+                    <div className="ov-card-prev">
+                      <div className="ov-card-flags">
+                        {isNew(o.createdAt) && <span className="ov-flag new">جديد</span>}
+                        {o.isFree && <span className="ov-flag free">مجانية</span>}
+                      </div>
+                      {o.poster
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={o.poster} alt="" loading="lazy" />
+                        : <iframe src={o.file} title={o.title} loading="lazy" />}
+                    </div>
+                    <div className="ov-card-body">
+                      <h3>{o.title}</h3>
+                      {o.description && <p>{o.description}</p>}
+                      <div className="ov-card-meta">
+                        <span>{catName}</span>
+                        <span>{fmtDate(o.createdAt)}</span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
