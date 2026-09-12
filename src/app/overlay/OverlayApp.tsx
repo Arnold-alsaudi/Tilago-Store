@@ -233,7 +233,10 @@ export default function OverlayApp({
         .ovl-side-foot a:hover{color:var(--ink-2)}
 
         /* ── المنطقة الرئيسية ─────────────────────────────── */
-        .ovl-main{margin-inline-end:var(--side);min-height:100vh;display:flex;flex-direction:column}
+        /* الشريط مثبّت يمين فيزيائياً (right:0)، فالهامش فيزيائي كمان.
+           margin-inline-end في الـRTL بتطلع شمال — وده اللي كان بيخلي
+           المحتوى يعدّي تحت الشريط. */
+        .ovl-main{margin-right:var(--side);min-height:100vh;display:flex;flex-direction:column}
         .ovl-bar{
           position:sticky;top:0;z-index:30;
           display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
@@ -326,13 +329,18 @@ export default function OverlayApp({
           background:rgba(12,5,22,.8);border:1px solid var(--line-2);color:var(--ink-2)}
         .ovl-flag.new{color:#d9c6ff}
         .ovl-flag.free{color:#a7f3c8;border-color:rgba(74,222,128,.4)}
+        /* صف التحكم فوق المعاينة: الأزرار بتبقى في نفس المكان في كل
+           الكروت مهما اختلف طول الوصف. */
+        .ovl-o-ctl{display:flex;gap:.4rem;align-items:center;padding:.7rem .8rem;
+          border-bottom:1px solid var(--line);background:var(--panel-2)}
+        .ovl-o-ctl input{flex:1;min-width:0;padding:.45rem .6rem;border-radius:7px;
+          background:var(--deep);border:1px solid var(--line);color:var(--ink-3);
+          font-family:'Oxanium',monospace;font-size:.73rem;direction:ltr;text-align:left}
+        .ovl-o-ctl .ovl-btn{flex:none}
         .ovl-o-body{padding:.85rem .95rem 1rem;display:flex;flex-direction:column;gap:.7rem;flex:1}
         .ovl-o-body p{margin:0;font-size:.83rem;line-height:1.7;color:var(--ink-3)}
-        .ovl-link{display:flex;gap:.4rem;align-items:center;margin-top:auto}
-        .ovl-link input{flex:1;min-width:0;padding:.45rem .6rem;border-radius:8px;
-          background:var(--deep);border:1px solid var(--line);color:var(--ink-3);
-          font-family:'Oxanium',monospace;font-size:.74rem;direction:ltr;text-align:left}
-        .ovl-acts{display:flex;gap:.4rem;flex-wrap:wrap}
+        .ovl-o-lock{padding:.8rem;border-bottom:1px solid var(--line);background:var(--panel-2)}
+        .ovl-o-lock .ovl-btn{width:100%;justify-content:center}
 
         /* الأسعار */
         .ovl-plans{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
@@ -415,7 +423,7 @@ export default function OverlayApp({
         @media(max-width:900px){
           .ovl-side{transform:translateX(100%);transition:transform .25s}
           .ovl-side.open{transform:none}
-          .ovl-main{margin-inline-end:0}
+          .ovl-main{margin-right:0}
           .ovl-burger{display:grid}
           .ovl-scrim.on{display:block;position:fixed;inset:0;z-index:35;background:rgba(6,2,14,.7)}
           .ovl-body{padding:1.4rem 1rem 3.5rem}
@@ -534,6 +542,31 @@ export default function OverlayApp({
                           )}
                         </div>
 
+                        {usable && url ? (
+                          <div className="ovl-o-ctl">
+                            <button type="button"
+                              className={`ovl-btn sm${copied === o.id ? ' done' : ''}`}
+                              onClick={() => copy(url, o.id)}>
+                              {copied === o.id ? <Check size={13} /> : <Copy size={13} />}
+                              {copied === o.id ? 'اتنسخ' : 'انسخ'}
+                            </button>
+                            <input readOnly value={url} onFocus={e => e.currentTarget.select()}
+                              aria-label={`رابط ${o.title}`} />
+                            <button type="button"
+                              className={`ovl-btn sm ghost${tested === o.id ? ' done' : ''}`}
+                              onClick={() => test(o)} title="جرّب التركيبة">
+                              <Play size={13} /> {tested === o.id ? 'ردّت' : 'جرّب'}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="ovl-o-lock">
+                            <button type="button" className="ovl-btn sm"
+                              onClick={() => setSection('plans')}>
+                              <Zap size={13} /> اشترك عشان تاخد الرابط
+                            </button>
+                          </div>
+                        )}
+
                         <div className="ovl-prev">
                           <div className="ovl-flags">
                             {isNew(o.createdAt) && <span className="ovl-flag new">جديد</span>}
@@ -547,35 +580,9 @@ export default function OverlayApp({
                                 src={`${o.file}?demo=0`} title={o.title} loading="lazy" />}
                         </div>
 
-                        <div className="ovl-o-body">
-                          {o.description && <p>{o.description}</p>}
-
-                          {usable && url ? (
-                            <>
-                              <div className="ovl-link">
-                                <input readOnly value={url} onFocus={e => e.currentTarget.select()} />
-                                <button type="button"
-                                  className={`ovl-btn sm${copied === o.id ? ' done' : ''}`}
-                                  onClick={() => copy(url, o.id)}>
-                                  {copied === o.id ? <Check size={13} /> : <Copy size={13} />}
-                                  {copied === o.id ? 'اتنسخ' : 'انسخ'}
-                                </button>
-                              </div>
-                              <div className="ovl-acts">
-                                <button type="button"
-                                  className={`ovl-btn sm ghost${tested === o.id ? ' done' : ''}`}
-                                  onClick={() => test(o)}>
-                                  <Play size={13} /> {tested === o.id ? 'ردّت' : 'جرّب'}
-                                </button>
-                              </div>
-                            </>
-                          ) : (
-                            <button type="button" className="ovl-btn sm"
-                              onClick={() => setSection('plans')}>
-                              <Zap size={13} /> اشترك عشان تاخد الرابط
-                            </button>
-                          )}
-                        </div>
+                        {o.description && (
+                          <div className="ovl-o-body"><p>{o.description}</p></div>
+                        )}
                       </article>
                     );
                   })}
