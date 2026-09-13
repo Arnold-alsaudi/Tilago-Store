@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  Layers, Palette, MonitorPlay, CreditCard, HelpCircle, User,
+  Home, Layers, Palette, MonitorPlay, HelpCircle,
   Copy, Check, Play, Gift, Trophy, Target, Frame, Menu, X,
-  Sparkles, Clock, ShieldCheck, Zap,
+  Sparkles, ShieldCheck, Zap, LogIn, Link2, RefreshCw, Smartphone,
+  Wand2, Clock, Headphones,
 } from 'lucide-react';
 
 export type OverlayCategory = 'SUPPORTERS' | 'CHALLENGES' | 'GOALS' | 'DECOR';
@@ -39,13 +40,35 @@ const CATS: { key: OverlayCategory; name: string; Icon: typeof Gift }[] = [
   { key: 'DECOR',      name: 'تزيين',  Icon: Frame },
 ];
 
+/* الترتيب من اليمين: 3 شهور · شهري · سنوي — السنوي آخر واحد عشان
+   العين بتقف عنده، وهو اللي عليه علامة "الأوفر". */
 const PLANS = [
-  { key: 'm3', name: '3 شهور', price: 749,  per: 250, note: 'وفّر 16%' },
-  { key: 'y',  name: 'سنوي',   price: 2399, per: 200, note: 'ادفع 8 شهور وخد سنة', best: true },
-  { key: 'm1', name: 'شهري',   price: 299,  per: 299, note: 'من غير التزام' },
+  { key: 'm3', name: 'خطة 3 شهور', tag: 'ربع سنوي', price: 749,  unit: '3 شهور', per: 250, note: 'وفّر 16%' },
+  { key: 'm1', name: 'الخطة الشهرية', tag: 'شهري', price: 299, unit: 'شهر', per: 299, note: 'من غير التزام' },
+  { key: 'y',  name: 'الخطة السنوية', tag: 'الأوفر', price: 2399, unit: 'سنة', per: 200, note: 'ادفع 8 شهور وخد سنة', best: true },
 ] as const;
 
 const PLAN_NAME: Record<string, string> = { m1: 'شهري', m3: '3 شهور', y: 'سنوي' };
+
+const PERKS = [
+  'كل التركيبات في المكتبة',
+  'الجديد أول ما ينزل',
+  'ألوانك على كل تركيبة',
+  'تغيير اللون وانت لايف',
+  'دعم لما تحتاجه',
+];
+
+/* اللي بيميّزنا — مكتوب بلغة العميل مش بلغة الكود */
+const FEATURES = [
+  { Icon: Play,        t: 'جرّب قبل البث',       d: 'زرار واحد يبعت حدث تجريبي، وتشوف التركيبة بترد قبل ما تفتح OBS.' },
+  { Icon: Smartphone,  t: 'غيّر وانت لايف',      d: 'غيّر ألوانك من موبايلك والبث شغّال، والرابط في OBS مابيتغيّرش.' },
+  { Icon: Link2,       t: 'رابط واحد وخلاص',     d: 'مفيش برنامج تنزّله ولا تحذير من ويندوز. تنسخ الرابط وتلزقه.' },
+  { Icon: Wand2,       t: 'تصميمات حصرية',       d: 'كل تركيبة مصمّمة عندنا من الصفر، مش قوالب متكررة.' },
+  { Icon: RefreshCw,   t: 'مكتبة بتكبر',          d: 'تركيبات جديدة كل أسبوع، وبتوصلك من غير أي دفع زيادة.' },
+  { Icon: ShieldCheck, t: 'مفيش مربع أبيض',      d: 'لو اشتراكك خلص وانت لايف، التركيبة بتختفي بهدوء قدام جمهورك.' },
+  { Icon: Clock,       t: 'دفع مصري',            d: 'انستاباي وفودافون كاش وبايبال، وفيزا وميزا قريباً.' },
+  { Icon: Headphones,  t: 'دعم حقيقي',           d: 'لو وقفت في أي خطوة، فيه حد يرد عليك مش رد آلي.' },
+];
 
 const FAQ = [
   { q: 'إزاي بحطها في OBS؟',
@@ -70,16 +93,18 @@ const daysLeft = (iso: string | null) =>
 
 const isNew = (iso: string) => Date.now() - new Date(iso).getTime() < 14 * 86400000;
 
-type SectionKey = 'overlays' | 'theme' | 'install' | 'plans' | 'help' | 'account';
+type SectionKey = 'home' | 'overlays' | 'theme' | 'install' | 'help';
 
 const NAV: { key: SectionKey; name: string; Icon: typeof Layers }[] = [
+  { key: 'home',     name: 'الرئيسية',  Icon: Home },
   { key: 'overlays', name: 'التركيبات', Icon: Layers },
   { key: 'theme',    name: 'الألوان',   Icon: Palette },
   { key: 'install',  name: 'التركيب',   Icon: MonitorPlay },
-  { key: 'plans',    name: 'الاشتراك',  Icon: CreditCard },
   { key: 'help',     name: 'مساعدة',    Icon: HelpCircle },
-  { key: 'account',  name: 'حسابك',     Icon: User },
 ];
+
+const HANDLE_KEY = 'tilago-tt-handle';
+const HANDLE_RE = /^[A-Za-z0-9._]{2,24}$/;
 
 /* ============================================================ */
 
@@ -91,12 +116,32 @@ export default function OverlayApp({
   const left = daysLeft(sub?.endsAt ?? null);
   const live = sub?.status === 'active' && (left === null || left > 0);
 
-  const [section, setSection] = useState<SectionKey>(live ? 'overlays' : 'plans');
+  const [section, setSection] = useState<SectionKey>(live ? 'overlays' : 'home');
   const [menu, setMenu] = useState(false);
   const [cat, setCat] = useState<OverlayCategory | 'ALL'>('ALL');
   const [copied, setCopied] = useState<string | null>(null);
   const [tested, setTested] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  /* يوزر تيك توك — بيتحفظ على الجهاز. الربط الحي نفسه بيشتغل لما خدمة
+     الأحداث تتنشر؛ لحد ساعتها الحالة بتفضل "غير متصل" بصراحة. */
+  const [handle, setHandle] = useState('');
+  const [handleNote, setHandleNote] = useState<string | null>(null);
+  useEffect(() => {
+    try { const v = localStorage.getItem(HANDLE_KEY); if (v) setHandle(v); } catch {}
+  }, []);
+
+  function saveHandle() {
+    const v = handle.trim().replace(/^@/, '');
+    if (!HANDLE_RE.test(v)) {
+      setHandleNote('اكتب اليوزر من غير @ — حروف إنجليزي وأرقام ونقطة وشرطة سفلية');
+    } else {
+      setHandle(v);
+      try { localStorage.setItem(HANDLE_KEY, v); } catch {}
+      setHandleNote('اتحفظ. الربط الحي هيشتغل أول ما خدمة الأحداث تتفعّل');
+    }
+    setTimeout(() => setHandleNote(null), 4200);
+  }
 
   const initialPalette = useMemo(() => {
     const v = sub?.theme?.violet;
@@ -132,7 +177,6 @@ export default function OverlayApp({
     () => overlays.find(o => o.featured) ?? overlays[0] ?? null, [overlays],
   );
 
-  /* اللون بيتبعت للمعاينة وهي شغّالة — من غير إعادة تحميل */
   useEffect(() => {
     themeFrame.current?.contentWindow?.postMessage(
       { type: 'plate-theme', vars: active.vars }, '*');
@@ -156,278 +200,300 @@ export default function OverlayApp({
     } catch { /* الرابط ظاهر في الخانة والعميل يقدر يعلّم عليه */ }
   }, []);
 
-  /* زرار التجربة: بيبعت حدث وهمي للمعاينة، فالعميل يشوف التركيبة
-     بترد بعينه قبل ما يفتح OBS أصلاً. ده بيرد على السؤال اللي بيخلي
-     الناس تطلب استرجاع: "هي شغّالة ولا لأ؟" */
+  /* زرار التجربة بيبعت حدث وهمي للمعاينة، فالعميل يشوف التركيبة بترد
+     بعينه قبل ما يفتح OBS — ده السؤال اللي ورا معظم طلبات الاسترجاع */
   function test(o: AppOverlay) {
-    const f = cardFrames.current[o.id];
-    f?.contentWindow?.postMessage({
+    cardFrames.current[o.id]?.contentWindow?.postMessage({
       type: 'plate',
       data: { key: 't' + Date.now(), label: 'تجربة', name: name || 'أهلاً بيك', value: 1250 },
     }, '*');
     setTested(o.id); setTimeout(() => setTested(null), 2200);
   }
 
-  /* خطوات جاهزية العميل — أكتر حتة بيتوهوا فيها هي OBS، فبدل ما
-     نسيبه يكتشف لوحده، بنوريه هو فين وفاضله إيه. */
   const steps = [
-    { done: Boolean(sub),              label: 'فعّلت اشتراكك' },
-    { done: Boolean(sub?.theme),       label: 'اخترت ألوانك' },
-    { done: overlays.length > 0,       label: 'في تركيبات جاهزة' },
+    { done: Boolean(sub),        label: 'فعّلت اشتراكك' },
+    { done: Boolean(sub?.theme), label: 'اخترت ألوانك' },
+    { done: overlays.length > 0, label: 'في تركيبات جاهزة' },
   ];
   const doneCount = steps.filter(s => s.done).length;
+
+  const go = (k: SectionKey) => { setSection(k); setMenu(false); window.scrollTo({ top: 0 }); };
+  const initial = (name || email || 'T').trim().charAt(0).toUpperCase();
 
   return (
     <div className="ovl" dir="rtl">
       <style>{`
-        /* ألوان الموقع الأربعة. حدود وتعبئة بدل التوهّج — مفيش box-shadow
-           ملوّن في الملف ده خالص. */
+        /* ألوان الموقع الأربعة. العمق من الحدود والتعبئة، ومفيش ولا
+           box-shadow ملوّن في الملف ده. */
         .ovl{
           --deep:#0C0516; --navy:#0F083B; --grape:#5416B5; --violet:#7F3AA1;
-          --ink:#ece8f7; --ink-2:#a49dc2; --ink-3:#7b7399;
-          --accent:#9B59D0;
-          --line:rgba(127,58,161,.22); --line-2:rgba(127,58,161,.42);
-          --panel:#120A26; --panel-2:#170E2F;
-          --ok:#4ade80; --warn:#fbbf24; --bad:#fb7185;
-          --side:212px;
+          --ink:#ece8f7; --ink-2:#a8a1c6; --ink-3:#7d769b;
+          --accent:#a36bd0;
+          --line:rgba(127,58,161,.2); --line-2:rgba(127,58,161,.45);
+          --panel:#110a24; --panel-2:#160e2e; --well:#0a0514;
+          --ok:#4ade80; --warn:#fbbf24; --bad:#f06277;
+          --side:128px; --bar:68px;
           min-height:100vh;background:var(--deep);color:var(--ink-2);
-          font-family:'Cairo','29LtBukra','Montserrat',sans-serif;
-          font-size:15px;
+          font-family:'Cairo','29LtBukra','Montserrat',sans-serif;font-size:15px;
         }
         .ovl *{box-sizing:border-box}
-        .ovl button{font-family:inherit}
+        .ovl button,.ovl input{font-family:inherit}
 
-        /* ── الشريط الجانبي ───────────────────────────────── */
+        /* ── الشريط الجانبي: أيقونة فوق الكلمة ─────────────── */
         .ovl-side{
-          position:fixed;inset:0 0 0 auto;width:var(--side);z-index:40;
+          position:fixed;top:0;right:0;bottom:0;width:var(--side);z-index:40;
           background:var(--panel);border-left:1px solid var(--line);
           display:flex;flex-direction:column;
         }
         .ovl-brand{
-          display:flex;flex-direction:column;align-items:center;gap:.5rem;
-          padding:1.5rem 1rem 1.2rem;border-bottom:1px solid var(--line);
-        }
-        .ovl-brand img{height:42px;width:auto;object-fit:contain}
-        .ovl-brand b{
-          font-family:'Oxanium',sans-serif;font-size:.82rem;font-weight:700;
-          letter-spacing:.14em;color:var(--ink);
-        }
-        .ovl-nav{flex:1;overflow-y:auto;padding:.8rem .7rem;display:flex;flex-direction:column;gap:.25rem}
-        .ovl-nav button{
-          display:flex;align-items:center;gap:.7rem;width:100%;cursor:pointer;
-          padding:.7rem .85rem;border-radius:10px;border:1px solid transparent;
-          background:none;color:var(--ink-2);font-size:.9rem;text-align:right;
-          transition:background .2s,color .2s,border-color .2s;
-        }
-        .ovl-nav button:hover{background:rgba(127,58,161,.14);color:var(--ink)}
-        .ovl-nav button[aria-current="true"]{
-          background:rgba(127,58,161,.22);border-color:var(--line-2);color:var(--ink);
-        }
-        .ovl-nav button svg{flex:none;color:var(--accent)}
-        .ovl-nav .ovl-badge{
-          margin-inline-start:auto;font-family:'Oxanium',sans-serif;font-size:.7rem;
-          background:rgba(0,0,0,.35);padding:.1rem .42rem;border-radius:50px;color:var(--ink-3);
-        }
-        .ovl-side-foot{padding:.9rem 1rem;border-top:1px solid var(--line);font-size:.76rem;color:var(--ink-3)}
-        .ovl-side-foot a{color:var(--ink-3);text-decoration:none;display:block;padding:.2rem 0}
-        .ovl-side-foot a:hover{color:var(--ink-2)}
-
-        /* ── المنطقة الرئيسية ─────────────────────────────── */
-        /* الشريط مثبّت يمين فيزيائياً (right:0)، فالهامش فيزيائي كمان.
-           margin-inline-end في الـRTL بتطلع شمال — وده اللي كان بيخلي
-           المحتوى يعدّي تحت الشريط. */
-        .ovl-main{margin-right:var(--side);min-height:100vh;display:flex;flex-direction:column}
-        .ovl-bar{
-          position:sticky;top:0;z-index:30;
-          display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
-          padding:.85rem 1.6rem;background:rgba(12,5,22,.92);backdrop-filter:blur(10px);
+          height:var(--bar);flex:none;display:flex;flex-direction:column;
+          align-items:center;justify-content:center;gap:3px;
           border-bottom:1px solid var(--line);
         }
-        .ovl-status{display:flex;align-items:center;gap:.6rem;font-size:.85rem}
-        .ovl-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--ink-3)}
+        .ovl-brand img{height:26px;width:auto;object-fit:contain}
+        .ovl-brand b{font-family:'Oxanium',sans-serif;font-size:.62rem;font-weight:700;
+          letter-spacing:.12em;color:var(--ink)}
+        .ovl-nav{flex:1;overflow-y:auto;padding:.7rem .55rem;display:flex;flex-direction:column;gap:.3rem}
+        .ovl-nav button{
+          position:relative;display:flex;flex-direction:column;align-items:center;gap:.4rem;
+          width:100%;cursor:pointer;padding:.8rem .3rem;border-radius:10px;
+          border:1px solid transparent;background:none;color:var(--ink-2);
+          font-size:.78rem;font-weight:600;transition:background .2s,color .2s,border-color .2s;
+        }
+        .ovl-nav button svg{color:var(--ink-3);transition:color .2s}
+        .ovl-nav button:hover{background:rgba(127,58,161,.12);color:var(--ink)}
+        .ovl-nav button:hover svg{color:var(--accent)}
+        .ovl-nav button[aria-current="true"]{background:rgba(127,58,161,.2);border-color:var(--line-2);color:var(--ink)}
+        .ovl-nav button[aria-current="true"] svg{color:var(--accent)}
+        .ovl-nav .ovl-badge{position:absolute;top:6px;left:8px;font-family:'Oxanium',sans-serif;
+          font-size:.62rem;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+          display:grid;place-items:center;background:var(--grape);color:#fff}
+        .ovl-side-foot{flex:none;padding:.7rem .5rem;border-top:1px solid var(--line);
+          display:flex;flex-direction:column;gap:.1rem;text-align:center}
+        .ovl-side-foot a{font-size:.72rem;color:var(--ink-3);text-decoration:none;padding:.3rem 0}
+        .ovl-side-foot a:hover{color:var(--ink-2)}
+
+        /* ── الشريط العلوي ─────────────────────────────────── */
+        .ovl-main{margin-right:var(--side);min-height:100vh;display:flex;flex-direction:column}
+        .ovl-bar{
+          position:sticky;top:0;z-index:30;height:var(--bar);
+          display:flex;align-items:center;justify-content:space-between;gap:1rem;
+          padding:0 1.5rem;background:rgba(12,5,22,.94);backdrop-filter:blur(10px);
+          border-bottom:1px solid var(--line);
+        }
+        .ovl-conn{display:flex;align-items:center;gap:.55rem;min-width:0}
+        .ovl-field{display:flex;align-items:center;gap:.45rem;height:40px;padding:0 .75rem;
+          background:var(--well);border:1px solid var(--line);border-radius:10px;min-width:0}
+        .ovl-field:focus-within{border-color:var(--line-2)}
+        .ovl-field span{font-size:.8rem;color:var(--ink-3)}
+        .ovl-field input{width:150px;min-width:0;background:none;border:0;outline:0;
+          color:var(--ink);font-size:.85rem;direction:ltr;text-align:left}
+        .ovl-state{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--ink-3);white-space:nowrap}
+        .ovl-dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--bad)}
         .ovl-dot.on{background:var(--ok)}
-        .ovl-dot.soon{background:var(--warn)}
-        .ovl-dot.off{background:var(--bad)}
-        .ovl-status b{color:var(--ink);font-weight:600}
-        .ovl-who{display:flex;align-items:center;gap:.6rem;font-size:.84rem;color:var(--ink-3)}
-        .ovl-who span{direction:ltr}
+        .ovl-note{position:absolute;top:calc(var(--bar) - 4px);right:1.5rem;z-index:31;
+          background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink-2);
+          font-size:.8rem;padding:.5rem .85rem;border-radius:9px}
+        .ovl-who{display:flex;align-items:center;gap:.6rem;flex:none}
+        .ovl-who small{font-size:.8rem;color:var(--ink-3);direction:ltr}
+        .ovl-burger{display:none;background:none;border:1px solid var(--line);color:var(--ink-2);
+          width:40px;height:40px;border-radius:10px;cursor:pointer;place-items:center}
 
-        .ovl-burger{
-          display:none;background:none;border:1px solid var(--line);color:var(--ink-2);
-          width:38px;height:38px;border-radius:10px;cursor:pointer;place-items:center;
-        }
+        .ovl-body{flex:1;padding:1.8rem 1.5rem 3rem;width:100%;max-width:1180px;margin:0 auto}
+        .ovl-h{margin:0 0 .3rem;font-family:'29LtBukra','Cairo',sans-serif;
+          font-size:1.45rem;font-weight:700;color:var(--ink);line-height:1.5}
+        .ovl-p{margin:0 0 1.6rem;font-size:.9rem;line-height:1.85;color:var(--ink-3);max-width:64ch}
 
-        .ovl-body{flex:1;padding:1.8rem 1.6rem 4rem;width:100%;max-width:1180px}
-        .ovl-h{margin:0 0 .35rem;font-family:'Oxanium','29LtBukra',sans-serif;
-          font-size:1.3rem;font-weight:700;color:var(--ink);line-height:1.5}
-        .ovl-p{margin:0 0 1.7rem;font-size:.9rem;line-height:1.85;color:var(--ink-2);max-width:62ch}
-
-        /* ── أزرار ────────────────────────────────────────── */
-        .ovl-btn{
-          display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;
-          font-size:.88rem;font-weight:600;padding:.62rem 1.3rem;border-radius:10px;
-          border:1px solid transparent;background:var(--grape);color:#fff;
-          transition:background .2s,border-color .2s,color .2s;text-decoration:none;
-        }
+        /* ── أزرار ─────────────────────────────────────────── */
+        .ovl-btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;cursor:pointer;
+          height:40px;padding:0 1.15rem;font-size:.86rem;font-weight:600;border-radius:10px;
+          border:1px solid transparent;background:var(--grape);color:#fff;white-space:nowrap;
+          transition:background .2s,border-color .2s,color .2s;text-decoration:none}
         .ovl-btn:hover{background:var(--violet)}
         .ovl-btn:disabled{opacity:.5;cursor:not-allowed}
-        .ovl-btn.ghost{background:rgba(127,58,161,.14);border-color:var(--line);color:var(--ink)}
-        .ovl-btn.ghost:hover{background:rgba(127,58,161,.28);border-color:var(--line-2)}
-        .ovl-btn.sm{padding:.45rem .85rem;font-size:.8rem;border-radius:8px}
-        .ovl-btn.done{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.4);color:var(--ok)}
+        .ovl-btn.ghost{background:var(--panel-2);border-color:var(--line);color:var(--ink)}
+        .ovl-btn.ghost:hover{background:rgba(127,58,161,.22);border-color:var(--line-2)}
+        .ovl-btn.sm{height:34px;padding:0 .8rem;font-size:.8rem;border-radius:8px}
+        .ovl-btn.done{background:rgba(74,222,128,.14);border-color:rgba(74,222,128,.4);color:var(--ok)}
         .ovl-btn:focus-visible,.ovl-chip:focus-visible,.ovl-tab:focus-visible,
-        .ovl-nav button:focus-visible,.ovl-q:focus-visible,.ovl-link input:focus-visible{
-          outline:2px solid var(--accent);outline-offset:2px;
-        }
+        .ovl-nav button:focus-visible,.ovl-q:focus-visible,.ovl-field:focus-within{
+          outline:2px solid var(--accent);outline-offset:2px}
 
-        /* ── بطاقات ───────────────────────────────────────── */
-        .ovl-card{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+        /* ── لوحة عامة ─────────────────────────────────────── */
+        .ovl-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+        .ovl-panel-h{display:flex;align-items:center;justify-content:space-between;gap:.8rem;
+          padding:.85rem 1.1rem;border-bottom:1px solid var(--line)}
+        .ovl-panel-h h2{margin:0;font-size:.95rem;font-weight:700;color:var(--ink)}
 
-        /* شريط الجاهزية */
-        .ovl-ready{
-          display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;
-          padding:1rem 1.3rem;margin-bottom:1.8rem;
-          background:var(--panel);border:1px solid var(--line);border-radius:12px;
-        }
-        .ovl-ready-t{display:flex;align-items:center;gap:.5rem;font-size:.86rem;color:var(--ink)}
+        /* الحساب */
+        .ovl-acc{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1.1rem}
+        .ovl-acc-l{display:flex;align-items:center;gap:.85rem;min-width:0}
+        .ovl-avatar{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;
+          background:var(--panel-2);border:1px solid var(--line-2);
+          font-family:'Oxanium',sans-serif;font-size:1.2rem;font-weight:800;color:var(--accent)}
+        .ovl-acc b{display:block;color:var(--ink);font-size:.98rem;font-weight:700}
+        .ovl-acc small{display:block;font-size:.8rem;color:var(--ink-3);direction:ltr;text-align:right}
+        .ovl-sub{display:flex;align-items:center;gap:.5rem;font-size:.84rem;color:var(--ink-2)}
+        .ovl-sub b{color:var(--ink);display:inline;font-size:.84rem}
+
+        /* الخطط */
+        .ovl-sec{margin:2.2rem 0 1.1rem}
+        .ovl-sec h2{margin:0 0 .25rem;font-family:'29LtBukra','Cairo',sans-serif;font-size:1.25rem;font-weight:700;color:var(--ink)}
+        .ovl-sec p{margin:0;font-size:.86rem;color:var(--ink-3)}
+        .ovl-plans{display:grid;gap:1rem;grid-template-columns:repeat(3,minmax(0,1fr))}
+        .ovl-plan{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+          padding:1.35rem 1.25rem 1.2rem;display:flex;flex-direction:column;transition:border-color .2s}
+        .ovl-plan:hover{border-color:var(--line-2)}
+        .ovl-plan.best{border-color:var(--line-2);background:var(--panel-2)}
+        .ovl-plan-top{display:flex;justify-content:flex-start;margin-bottom:.9rem}
+        .ovl-pill{font-size:.72rem;font-weight:700;padding:.22rem .65rem;border-radius:6px;
+          background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2)}
+        .ovl-plan.best .ovl-pill{background:var(--grape);border-color:var(--grape);color:#fff}
+        .ovl-plan h3{margin:0 0 .6rem;text-align:center;font-size:1rem;font-weight:700;color:var(--ink)}
+        .ovl-price{display:flex;align-items:baseline;justify-content:center;gap:.35rem}
+        .ovl-price b{font-family:'Oxanium',sans-serif;font-size:2.25rem;font-weight:800;color:var(--ink);
+          line-height:1.1;font-variant-numeric:tabular-nums}
+        .ovl-price span{font-size:.82rem;color:var(--ink-3)}
+        .ovl-save-tag{align-self:center;margin:.55rem 0 1rem;font-size:.76rem;
+          padding:.22rem .7rem;border-radius:6px;background:var(--well);border:1px solid var(--line);color:var(--ink-2)}
+        .ovl-save-tag em{font-style:normal;color:var(--accent)}
+        .ovl-plan ul{list-style:none;margin:0 0 1.2rem;padding:1rem 0 0;border-top:1px solid var(--line);
+          display:grid;gap:.55rem;flex:1}
+        .ovl-plan li{display:flex;gap:.5rem;align-items:center;font-size:.84rem;color:var(--ink-2)}
+        .ovl-plan li svg{flex:none;color:var(--accent)}
+        .ovl-plan .ovl-btn{width:100%}
+        .ovl-trust{display:flex;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+          margin-top:1.1rem;font-size:.8rem;color:var(--ink-3)}
+        .ovl-trust span{display:inline-flex;align-items:center;gap:.35rem}
+        .ovl-trust svg{color:var(--accent)}
+
+        /* المميزات */
+        .ovl-feats{display:grid;gap:1rem;grid-template-columns:repeat(4,minmax(0,1fr))}
+        .ovl-feat{text-align:center;padding:1.3rem 1rem;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+        .ovl-hex{width:54px;height:60px;margin:0 auto .8rem;position:relative;display:grid;place-items:center;color:var(--accent)}
+        .ovl-hex::before{content:'';position:absolute;inset:0;background:var(--line-2);
+          clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+        .ovl-hex::after{content:'';position:absolute;inset:1.5px;background:var(--panel);
+          clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+        .ovl-hex svg{position:relative;z-index:1}
+        .ovl-feat b{display:block;color:var(--ink);font-size:.92rem;margin-bottom:.35rem}
+        .ovl-feat p{margin:0;font-size:.8rem;line-height:1.7;color:var(--ink-3)}
+
+        /* الجاهزية */
+        .ovl-ready{display:flex;align-items:center;gap:1.3rem;flex-wrap:wrap;
+          padding:.85rem 1.1rem;margin-bottom:1.3rem}
+        .ovl-ready-t{display:flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--ink)}
+        .ovl-ready-t svg{color:var(--accent)}
         .ovl-ready-t b{font-family:'Oxanium',sans-serif;color:var(--accent)}
         .ovl-ready ul{list-style:none;margin:0;padding:0;display:flex;gap:1.1rem;flex-wrap:wrap}
-        .ovl-ready li{display:flex;align-items:center;gap:.4rem;font-size:.83rem;color:var(--ink-3)}
+        .ovl-ready li{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:var(--ink-3)}
         .ovl-ready li.on{color:var(--ink-2)}
-        .ovl-ready li i{
-          width:15px;height:15px;border-radius:50%;border:1px solid var(--line-2);flex:none;
-          display:grid;place-items:center;font-style:normal;font-size:9px;color:transparent;
-        }
+        .ovl-ready li i{width:15px;height:15px;border-radius:50%;border:1px solid var(--line-2);flex:none;
+          display:grid;place-items:center;font-style:normal;font-size:9px;color:transparent}
         .ovl-ready li.on i{background:var(--ok);border-color:var(--ok);color:#08210f}
 
-        /* تبويبات */
-        .ovl-tabs{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1.4rem}
-        .ovl-tab{
-          display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;
-          padding:.45rem 1rem;border-radius:8px;background:rgba(127,58,161,.1);
-          border:1px solid var(--line);color:var(--ink-2);transition:background .2s,color .2s,border-color .2s;
-        }
-        .ovl-tab:hover{background:rgba(127,58,161,.24);color:var(--ink)}
-        .ovl-tab[aria-pressed="true"]{background:rgba(127,58,161,.3);border-color:var(--line-2);color:var(--ink)}
+        /* التبويبات */
+        .ovl-tabs{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1.2rem}
+        .ovl-tab{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;height:36px;
+          padding:0 .95rem;border-radius:9px;background:var(--panel);border:1px solid var(--line);
+          color:var(--ink-2);font-size:.84rem;transition:background .2s,color .2s,border-color .2s}
+        .ovl-tab:hover{background:var(--panel-2);color:var(--ink)}
+        .ovl-tab[aria-pressed="true"]{background:rgba(127,58,161,.22);border-color:var(--line-2);color:var(--ink)}
         .ovl-tab b{font-family:'Oxanium',sans-serif;font-size:.72rem;color:var(--ink-3)}
 
-        /* شبكة التركيبات */
-        .ovl-grid{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr))}
-        .ovl-o{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+        /* كروت التركيبات: عمودين */
+        .ovl-grid{display:grid;gap:1.1rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+        .ovl-o{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
           display:flex;flex-direction:column;transition:border-color .2s}
         .ovl-o:hover{border-color:var(--line-2)}
         .ovl-o-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
-          padding:.75rem .95rem;border-bottom:1px solid var(--line)}
-        .ovl-o-head h3{margin:0;font-size:.92rem;font-weight:600;color:var(--ink)}
-        .ovl-o-cat{display:inline-flex;align-items:center;gap:.3rem;font-size:.74rem;color:var(--ink-3)}
-        .ovl-prev{position:relative;aspect-ratio:16/9;background:var(--panel-2);border-bottom:1px solid var(--line)}
+          padding:.8rem 1rem;border-bottom:1px solid var(--line)}
+        .ovl-o-head h3{margin:0;display:flex;align-items:center;gap:.5rem;font-size:.95rem;font-weight:700;color:var(--ink)}
+        .ovl-o-head h3 svg{color:var(--accent)}
+        .ovl-flags{display:flex;gap:.3rem}
+        .ovl-flag{font-size:.68rem;font-weight:700;padding:.16rem .5rem;border-radius:5px;
+          background:var(--well);border:1px solid var(--line);color:var(--ink-2)}
+        .ovl-flag.free{color:#a7f3c8;border-color:rgba(74,222,128,.35)}
+        /* صف التحكم فوق المعاينة: نفس الزرار في نفس المكان في كل كارت */
+        .ovl-o-ctl{display:flex;gap:.45rem;align-items:center;padding:.7rem .8rem;border-bottom:1px solid var(--line)}
+        .ovl-o-ctl input{flex:1;min-width:0;height:34px;padding:0 .6rem;border-radius:8px;
+          background:var(--well);border:1px solid var(--line);color:var(--ink-3);
+          font-family:'Oxanium',monospace;font-size:.72rem;direction:ltr;text-align:left}
+        .ovl-o-ctl .ovl-btn{flex:none}
+        .ovl-o-ctl .ovl-btn.full{flex:1}
+        .ovl-prev{position:relative;aspect-ratio:16/9;background:#000}
         .ovl-prev iframe,.ovl-prev img{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
         .ovl-prev img{object-fit:cover}
-        .ovl-flags{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:.3rem}
-        .ovl-flag{font-family:'Oxanium',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.08em;
-          text-transform:uppercase;padding:.18rem .5rem;border-radius:5px;
-          background:rgba(12,5,22,.8);border:1px solid var(--line-2);color:var(--ink-2)}
-        .ovl-flag.new{color:#d9c6ff}
-        .ovl-flag.free{color:#a7f3c8;border-color:rgba(74,222,128,.4)}
-        /* صف التحكم فوق المعاينة: الأزرار بتبقى في نفس المكان في كل
-           الكروت مهما اختلف طول الوصف. */
-        .ovl-o-ctl{display:flex;gap:.4rem;align-items:center;padding:.7rem .8rem;
-          border-bottom:1px solid var(--line);background:var(--panel-2)}
-        .ovl-o-ctl input{flex:1;min-width:0;padding:.45rem .6rem;border-radius:7px;
-          background:var(--deep);border:1px solid var(--line);color:var(--ink-3);
-          font-family:'Oxanium',monospace;font-size:.73rem;direction:ltr;text-align:left}
-        .ovl-o-ctl .ovl-btn{flex:none}
-        .ovl-o-body{padding:.85rem .95rem 1rem;display:flex;flex-direction:column;gap:.7rem;flex:1}
-        .ovl-o-body p{margin:0;font-size:.83rem;line-height:1.7;color:var(--ink-3)}
-        .ovl-o-lock{padding:.8rem;border-bottom:1px solid var(--line);background:var(--panel-2)}
-        .ovl-o-lock .ovl-btn{width:100%;justify-content:center}
-
-        /* الأسعار */
-        .ovl-plans{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
-        .ovl-plan{background:var(--panel);border:1px solid var(--line);border-radius:12px;
-          padding:1.5rem 1.4rem;display:flex;flex-direction:column;position:relative;transition:border-color .2s}
-        .ovl-plan:hover{border-color:var(--line-2)}
-        .ovl-plan.best{border-color:var(--line-2)}
-        .ovl-tag{position:absolute;top:-10px;right:1.3rem;font-family:'Oxanium',sans-serif;
-          font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-          background:var(--grape);color:#fff;padding:.24rem .7rem;border-radius:5px}
-        .ovl-plan h3{margin:0 0 .9rem;font-size:.95rem;font-weight:600;color:var(--ink)}
-        .ovl-price{display:flex;align-items:baseline;gap:.35rem;margin-bottom:.25rem}
-        .ovl-price b{font-family:'Oxanium',sans-serif;font-size:2.1rem;font-weight:800;color:var(--ink);
-          line-height:1;font-variant-numeric:tabular-nums}
-        .ovl-price span{font-size:.84rem;color:var(--ink-3)}
-        .ovl-per{font-size:.82rem;color:var(--ink-3);margin:0 0 1.2rem}
-        .ovl-per em{font-style:normal;color:var(--accent)}
-        .ovl-plan ul{list-style:none;margin:0 0 1.4rem;padding:0;display:grid;gap:.5rem;flex:1}
-        .ovl-plan li{display:flex;gap:.5rem;align-items:flex-start;font-size:.84rem;
-          line-height:1.6;color:var(--ink-2)}
-        .ovl-plan li svg{flex:none;margin-top:.2rem;color:var(--accent)}
-        .ovl-plan .ovl-btn{width:100%;justify-content:center}
-        .ovl-pay{display:flex;gap:1rem;flex-wrap:wrap;font-size:.82rem;color:var(--ink-3);margin-top:1.6rem}
-        .ovl-pay b{color:var(--ink-2);font-weight:600}
+        .ovl-o-desc{margin:0;padding:.75rem 1rem .9rem;border-top:1px solid var(--line);
+          font-size:.82rem;line-height:1.7;color:var(--ink-3)}
 
         /* الألوان */
-        .ovl-theme{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.8fr);gap:2rem;align-items:start}
-        .ovl-chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.3rem}
-        .ovl-chip{display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;font-size:.85rem;
-          padding:.5rem .95rem;border-radius:8px;background:rgba(127,58,161,.1);
-          border:1px solid var(--line);color:var(--ink-2);transition:background .2s,color .2s,border-color .2s}
-        .ovl-chip:hover{background:rgba(127,58,161,.24);color:var(--ink)}
-        .ovl-chip[aria-pressed="true"]{background:rgba(127,58,161,.3);border-color:var(--line-2);color:var(--ink)}
+        .ovl-theme{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:1.2rem;align-items:start}
+        .ovl-theme .ovl-panel{padding:1.1rem}
+        .ovl-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin-bottom:1.1rem}
+        .ovl-chip{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;cursor:pointer;height:40px;
+          border-radius:9px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2);
+          font-size:.85rem;transition:background .2s,color .2s,border-color .2s}
+        .ovl-chip:hover{color:var(--ink);border-color:var(--line-2)}
+        .ovl-chip[aria-pressed="true"]{background:rgba(127,58,161,.22);border-color:var(--line-2);color:var(--ink)}
         .ovl-chip i{width:11px;height:11px;border-radius:3px;flex:none}
-        .ovl-screen{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;
-          border:1px solid var(--line);background:var(--panel-2)}
+        .ovl-savebar{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+        .ovl-ok{font-size:.82rem;color:var(--ok)}
+        .ovl-screen{position:relative;aspect-ratio:16/9;background:#000}
         .ovl-screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
-        .ovl-save{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
-        .ovl-ok{font-size:.83rem;color:var(--ok)}
+        .ovl-empty-screen{position:absolute;inset:0;display:grid;place-items:center;font-size:.84rem;color:var(--ink-3)}
 
-        /* خطوات */
-        .ovl-steps{counter-reset:s;display:grid;gap:.8rem}
-        .ovl-stp{counter-increment:s;display:grid;grid-template-columns:auto 1fr;gap:.9rem;
-          align-items:start;background:var(--panel);border:1px solid var(--line);
-          border-radius:12px;padding:1.1rem 1.2rem}
-        .ovl-stp::before{content:counter(s);font-family:'Oxanium',sans-serif;font-size:.8rem;font-weight:700;
-          width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
-          background:rgba(127,58,161,.25);border:1px solid var(--line-2);color:var(--accent)}
-        .ovl-stp b{display:block;color:var(--ink);font-size:.92rem;margin-bottom:.25rem;font-weight:600}
-        .ovl-stp p{margin:0;font-size:.85rem;line-height:1.75;color:var(--ink-3)}
-        .ovl-stp code{font-family:'Oxanium',monospace;font-size:.85em;direction:ltr;display:inline-block;
-          background:rgba(127,58,161,.2);color:var(--ink-2);padding:.08em .38em;border-radius:4px}
+        /* الخطوات */
+        .ovl-steps{counter-reset:s;display:grid;gap:.75rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+        .ovl-stp{counter-increment:s;display:grid;grid-template-columns:auto 1fr;gap:.85rem;align-items:start;padding:1.1rem}
+        .ovl-stp::before{content:counter(s);font-family:'Oxanium',sans-serif;font-size:.85rem;font-weight:800;
+          width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+          background:var(--panel-2);border:1px solid var(--line-2);color:var(--accent)}
+        .ovl-stp b{display:block;color:var(--ink);font-size:.92rem;margin-bottom:.3rem}
+        .ovl-stp p{margin:0;font-size:.84rem;line-height:1.75;color:var(--ink-3)}
+        .ovl-stp code{font-family:'Oxanium',monospace;font-size:.84em;direction:ltr;display:inline-block;
+          background:var(--well);border:1px solid var(--line);color:var(--ink-2);padding:0 .35em;border-radius:4px}
 
-        /* أسئلة */
-        .ovl-faq{display:grid;gap:.6rem;max-width:780px}
+        /* الأسئلة */
+        .ovl-faq{display:grid;gap:.6rem;max-width:820px}
         .ovl-qa{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
         .ovl-qa.open{border-color:var(--line-2)}
-        .ovl-q{width:100%;text-align:right;cursor:pointer;background:none;border:0;
-          padding:1rem 1.2rem;font-size:.92rem;font-weight:600;color:var(--ink);
-          display:flex;justify-content:space-between;align-items:center;gap:1rem}
-        .ovl-q i{color:var(--accent);font-style:normal;transition:transform .25s;flex:none;font-size:.8rem}
+        .ovl-q{width:100%;text-align:right;cursor:pointer;background:none;border:0;padding:1rem 1.15rem;
+          font-size:.92rem;font-weight:600;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:1rem}
+        .ovl-q i{color:var(--accent);font-style:normal;transition:transform .25s;flex:none;font-size:.75rem}
         .ovl-qa.open .ovl-q i{transform:rotate(180deg)}
-        .ovl-a{padding:0 1.2rem 1.15rem;margin:0;font-size:.87rem;line-height:1.9;color:var(--ink-3)}
+        .ovl-a{padding:0 1.15rem 1.1rem;margin:0;font-size:.86rem;line-height:1.9;color:var(--ink-3)}
 
-        /* الحساب */
-        .ovl-rows{display:grid;gap:.7rem;max-width:600px}
-        .ovl-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
-          background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem}
-        .ovl-row span{font-size:.84rem;color:var(--ink-3)}
-        .ovl-row b{color:var(--ink);font-size:.9rem;font-weight:600;direction:ltr}
+        .ovl-none{border:1px dashed var(--line-2);border-radius:14px;padding:2.6rem 1.4rem;text-align:center}
+        .ovl-none b{display:block;color:var(--ink);font-size:1rem;margin-bottom:.45rem}
+        .ovl-none p{margin:0 auto;max-width:44ch;font-size:.86rem;line-height:1.8;color:var(--ink-3)}
+        .ovl-none .ovl-btn{margin-top:1.1rem}
 
-        /* حالة فاضية */
-        .ovl-none{border:1px dashed var(--line);border-radius:12px;padding:3rem 1.5rem;text-align:center}
-        .ovl-none b{display:block;font-family:'Oxanium','29LtBukra',sans-serif;color:var(--ink);
-          font-size:1rem;margin-bottom:.5rem}
-        .ovl-none p{margin:0 auto;max-width:44ch;font-size:.87rem;line-height:1.8;color:var(--ink-3)}
+        .ovl-foot{border-top:1px solid var(--line);padding:1.3rem 1.5rem;display:flex;
+          justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.78rem;color:var(--ink-3)}
+        .ovl-foot nav{display:flex;gap:1.1rem;flex-wrap:wrap}
+        .ovl-foot a{color:var(--ink-3);text-decoration:none}
+        .ovl-foot a:hover{color:var(--ink-2)}
 
-        /* موبايل */
         .ovl-scrim{display:none}
+        @media(max-width:1100px){
+          .ovl-feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+        }
         @media(max-width:900px){
           .ovl-side{transform:translateX(100%);transition:transform .25s}
           .ovl-side.open{transform:none}
           .ovl-main{margin-right:0}
           .ovl-burger{display:grid}
           .ovl-scrim.on{display:block;position:fixed;inset:0;z-index:35;background:rgba(6,2,14,.7)}
-          .ovl-body{padding:1.4rem 1rem 3.5rem}
-          .ovl-theme{grid-template-columns:1fr}
+          .ovl-body{padding:1.3rem 1rem 2.5rem}
+          .ovl-plans,.ovl-grid,.ovl-theme,.ovl-steps{grid-template-columns:1fr}
+          .ovl-who small{display:none}
+          .ovl-bar{padding:0 1rem}
+        }
+        @media(max-width:560px){
+          .ovl-feats{grid-template-columns:1fr}
+          .ovl-field input{width:96px}
+          .ovl-state{display:none}
         }
         @media(prefers-reduced-motion:reduce){.ovl *{transition:none!important;animation:none!important}}
       `}</style>
@@ -436,86 +502,160 @@ export default function OverlayApp({
       <aside className={`ovl-side${menu ? ' open' : ''}`}>
         <div className="ovl-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.webp" alt="Tilago" width={63} height={42} />
-          <b>TILAGO OVERLAY</b>
+          <img src="/logo-mark.webp" alt="Tilago" width={39} height={26} />
+          <b>TILAGO</b>
         </div>
-
-        <nav className="ovl-nav">
+        <nav className="ovl-nav" aria-label="أقسام اللوحة">
           {NAV.map(n => (
-            <button
-              key={n.key} type="button"
-              aria-current={section === n.key}
-              onClick={() => { setSection(n.key); setMenu(false); }}
-            >
-              <n.Icon size={17} />
+            <button key={n.key} type="button" aria-current={section === n.key} onClick={() => go(n.key)}>
+              <n.Icon size={20} />
               {n.name}
-              {n.key === 'overlays' && overlays.length > 0 && (
-                <span className="ovl-badge">{overlays.length}</span>
-              )}
+              {n.key === 'overlays' && overlays.length > 0 && <span className="ovl-badge">{overlays.length}</span>}
             </button>
           ))}
         </nav>
-
         <div className="ovl-side-foot">
-          <Link href="/">الرجوع للمتجر</Link>
-          <Link href="/contact">تواصل معنا</Link>
+          <Link href="/">المتجر</Link>
+          <Link href="/contact">الدعم</Link>
         </div>
       </aside>
 
       <div className={`ovl-scrim${menu ? ' on' : ''}`} onClick={() => setMenu(false)} />
 
-      {/* ── المنطقة الرئيسية ────────────────────────────── */}
       <div className="ovl-main">
+        {/* ── الشريط العلوي ─────────────────────────────── */}
         <header className="ovl-bar">
-          <div className="ovl-status">
-            <i className={`ovl-dot ${!sub ? '' : !live ? 'off' : left !== null && left <= 7 ? 'soon' : 'on'}`} />
-            {!sub ? <span>مفيش اشتراك</span>
-              : !live ? <span>الاشتراك متوقف</span>
-              : <span><b>{PLAN_NAME[sub.plan] ?? sub.plan}</b> · فاضل {left} يوم</span>}
+          <div className="ovl-conn">
+            <label className="ovl-field">
+              <span>@</span>
+              <input value={handle} onChange={e => setHandle(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') saveHandle(); }}
+                placeholder="يوزر تيك توك" aria-label="يوزر تيك توك" spellCheck={false} />
+            </label>
+            <button type="button" className="ovl-btn ghost" onClick={saveHandle}>اتصال</button>
+            <span className="ovl-state"><i className="ovl-dot" />غير متصل</span>
           </div>
 
           <div className="ovl-who">
-            {email ? <span>{email}</span> : <Link className="ovl-btn sm ghost" href="/auth/signin?callbackUrl=/overlay">تسجيل الدخول</Link>}
+            {email
+              ? <small>{email}</small>
+              : <Link className="ovl-btn sm" href="/auth/signin?callbackUrl=/overlay"><LogIn size={14} /> دخول</Link>}
             <button type="button" className="ovl-burger" onClick={() => setMenu(m => !m)} aria-label="القائمة">
               {menu ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
+          {handleNote && <div className="ovl-note" role="status">{handleNote}</div>}
         </header>
 
         <main className="ovl-body">
+          {/* ── الرئيسية: الحساب + الخطط + المميزات ─────── */}
+          {section === 'home' && (
+            <>
+              <div className="ovl-panel">
+                <div className="ovl-panel-h"><h2>الحساب</h2></div>
+                <div className="ovl-acc">
+                  {email ? (
+                    <>
+                      <div className="ovl-acc-l">
+                        <span className="ovl-avatar">{initial}</span>
+                        <div>
+                          <b>{name || 'مستخدم Tilago'}</b>
+                          <small>{email}</small>
+                        </div>
+                      </div>
+                      <div className="ovl-sub">
+                        <i className={`ovl-dot${live ? ' on' : ''}`} />
+                        {!sub ? 'مفيش اشتراك'
+                          : live ? <span>اشتراك <b>{PLAN_NAME[sub.plan] ?? sub.plan}</b> · فاضل {left} يوم{sub.endsAt ? ` · بيخلص ${fmtDate(sub.endsAt)}` : ''}</span>
+                          : 'الاشتراك متوقف'}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="ovl-acc-l">
+                        <span className="ovl-avatar">T</span>
+                        <div>
+                          <b>سجّل دخولك</b>
+                          <small style={{ direction: 'rtl' }}>بجوجل، في ثانية</small>
+                        </div>
+                      </div>
+                      <Link className="ovl-btn" href="/auth/signin?callbackUrl=/overlay"><LogIn size={16} /> تسجيل الدخول بجوجل</Link>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="ovl-sec">
+                <h2>اختار خطتك</h2>
+                <p>اشتراك واحد فيه المكتبة كلها، من غير باقات ولا مميزات مقفولة.</p>
+              </div>
+
+              <div className="ovl-plans">
+                {PLANS.map(p => {
+                  const best = 'best' in p && p.best;
+                  return (
+                    <div key={p.key} className={`ovl-plan${best ? ' best' : ''}`}>
+                      <div className="ovl-plan-top"><span className="ovl-pill">{p.tag}</span></div>
+                      <h3>{p.name}</h3>
+                      <div className="ovl-price">
+                        <b>{p.price.toLocaleString('en-US')}</b>
+                        <span>جنيه / {p.unit}</span>
+                      </div>
+                      <span className="ovl-save-tag">الشهر بـ <em>{p.per} جنيه</em> · {p.note}</span>
+                      <ul>{PERKS.map(x => <li key={x}><Check size={14} />{x}</li>)}</ul>
+                      <Link href="/contact" className={`ovl-btn${best ? '' : ' ghost'}`}>
+                        {sub ? 'جدّد الآن' : 'اشترك الآن'}
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="ovl-trust">
+                <span><ShieldCheck size={14} /> استرجاع كامل خلال 7 أيام لو مركّبتش</span>
+                <span><Zap size={14} /> انستاباي · فودافون كاش · بايبال</span>
+              </div>
+
+              <div className="ovl-sec">
+                <h2>ليه Tilago Overlay؟</h2>
+                <p>الحاجات اللي بتفرق فعلاً وانت لايف.</p>
+              </div>
+              <div className="ovl-feats">
+                {FEATURES.map(f => (
+                  <div className="ovl-feat" key={f.t}>
+                    <span className="ovl-hex"><f.Icon size={20} /></span>
+                    <b>{f.t}</b>
+                    <p>{f.d}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           {/* ── التركيبات ─────────────────────────────── */}
           {section === 'overlays' && (
             <>
-              <h1 className="ovl-h">
-                {overlays.length > 0 ? `${overlays.length} تركيبة في مكتبتك` : 'المكتبة بتتجهّز'}
-              </h1>
+              <h1 className="ovl-h">التركيبات</h1>
               <p className="ovl-p">
-                كل تركيبة ليها رابط خاص بيك. انسخه وحطه في OBS كـ Browser Source، ودوس
-                «جرّب» قبل البث عشان تتأكد إنها بترد.
+                كل تركيبة ليها رابط خاص بيك. انسخه وحطه في OBS كـ Browser Source، ودوس «جرّب» قبل البث.
               </p>
 
-              {(sub || overlays.length > 0) && (
-                <div className="ovl-ready">
-                  <span className="ovl-ready-t">
-                    <Sparkles size={16} /> جاهزيتك <b>{doneCount}/{steps.length}</b>
-                  </span>
-                  <ul>
-                    {steps.map(s => (
-                      <li key={s.label} className={s.done ? 'on' : ''}>
-                        <i>{s.done ? '✓' : ''}</i>{s.label}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div className="ovl-panel ovl-ready">
+                <span className="ovl-ready-t"><Sparkles size={16} /> جاهزيتك <b>{doneCount}/{steps.length}</b></span>
+                <ul>
+                  {steps.map(s => (
+                    <li key={s.label} className={s.done ? 'on' : ''}><i>{s.done ? '✓' : ''}</i>{s.label}</li>
+                  ))}
+                </ul>
+              </div>
 
               {overlays.length > 0 && (
                 <div className="ovl-tabs" role="group" aria-label="تصنيفات">
-                  <button type="button" className="ovl-tab" aria-pressed={cat === 'ALL'}
-                    onClick={() => setCat('ALL')}>الكل <b>{counts.ALL}</b></button>
+                  <button type="button" className="ovl-tab" aria-pressed={cat === 'ALL'} onClick={() => setCat('ALL')}>
+                    الكل <b>{counts.ALL}</b>
+                  </button>
                   {CATS.filter(c => counts[c.key]).map(c => (
-                    <button key={c.key} type="button" className="ovl-tab"
-                      aria-pressed={cat === c.key} onClick={() => setCat(c.key)}>
+                    <button key={c.key} type="button" className="ovl-tab" aria-pressed={cat === c.key} onClick={() => setCat(c.key)}>
                       <c.Icon size={13} /> {c.name} <b>{counts[c.key]}</b>
                     </button>
                   ))}
@@ -532,57 +672,45 @@ export default function OverlayApp({
                   {shown.map(o => {
                     const catInfo = CATS.find(c => c.key === o.category);
                     const url = linkFor(o);
-                    const usable = live || o.isFree;
+                    const usable = (live || o.isFree) && Boolean(url);
                     return (
                       <article className="ovl-o" key={o.id}>
                         <div className="ovl-o-head">
-                          <h3>{o.title}</h3>
-                          {catInfo && (
-                            <span className="ovl-o-cat"><catInfo.Icon size={12} /> {catInfo.name}</span>
+                          <h3>{catInfo && <catInfo.Icon size={16} />}{o.title}</h3>
+                          <div className="ovl-flags">
+                            {isNew(o.createdAt) && <span className="ovl-flag">جديد</span>}
+                            {o.isFree && <span className="ovl-flag free">مجانية</span>}
+                          </div>
+                        </div>
+
+                        <div className="ovl-o-ctl">
+                          {usable ? (
+                            <>
+                              <button type="button" className={`ovl-btn sm${copied === o.id ? ' done' : ''}`} onClick={() => copy(url, o.id)}>
+                                {copied === o.id ? <Check size={13} /> : <Copy size={13} />}
+                                {copied === o.id ? 'اتنسخ' : 'نسخ'}
+                              </button>
+                              <input readOnly value={url} onFocus={e => e.currentTarget.select()} aria-label={`رابط ${o.title}`} />
+                              <button type="button" className={`ovl-btn sm ghost${tested === o.id ? ' done' : ''}`} onClick={() => test(o)}>
+                                <Play size={13} /> {tested === o.id ? 'ردّت' : 'جرّب'}
+                              </button>
+                            </>
+                          ) : (
+                            <button type="button" className="ovl-btn sm full" onClick={() => go('home')}>
+                              <Zap size={13} /> {email ? 'اشترك عشان تاخد الرابط' : 'سجّل دخول واشترك عشان تاخد الرابط'}
+                            </button>
                           )}
                         </div>
 
-                        {usable && url ? (
-                          <div className="ovl-o-ctl">
-                            <button type="button"
-                              className={`ovl-btn sm${copied === o.id ? ' done' : ''}`}
-                              onClick={() => copy(url, o.id)}>
-                              {copied === o.id ? <Check size={13} /> : <Copy size={13} />}
-                              {copied === o.id ? 'اتنسخ' : 'انسخ'}
-                            </button>
-                            <input readOnly value={url} onFocus={e => e.currentTarget.select()}
-                              aria-label={`رابط ${o.title}`} />
-                            <button type="button"
-                              className={`ovl-btn sm ghost${tested === o.id ? ' done' : ''}`}
-                              onClick={() => test(o)} title="جرّب التركيبة">
-                              <Play size={13} /> {tested === o.id ? 'ردّت' : 'جرّب'}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="ovl-o-lock">
-                            <button type="button" className="ovl-btn sm"
-                              onClick={() => setSection('plans')}>
-                              <Zap size={13} /> اشترك عشان تاخد الرابط
-                            </button>
-                          </div>
-                        )}
-
                         <div className="ovl-prev">
-                          <div className="ovl-flags">
-                            {isNew(o.createdAt) && <span className="ovl-flag new">جديد</span>}
-                            {o.isFree && <span className="ovl-flag free">مجانية</span>}
-                          </div>
                           {o.poster
                             // eslint-disable-next-line @next/next/no-img-element
                             ? <img src={o.poster} alt="" loading="lazy" />
-                            : <iframe
-                                ref={el => { cardFrames.current[o.id] = el; }}
+                            : <iframe ref={el => { cardFrames.current[o.id] = el; }}
                                 src={`${o.file}?demo=0`} title={o.title} loading="lazy" />}
                         </div>
 
-                        {o.description && (
-                          <div className="ovl-o-body"><p>{o.description}</p></div>
-                        )}
+                        {o.description && <p className="ovl-o-desc">{o.description}</p>}
                       </article>
                     );
                   })}
@@ -594,126 +722,61 @@ export default function OverlayApp({
           {/* ── الألوان ───────────────────────────────── */}
           {section === 'theme' && (
             <>
-              <h1 className="ovl-h">ألوانك</h1>
+              <h1 className="ovl-h">الألوان</h1>
               <p className="ovl-p">
-                اختار اللون واحفظه. الرابط اللي في OBS مابيتغيّرش، والتركيبة بتتحدّث على بثك
-                في نفس اللحظة — حتى لو غيّرته من موبايلك وانت لايف.
+                اختار اللون واحفظه. الرابط اللي في OBS مابيتغيّرش، والتركيبة بتتحدّث على بثك في نفس اللحظة.
               </p>
-
-              {!sub ? (
-                <div className="ovl-none">
-                  <b>الألوان بتيجي مع الاشتراك</b>
-                  <p>اشترك وهتقدر تلوّن كل تركيباتك وتغيّرها وقت ما تحب.</p>
-                </div>
-              ) : (
-                <div className="ovl-theme">
-                  <div>
-                    <div className="ovl-chips" role="group" aria-label="لون التركيبات">
-                      {PALETTES.map(p => (
-                        <button key={p.key} type="button" className="ovl-chip"
-                          aria-pressed={palette === p.key} onClick={() => setPalette(p.key)}>
-                          <i style={{ background: p.dot }} aria-hidden="true" />
-                          {p.name}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="ovl-save">
+              <div className="ovl-theme">
+                <div className="ovl-panel">
+                  <div className="ovl-chips" role="group" aria-label="لون التركيبات">
+                    {PALETTES.map(p => (
+                      <button key={p.key} type="button" className="ovl-chip" aria-pressed={palette === p.key} onClick={() => setPalette(p.key)}>
+                        <i style={{ background: p.dot }} aria-hidden="true" />{p.name}
+                      </button>
+                    ))}
+                  </div>
+                  {sub ? (
+                    <div className="ovl-savebar">
                       <button type="button" className="ovl-btn" onClick={saveTheme} disabled={saving}>
                         {saving ? 'بيحفظ…' : 'احفظ اللون'}
                       </button>
                       {saved && <span className="ovl-ok">اتحفظ، والتركيبات اتحدّثت</span>}
                     </div>
-                  </div>
+                  ) : (
+                    <button type="button" className="ovl-btn ghost" onClick={() => go('home')}>
+                      <Zap size={14} /> الحفظ بييجي مع الاشتراك
+                    </button>
+                  )}
+                </div>
 
+                <div className="ovl-panel" style={{ overflow: 'hidden' }}>
+                  <div className="ovl-panel-h"><h2>المعاينة</h2><span className="ovl-flag">{active.name}</span></div>
                   <div className="ovl-screen">
-                    {demo ? (
-                      <iframe ref={themeFrame}
-                        src={`${demo.file}?demo=0&label=${encodeURIComponent('أكبر داعم')}&name=${encodeURIComponent(name || 'اسمك هنا')}&value=12500`}
-                        title="معاينة ألوانك" loading="lazy" />
-                    ) : (
-                      <div style={{ display: 'grid', placeItems: 'center', height: '100%',
-                                    fontSize: '.84rem', color: 'var(--ink-3)' }}>
-                        المعاينة هتبان أول ما تنزل تركيبة
-                      </div>
-                    )}
+                    {demo
+                      ? <iframe ref={themeFrame}
+                          src={`${demo.file}?demo=0&label=${encodeURIComponent('أكبر داعم')}&name=${encodeURIComponent(name || 'اسمك هنا')}&value=12500`}
+                          title="معاينة ألوانك" loading="lazy" />
+                      : <span className="ovl-empty-screen">المعاينة هتبان أول ما تنزل تركيبة</span>}
                   </div>
                 </div>
-              )}
+              </div>
             </>
           )}
 
           {/* ── التركيب ───────────────────────────────── */}
           {section === 'install' && (
             <>
-              <h1 className="ovl-h">حطها في OBS</h1>
-              <p className="ovl-p">
-                مفيش تنصيب ولا تحذير من ويندوز. العملية بتاخد أقل من دقيقة.
-              </p>
+              <h1 className="ovl-h">التركيب في OBS</h1>
+              <p className="ovl-p">مفيش تنصيب ولا تحذير من ويندوز. العملية بتاخد أقل من دقيقة.</p>
               <div className="ovl-steps">
-                <div className="ovl-stp">
-                  <div>
-                    <b>انسخ الرابط</b>
-                    <p>من قسم التركيبات، كل واحدة ليها رابط خاص بيك وبألوانك. ضغطة واحدة وهو في الحافظة.</p>
-                  </div>
-                </div>
-                <div className="ovl-stp">
-                  <div>
-                    <b>ضيف Browser Source</b>
-                    <p>في OBS اختار <code>Sources</code> ثم <code>+</code> ثم <code>Browser</code>، والزق الرابط في خانة <code>URL</code>.</p>
-                  </div>
-                </div>
-                <div className="ovl-stp">
-                  <div>
-                    <b>حط المقاس</b>
-                    <p><code>Width 1920</code> و <code>Height 1080</code>، وبعدين <code>OK</code>. التركيبة بتظبط نفسها على أي مقاس تديهوله.</p>
-                  </div>
-                </div>
-                <div className="ovl-stp">
-                  <div>
-                    <b>جرّبها قبل البث</b>
-                    <p>ارجع لقسم التركيبات ودوس «جرّب». هتشوف التركيبة بترد على الشاشة. لو ردّت، انت جاهز.</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* ── الاشتراك ──────────────────────────────── */}
-          {section === 'plans' && (
-            <>
-              <h1 className="ovl-h">اشتراك واحد، المكتبة كلها</h1>
-              <p className="ovl-p">
-                مفيش باقات ولا مميزات مقفولة. أي تركيبة في المكتبة دلوقتي وأي واحدة هتنزل بعد كده،
-                اشتراكك بياخدها.
-              </p>
-
-              <div className="ovl-plans">
-                {PLANS.map(p => (
-                  <div key={p.key} className={`ovl-plan${'best' in p && p.best ? ' best' : ''}`}>
-                    {'best' in p && p.best && <span className="ovl-tag">الأوفر</span>}
-                    <h3>{p.name}</h3>
-                    <div className="ovl-price">
-                      <b>{p.price.toLocaleString('en-US')}</b><span>جنيه</span>
-                    </div>
-                    <p className="ovl-per">يطلع الشهر بـ <em>{p.per} جنيه</em>. {p.note}</p>
-                    <ul>
-                      <li><Check size={14} />كل التركيبات في المكتبة</li>
-                      <li><Check size={14} />الجديد أول ما ينزل</li>
-                      <li><Check size={14} />ألوانك على كل تركيبة</li>
-                      <li><Check size={14} />تغيير اللون وانت لايف</li>
-                      <li><Check size={14} />دعم لما تحتاجه</li>
-                    </ul>
-                    <Link href="/contact" className={`ovl-btn${'best' in p && p.best ? '' : ' ghost'}`}>
-                      {sub ? 'جدّد' : 'اشترك'}
-                    </Link>
-                  </div>
-                ))}
-              </div>
-
-              <div className="ovl-pay">
-                <span><b>الدفع:</b> انستاباي وفودافون كاش وبايبال</span>
-                <span>فيزا وميزا قريباً</span>
-                <span><ShieldCheck size={13} style={{ verticalAlign: '-2px' }} /> <b>استرجاع كامل</b> خلال 7 أيام لو مركّبتش</span>
+                <div className="ovl-panel ovl-stp"><div><b>انسخ الرابط</b>
+                  <p>من قسم التركيبات، كل واحدة ليها رابط خاص بيك وبألوانك. ضغطة واحدة وهو في الحافظة.</p></div></div>
+                <div className="ovl-panel ovl-stp"><div><b>ضيف Browser Source</b>
+                  <p>في OBS اختار <code>Sources</code> ثم <code>+</code> ثم <code>Browser</code>، والزق الرابط في <code>URL</code>.</p></div></div>
+                <div className="ovl-panel ovl-stp"><div><b>حط المقاس</b>
+                  <p><code>Width 1920</code> و <code>Height 1080</code> ثم <code>OK</code>. التركيبة بتظبط نفسها على أي مقاس.</p></div></div>
+                <div className="ovl-panel ovl-stp"><div><b>جرّبها قبل البث</b>
+                  <p>ارجع لقسم التركيبات ودوس «جرّب». لو التركيبة ردّت على الشاشة، انت جاهز.</p></div></div>
               </div>
             </>
           )}
@@ -721,13 +784,12 @@ export default function OverlayApp({
           {/* ── مساعدة ────────────────────────────────── */}
           {section === 'help' && (
             <>
-              <h1 className="ovl-h">اللي بيتسأل كتير</h1>
+              <h1 className="ovl-h">مساعدة</h1>
               <p className="ovl-p">لو سؤالك مش هنا، ابعتلنا وهنرد عليك.</p>
               <div className="ovl-faq">
                 {FAQ.map((f, i) => (
                   <div className={`ovl-qa${openFaq === i ? ' open' : ''}`} key={f.q}>
-                    <button type="button" className="ovl-q" aria-expanded={openFaq === i}
-                      onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                    <button type="button" className="ovl-q" aria-expanded={openFaq === i} onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                       {f.q}<i>▾</i>
                     </button>
                     {openFaq === i && <p className="ovl-a">{f.a}</p>}
@@ -736,44 +798,16 @@ export default function OverlayApp({
               </div>
             </>
           )}
-
-          {/* ── الحساب ────────────────────────────────── */}
-          {section === 'account' && (
-            <>
-              <h1 className="ovl-h">حسابك</h1>
-              <p className="ovl-p">بيانات اشتراكك وحالته.</p>
-
-              {!email ? (
-                <div className="ovl-none">
-                  <b>مش مسجّل دخول</b>
-                  <p>سجّل دخولك بجوجل عشان تشوف اشتراكك وروابطك.</p>
-                  <Link className="ovl-btn" href="/auth/signin?callbackUrl=/overlay"
-                    style={{ marginTop: '1.2rem' }}>تسجيل الدخول بجوجل</Link>
-                </div>
-              ) : (
-                <div className="ovl-rows">
-                  <div className="ovl-row">
-                    <span>الإيميل</span><b>{email}</b>
-                  </div>
-                  {name && <div className="ovl-row"><span>الاسم</span><b>{name}</b></div>}
-                  <div className="ovl-row">
-                    <span>الاشتراك</span>
-                    <b>{!sub ? 'مفيش' : `${PLAN_NAME[sub.plan] ?? sub.plan}${live ? '' : ' (متوقف)'}`}</b>
-                  </div>
-                  {sub?.endsAt && (
-                    <div className="ovl-row">
-                      <span>بيخلص في</span>
-                      <b><Clock size={13} style={{ verticalAlign: '-2px' }} /> {fmtDate(sub.endsAt)}</b>
-                    </div>
-                  )}
-                  {live && left !== null && (
-                    <div className="ovl-row"><span>الأيام الفاضلة</span><b>{left} يوم</b></div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
         </main>
+
+        <footer className="ovl-foot">
+          <span>Tilago Overlay · مصمّمة لصنّاع البث على تيك توك</span>
+          <nav>
+            <button type="button" onClick={() => go('help')} style={{ background: 'none', border: 0, color: 'inherit', cursor: 'pointer', padding: 0, font: 'inherit' }}>الأسئلة الشائعة</button>
+            <Link href="/contact">تواصل معنا</Link>
+            <Link href="/">المتجر</Link>
+          </nav>
+        </footer>
       </div>
     </div>
   );
