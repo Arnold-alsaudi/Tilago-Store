@@ -22,9 +22,6 @@ const METHOD_LABEL: Record<string, string> = {
   paymob: 'بايموب (كارت/ميزة)',
   PayPal: 'باي بال',
   paypal: 'باي بال',
-  InstaPay: 'إنستاباي',
-  'Vodafone Cash': 'فودافون كاش',
-  Fawry: 'فوري',
   stripe: 'سترايب',
 };
 const methodLabel = (m: string) => METHOD_LABEL[m] ?? m;

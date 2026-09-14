@@ -314,6 +314,7 @@ export default function AlertsPage() {
         .al-cta:hover { transform:translateY(-2px); box-shadow:0 6px 22px rgba(84,22,181,0.45); }
         @media(max-width:768px) {
           .al-hero { flex-direction:column; text-align:center; }
+          .al-hero-video { order:-1; }
         }
 
         /* ── Carousel ── */
@@ -777,7 +778,7 @@ export default function AlertsPage() {
         /* Mobile landscape + large phones */
         @media(max-width:768px){
           .al-hero { flex-direction:column; text-align:center; padding:2rem 5%; gap:1.5rem; }
-          .al-hero-video { min-width:unset; max-width:100%; }
+          .al-hero-video { min-width:unset; max-width:100%; order:-1; }
           .al-hero-content { min-width:unset; max-width:100%; padding:.5rem; }
           .al-hero-content h2 { font-size:1.6rem; }
           .al-hero-content p { font-size:.9rem; margin-bottom:1.5rem; }
@@ -827,16 +828,18 @@ export default function AlertsPage() {
 
         {/* ── Hero ── */}
         {!activeCat && (
+          /* الكلام قبل الفيديو في الكود: الصفحة RTL فأول عنصر بيقف يمين،
+             والكلام عربي فمكانه الطبيعي يمين والفيديو شمال */
           <section className="al-hero">
-            <div className="al-hero-video">
-              <video autoPlay muted loop playsInline>
-                <source src="https://res.cloudinary.com/zazon8ja/video/upload/v1788311341/tilago.mp4" type="video/mp4" />
-              </video>
-            </div>
             <div className="al-hero-content">
               <h2>أفضل Alerts احترافية من Tilago</h2>
               <p>اليرتات جاهزة ومصممة باحترافية لقنوات البث المباشر، تزيد من تفاعل المشاهدين وتجعل شكل قناتك أكثر احترافية.</p>
               <a href="#products" className="al-cta">تصفح الآن</a>
+            </div>
+            <div className="al-hero-video">
+              <video autoPlay muted loop playsInline>
+                <source src="https://res.cloudinary.com/zazon8ja/video/upload/v1788311341/tilago.mp4" type="video/mp4" />
+              </video>
             </div>
           </section>
         )}

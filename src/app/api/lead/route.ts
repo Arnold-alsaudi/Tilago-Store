@@ -17,7 +17,8 @@ const leadSchema = z.object({
   name:   z.string().trim().min(1).max(120),
   amount: z.number().positive().max(100_000),
   phone:  z.string().trim().min(8).max(20),
-  method: z.enum(['PayPal', 'InstaPay', 'Vodafone Cash', 'Fawry']).optional(),
+  // الدفع اليدوي PayPal بس — الكروت والميزة عن طريق بايموب
+  method: z.enum(['PayPal']).optional(),
   // أسطر الطلب — منها بنجيب الاسم والكود من الداتابيز بدل ما نثق في نص العميل
   items:  z.array(z.object({
     productId: z.string().min(1).max(200),

@@ -21,7 +21,7 @@ export interface AdminSub {
 
 interface PendingPay {
   id: string; userEmail: string; userName: string | null;
-  amount: number; method: string; createdAt: string;
+  amount: number; method: string; createdAt: string; plan: string | null;
 }
 
 const PLANS = [
@@ -62,8 +62,9 @@ export default function SubscriptionsClient({
     return { live: live.length, soon: soon.length, income };
   }, [list]);
 
-  function startFor(e?: string) {
-    setEmail(e ?? ''); setPlan('y'); setError(null); setOpen(true);
+  /* الخطة بتتختار لوحدها من الطلب نفسه — مش محتاج تفتكر العميل دفع أنهي */
+  function startFor(e?: string, p?: string | null) {
+    setEmail(e ?? ''); setPlan(p ?? 'y'); setError(null); setOpen(true);
   }
 
   async function activate() {
@@ -276,24 +277,24 @@ export default function SubscriptionsClient({
         {/* التحويلات المستنية — دي اللي البوت بيقولك عليها */}
         {pending.length > 0 && (
           <div className="sb-pend">
-            <h2><Inbox size={17} /> تحويلات مستنية تأكيد</h2>
-            <p>البوت بعتلك دول. أكّد التحويل الأول، وبعدين فعّل الاشتراك.</p>
+            <h2><Inbox size={17} /> اشتراكات PayPal مستنية تأكيد</h2>
+            <p>البوت بعتلك دول. اتأكد إن الفلوس وصلت على PayPal الأول، وبعدين فعّل. دفعات الكارت بتتفعّل لوحدها.</p>
             {pending.map(p => (
               <div className="sb-pay" key={p.id}>
                 <div className="sb-pay-l">
                   <b>{p.userName || p.userEmail}</b>
                   <span>
-                    <em>{p.amount.toLocaleString('en-US')}</em> جنيه · {p.method} ·{' '}
+                    <em>{p.amount.toLocaleString('en-US')}</em> جنيه · {planOf(p.plan ?? '')?.label ?? '—'} · {p.method} ·{' '}
                     {new Date(p.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' })}
                   </span>
                 </div>
-                {linked.has(p.userEmail)
-                  ? <span className="sb-done"><Check size={13} /> عنده اشتراك</span>
-                  : (
-                    <button type="button" className="sb-mini" onClick={() => startFor(p.userEmail)}>
-                      <Play size={12} /> فعّل
-                    </button>
-                  )}
+                {/* اللي عنده اشتراك وبعت دفعة جديدة بيجدّد — كان الزرار بيختفي
+                    عنده فمكانش فيه طريقة تجدّدله من هنا */}
+                <button type="button" className="sb-mini" onClick={() => startFor(p.userEmail, p.plan)}>
+                  {linked.has(p.userEmail)
+                    ? <><RefreshCw size={12} /> جدّد</>
+                    : <><Play size={12} /> فعّل</>}
+                </button>
               </div>
             ))}
           </div>

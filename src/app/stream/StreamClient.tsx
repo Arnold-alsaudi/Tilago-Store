@@ -100,6 +100,8 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
         .sp-hero-cta:hover i { transform:translateX(-4px); }
         @media(max-width:768px){
           .sp-hero { flex-direction:column; text-align:center; }
+          /* على الموبايل الفيديو يفضل فوق زي ما كان */
+          .sp-hero-video { order:-1; }
           .sp-hero-tag { margin-inline:auto; }
           .sp-hero-divider { margin-inline:auto; }
           .sp-hero-cta { margin-inline:auto; }
@@ -407,18 +409,20 @@ export default function StreamClient({ packages }: { packages: StreamPkg[] }) {
       `}</style>
 
       {/* Hero */}
+      {/* الكلام قبل الفيديو في الكود: الصفحة RTL فأول عنصر بيقف يمين،
+          والكلام عربي فمكانه الطبيعي يمين والفيديو شمال */}
       <section className="sp-hero">
-        <div className="sp-hero-video">
-          <video autoPlay muted loop playsInline>
-            <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4" type="video/mp4"/>
-          </video>
-        </div>
         <div className="sp-hero-content">
           <div className="sp-hero-tag"><i className="fas fa-layer-group"/> Stream Packages</div>
           <h2>أفضل باكدجات <span>ستريم</span> من Tilago</h2>
           <div className="sp-hero-divider"/>
           <p>باكدجات جاهزة ومصممة باحترافية لقنوات البث المباشر — أوفرلاي، يرتات، شاشات بدء وإنهاء، وأكثر. كل شيء مخصص لك.</p>
           <a href="#packages" className="sp-hero-cta">تصفح الآن <i className="fas fa-arrow-left"/></a>
+        </div>
+        <div className="sp-hero-video">
+          <video autoPlay muted loop playsInline>
+            <source src="https://res.cloudinary.com/v6vo90hw/video/upload/v1784782950/tilago/tilago.mp4" type="video/mp4"/>
+          </video>
         </div>
       </section>
 

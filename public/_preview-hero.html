@@ -1,0 +1,205 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مقارنة المقدمة</title>
+<style>
+/* خطوط الموقع الحقيقية — نفس الملفات اللي في globals.css */
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-semibold.ttf') format('truetype');font-weight:600;font-display:swap}
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-bold.ttf') format('truetype');font-weight:700;font-display:swap}
+@font-face{font-family:'Oxanium';src:url('/fonts/oxanium-bold.ttf') format('truetype');font-weight:700;font-display:swap}
+@font-face{font-family:'Oxanium';src:url('/fonts/oxanium-extrabold.ttf') format('truetype');font-weight:800;font-display:swap}
+
+:root{
+  --deep:#0C0516; --navy:#0F083B; --grape:#5416B5; --violet:#7F3AA1;
+  --ink:#e8e4f8; --ink-2:#a09abf; --ink-3:#7d76a0; --accent:#9B59D0;
+  --line:rgba(84,22,181,0.2);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--deep);color:var(--ink-2);
+  font-family:'Cairo',system-ui,sans-serif;
+  direction:rtl;overflow-x:hidden;
+}
+
+/* شريط المقارنة */
+.bar{
+  position:sticky;top:0;z-index:50;
+  display:flex;gap:.6rem;align-items:center;justify-content:center;
+  padding:.8rem;background:rgba(8,3,18,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.bar button{
+  font-family:'Cairo',sans-serif;font-size:.9rem;cursor:pointer;
+  padding:.5rem 1.3rem;border-radius:50px;
+  background:rgba(84,22,181,.16);border:1px solid var(--line);color:var(--ink-2);
+  transition:all .22s;
+}
+.bar button[aria-pressed="true"]{background:rgba(84,22,181,.4);color:#fff;border-color:rgba(84,22,181,.55)}
+.bar span{font-size:.78rem;color:var(--ink-3);margin-inline-start:.6rem}
+
+.view{display:none}
+.view.on{display:block}
+
+.cta{
+  display:inline-block;padding:.9rem 2.2rem;
+  background:linear-gradient(135deg,var(--grape),var(--violet));
+  color:#fff;font-weight:600;font-size:1rem;border:none;border-radius:50px;
+  box-shadow:0 4px 14px rgba(0,0,0,.45);
+  text-decoration:none;font-family:'Oxanium',sans-serif;
+  text-transform:uppercase;letter-spacing:1px;transition:all .3s;cursor:pointer;
+}
+.cta:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.55)}
+.cta.ghost{background:rgba(84,22,181,.18);border:1px solid var(--line);box-shadow:none;color:var(--ink)}
+
+.kicker{
+  font-family:'Oxanium',sans-serif;font-size:.74rem;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--accent);
+  display:block;margin-bottom:.7rem;
+}
+h1{
+  font-family:'Oxanium','Cairo',sans-serif;font-weight:800;
+  color:var(--ink);line-height:1.18;text-wrap:balance;
+}
+h1 b{
+  font-weight:800;
+  background:linear-gradient(135deg,#c98bff,var(--violet));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* ══════════ الحالي ══════════ */
+.a-hero{
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
+  gap:3.5rem;align-items:center;padding:4.5rem 5% 5rem;
+  background:linear-gradient(var(--navy),var(--deep));
+  border-bottom:1px solid var(--line);
+}
+.a-hero h1{font-size:clamp(2.1rem,5.2vw,3.5rem);margin-bottom:1.1rem}
+.a-hero p{font-size:1.06rem;line-height:1.9;margin-bottom:1.9rem;max-width:46ch}
+.a-screen{
+  position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/9;
+  border:1px solid rgba(155,89,208,.28);
+  box-shadow:0 24px 60px rgba(0,0,0,.65);
+  background:linear-gradient(160deg,#150c2b,#0a0418);
+}
+.a-screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* ══════════ المقترح ══════════ */
+/* التركيبة نفسها هي البانر: شريط بعرض الصفحة، والفراغ الفاضي
+   فوق وتحت اللوحة (44% من الكادر) متقصوص فتملى الإطار. */
+.b-hero{
+  padding:2.6rem 0 4.5rem;
+  background:linear-gradient(var(--navy),var(--deep));
+  border-bottom:1px solid var(--line);
+  text-align:center;
+}
+.b-band{
+  position:relative;width:min(96%,1500px);margin:0 auto 2.6rem;
+  aspect-ratio:1735/628;          /* نسبة اللوحة نفسها، مش 16:9 */
+  overflow:hidden;border-radius:18px;
+  border:1px solid rgba(155,89,208,.22);
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+  background:linear-gradient(160deg,#150c2b,#0a0418);
+}
+/* الإطار أكبر من الحاوية ومزاح لفوق، فالجزء الفاضي بيتقص */
+.b-band iframe{
+  position:absolute;border:0;display:block;
+  width:110.7%;left:-5.35%;
+  height:172%;top:-39.8%;
+}
+.b-live{
+  position:absolute;top:14px;right:16px;z-index:2;
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:'Oxanium',sans-serif;font-size:.7rem;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:#fff;
+  background:rgba(12,5,22,.62);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.16);padding:.32rem .7rem;border-radius:50px;
+}
+.b-live i{width:7px;height:7px;border-radius:50%;background:#f43f5e;animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+.b-copy{width:min(92%,760px);margin:0 auto}
+.b-hero h1{font-size:clamp(2.2rem,5.6vw,3.6rem);margin-bottom:1rem}
+.b-hero p{font-size:1.06rem;line-height:1.9;margin:0 auto 1.9rem;max-width:52ch}
+.b-btns{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
+
+.facts{
+  display:flex;gap:2.4rem;flex-wrap:wrap;justify-content:center;
+  margin-top:2.6rem;padding-top:1.7rem;border-top:1px solid var(--line);
+  width:min(92%,760px);margin-inline:auto;
+}
+.a-hero .facts{justify-content:flex-start;width:auto;margin-inline:0}
+.fact b{font-family:'Oxanium',sans-serif;font-size:1.5rem;font-weight:800;color:var(--accent);display:block;line-height:1.2}
+.fact span{font-size:.82rem;color:var(--ink-3)}
+
+@media(max-width:980px){
+  .a-hero{grid-template-columns:1fr;gap:2.4rem}
+  .b-band{aspect-ratio:1735/760}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="bar">
+  <button type="button" id="btnA" aria-pressed="false">الحالي</button>
+  <button type="button" id="btnB" aria-pressed="true">المقترح</button>
+  <span>معاينة للمقارنة، مش مطبّقة على الموقع</span>
+</div>
+
+<!-- ═══ الحالي ═══ -->
+<section class="view" id="viewA">
+  <div class="a-hero">
+    <div>
+      <span class="kicker">Tilago Overlay</span>
+      <h1>شاشتك <b>بترد</b> على جمهورك</h1>
+      <p>تركيبات بث بتتحرك مع كل هدية ومتابع وتحدي. رابط واحد تحطه في OBS، بألوانك وشعارك، وتركيبات جديدة كل أسبوع.</p>
+      <div class="b-btns" style="justify-content:flex-start">
+        <a href="#" class="cta">ابدأ الاشتراك</a>
+        <a href="#" class="cta ghost">جرّب بألوانك</a>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>200</b><span>جنيه في الشهر مع الخطة السنوية</span></div>
+        <div class="fact"><b>60</b><span>ثانية والتركيبة على بثك</span></div>
+        <div class="fact"><b>0</b><span>برامج تنزّلها على جهازك</span></div>
+      </div>
+    </div>
+    <div class="a-screen">
+      <iframe src="/overlays/qatar-plate.html" title="معاينة"></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ المقترح ═══ -->
+<section class="view on" id="viewB">
+  <div class="b-hero">
+    <div class="b-band">
+      <span class="b-live"><i></i>مباشر</span>
+      <iframe src="/overlays/qatar-plate.html" title="معاينة حيّة"></iframe>
+    </div>
+    <div class="b-copy">
+      <span class="kicker">Tilago Overlay</span>
+      <h1>شاشتك <b>بترد</b> على جمهورك</h1>
+      <p>تركيبات بث بتتحرك مع كل هدية ومتابع وتحدي. رابط واحد تحطه في OBS، بألوانك وشعارك، وتركيبات جديدة كل أسبوع.</p>
+      <div class="b-btns">
+        <a href="#" class="cta">ابدأ الاشتراك</a>
+        <a href="#" class="cta ghost">جرّب بألوانك</a>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>200</b><span>جنيه في الشهر مع الخطة السنوية</span></div>
+        <div class="fact"><b>60</b><span>ثانية والتركيبة على بثك</span></div>
+        <div class="fact"><b>0</b><span>برامج تنزّلها على جهازك</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  var a = document.getElementById('viewA'), b = document.getElementById('viewB');
+  var ba = document.getElementById('btnA'), bb = document.getElementById('btnB');
+  function show(which) {
+    a.classList.toggle('on', which === 'a');
+    b.classList.toggle('on', which === 'b');
+    ba.setAttribute('aria-pressed', which === 'a');
+    bb.setAttribute('aria-pressed', which === 'b');
+  }
+  ba.onclick = function () { show('a'); };
+  bb.onclick = function () { show('b'); };
+</script>

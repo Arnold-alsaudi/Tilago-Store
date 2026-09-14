@@ -6,7 +6,7 @@ import {
   Home, Layers, Palette, MonitorPlay, HelpCircle,
   Copy, Check, Play, Gift, Trophy, Target, Frame, Menu, X,
   Sparkles, ShieldCheck, Zap, LogIn, Link2, RefreshCw, Smartphone,
-  Wand2, Clock, Headphones,
+  Wand2, Clock, Headphones, CreditCard,
 } from 'lucide-react';
 
 export type OverlayCategory = 'SUPPORTERS' | 'CHALLENGES' | 'GOALS' | 'DECOR';
@@ -66,7 +66,7 @@ const FEATURES = [
   { Icon: Wand2,       t: 'تصميمات حصرية',       d: 'كل تركيبة مصمّمة عندنا من الصفر، مش قوالب متكررة.' },
   { Icon: RefreshCw,   t: 'مكتبة بتكبر',          d: 'تركيبات جديدة كل أسبوع، وبتوصلك من غير أي دفع زيادة.' },
   { Icon: ShieldCheck, t: 'مفيش مربع أبيض',      d: 'لو اشتراكك خلص وانت لايف، التركيبة بتختفي بهدوء قدام جمهورك.' },
-  { Icon: Clock,       t: 'دفع مصري',            d: 'انستاباي وفودافون كاش وبايبال، وفيزا وميزا قريباً.' },
+  { Icon: Clock,       t: 'دفع آمن',             d: 'فيزا وميزا عن طريق بايموب، أو بايبال.' },
   { Icon: Headphones,  t: 'دعم حقيقي',           d: 'لو وقفت في أي خطوة، فيه حد يرد عليك مش رد آلي.' },
 ];
 
@@ -141,6 +141,57 @@ export default function OverlayApp({
       setHandleNote('اتحفظ. الربط الحي هيشتغل أول ما خدمة الأحداث تتفعّل');
     }
     setTimeout(() => setHandleNote(null), 4200);
+  }
+
+  /* ── الدفع ──────────────────────────────────────────────────
+     الكارت (بايموب) بيفعّل لوحده بعد الدفع. PayPal بيوصلك على البوت
+     وانت بتفعّل من الأدمن بعد ما تتأكد إن الفلوس وصلت. */
+  const [checkout, setCheckout] = useState<(typeof PLANS)[number] | null>(null);
+  const [phone, setPhone] = useState('');
+  const [paying, setPaying] = useState<'paymob' | 'PayPal' | null>(null);
+  const [payError, setPayError] = useState<string | null>(null);
+  const [paidBanner, setPaidBanner] = useState(false);
+
+  useEffect(() => {
+    // الرجوع من صفحة بايموب — الويبهوك ممكن ياخد ثواني يفعّل
+    if (new URLSearchParams(window.location.search).get('payment') === 'success') setPaidBanner(true);
+  }, []);
+
+  function openCheckout(p: (typeof PLANS)[number]) {
+    setCheckout(p); setPayError(null); setPaying(null);
+  }
+
+  async function pay(method: 'paymob' | 'PayPal') {
+    if (!checkout) return;
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 8 || digits.length > 15) {
+      setPayError('اكتب رقم موبايل صحيح عشان نقدر نتواصل معاك');
+      return;
+    }
+    setPaying(method); setPayError(null);
+    try {
+      const res = await fetch('/api/overlay/subscribe', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ plan: checkout.key, method, phone: digits }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setPayError(data.error ?? 'حصل خطأ، جرّب تاني'); setPaying(null); return; }
+
+      if (method === 'paymob') { window.location.href = data.url; return; }
+
+      // PayPal مابيدعمش الجنيه — نحوّل بسعر الدولار الحيّ زي سلة المتجر
+      let egpPerUsd = 50;
+      try {
+        const r = await fetch('/api/fx');
+        const d = await r.json();
+        if (d?.egpPerUsd > 0) egpPerUsd = d.egpPerUsd;
+      } catch {}
+      const usd = Math.max(1, checkout.price / egpPerUsd).toFixed(2);
+      const handleName = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
+      window.location.href = `https://www.paypal.me/${handleName}/${usd}USD`;
+    } catch {
+      setPayError('مفيش اتصال، جرّب تاني'); setPaying(null);
+    }
   }
 
   const initialPalette = useMemo(() => {
@@ -475,6 +526,51 @@ export default function OverlayApp({
         .ovl-foot a{color:var(--ink-3);text-decoration:none}
         .ovl-foot a:hover{color:var(--ink-2)}
 
+        /* نافذة الدفع */
+        .ovl-modal-back{position:fixed;inset:0;z-index:80;background:rgba(6,2,14,.8);backdrop-filter:blur(6px);
+          display:grid;place-items:center;padding:1rem;overflow-y:auto}
+        .ovl-modal{width:min(100%,460px);background:var(--panel);border:1px solid var(--line-2);border-radius:16px;overflow:hidden}
+        .ovl-modal-h{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--line)}
+        .ovl-modal-h h2{margin:0;font-size:1.02rem;font-weight:700;color:var(--ink)}
+        .ovl-x{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;cursor:pointer;
+          background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2)}
+        .ovl-x:hover{color:var(--ink);border-color:var(--line-2)}
+        .ovl-co-sum{display:flex;align-items:baseline;justify-content:space-between;padding:1rem 1.2rem;
+          background:var(--well);border-bottom:1px solid var(--line)}
+        .ovl-co-sum span{font-size:.84rem;color:var(--ink-3)}
+        .ovl-co-sum b{font-family:'Oxanium',sans-serif;font-size:1.6rem;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+        .ovl-co-sum small{font-family:'Cairo',sans-serif;font-size:.8rem;font-weight:400;color:var(--ink-3)}
+        .ovl-co-login{padding:1.2rem;text-align:center}
+        .ovl-co-login p{margin:0 0 1rem;font-size:.87rem;line-height:1.8;color:var(--ink-2)}
+        .ovl-co-field{display:block;padding:1.1rem 1.2rem .4rem}
+        .ovl-co-field span{display:block;font-size:.8rem;color:var(--ink-2);margin-bottom:.4rem}
+        .ovl-co-field input{width:100%;height:42px;padding:0 .8rem;border-radius:10px;background:var(--well);
+          border:1px solid var(--line);color:var(--ink);font-family:'Oxanium',sans-serif;font-size:.95rem;direction:ltr;text-align:left;outline:0}
+        .ovl-co-field input:focus{border-color:var(--line-2)}
+        .ovl-co-err{margin:.5rem 1.2rem 0;padding:.55rem .8rem;border-radius:9px;font-size:.82rem;
+          background:rgba(240,98,119,.1);border:1px solid rgba(240,98,119,.4);color:#ffd4db}
+        .ovl-co-methods{display:grid;gap:.6rem;padding:.9rem 1.2rem}
+        .ovl-co-m{display:flex;align-items:center;gap:.8rem;width:100%;text-align:right;cursor:pointer;
+          padding:.85rem .95rem;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+          transition:border-color .2s,background .2s}
+        .ovl-co-m:hover:not(:disabled){border-color:var(--line-2);background:rgba(127,58,161,.16)}
+        .ovl-co-m:disabled{opacity:.6;cursor:wait}
+        .ovl-co-m svg{flex:none;color:var(--accent)}
+        .ovl-co-m b{display:block;font-size:.92rem}
+        .ovl-co-m small{display:block;font-size:.76rem;color:var(--ink-3);margin-top:.1rem}
+        .ovl-pp{flex:none;width:20px;height:20px;border-radius:5px;display:grid;place-items:center;
+          font-family:'Oxanium',sans-serif;font-weight:800;font-size:.8rem;background:var(--grape);color:#fff}
+        .ovl-co-m:focus-visible,.ovl-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+        .ovl-co-note{display:flex;align-items:center;justify-content:center;gap:.35rem;margin:0;
+          padding:.2rem 1.2rem 1.1rem;font-size:.78rem;color:var(--ink-3)}
+        .ovl-co-note svg{color:var(--accent)}
+        .ovl-paid{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:70;
+          display:flex;align-items:center;gap:.6rem;max-width:calc(100% - 2rem);
+          background:var(--panel-2);border:1px solid rgba(74,222,128,.45);color:var(--ink);
+          padding:.65rem .8rem .65rem 1rem;border-radius:12px;font-size:.86rem}
+        .ovl-paid > svg{color:var(--ok);flex:none}
+        .ovl-paid button{background:none;border:0;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
+
         .ovl-scrim{display:none}
         @media(max-width:1100px){
           .ovl-feats{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -603,9 +699,9 @@ export default function OverlayApp({
                       </div>
                       <span className="ovl-save-tag">الشهر بـ <em>{p.per} جنيه</em> · {p.note}</span>
                       <ul>{PERKS.map(x => <li key={x}><Check size={14} />{x}</li>)}</ul>
-                      <Link href="/contact" className={`ovl-btn${best ? '' : ' ghost'}`}>
+                      <button type="button" className={`ovl-btn${best ? '' : ' ghost'}`} onClick={() => openCheckout(p)}>
                         {sub ? 'جدّد الآن' : 'اشترك الآن'}
-                      </Link>
+                      </button>
                     </div>
                   );
                 })}
@@ -613,7 +709,7 @@ export default function OverlayApp({
 
               <div className="ovl-trust">
                 <span><ShieldCheck size={14} /> استرجاع كامل خلال 7 أيام لو مركّبتش</span>
-                <span><Zap size={14} /> انستاباي · فودافون كاش · بايبال</span>
+                <span><Zap size={14} /> فيزا · ميزا · بايبال</span>
               </div>
 
               <div className="ovl-sec">
@@ -799,6 +895,62 @@ export default function OverlayApp({
             </>
           )}
         </main>
+
+        {paidBanner && (
+          <div className="ovl-paid" role="status">
+            <Check size={16} />
+            {live
+              ? 'الدفع تم واشتراكك شغّال. روابطك في قسم التركيبات.'
+              : 'الدفع وصل. الاشتراك بيتفعّل خلال ثواني، ولو مظهرش حدّث الصفحة.'}
+            <button type="button" onClick={() => setPaidBanner(false)} aria-label="إغلاق"><X size={14} /></button>
+          </div>
+        )}
+
+        {checkout && (
+          <div className="ovl-modal-back" onClick={e => { if (e.target === e.currentTarget && !paying) setCheckout(null); }}>
+            <div className="ovl-modal" role="dialog" aria-modal="true" aria-labelledby="ovl-co-title">
+              <div className="ovl-modal-h">
+                <h2 id="ovl-co-title">{checkout.name}</h2>
+                <button type="button" className="ovl-x" onClick={() => setCheckout(null)} disabled={Boolean(paying)} aria-label="إغلاق"><X size={16} /></button>
+              </div>
+
+              <div className="ovl-co-sum">
+                <span>المبلغ</span>
+                <b>{checkout.price.toLocaleString('en-US')} <small>جنيه</small></b>
+              </div>
+
+              {!email ? (
+                <div className="ovl-co-login">
+                  <p>الاشتراك بيتربط بحسابك، فسجّل دخولك الأول وارجع كمّل.</p>
+                  <Link className="ovl-btn" href="/auth/signin?callbackUrl=/overlay"><LogIn size={16} /> تسجيل الدخول بجوجل</Link>
+                </div>
+              ) : (
+                <>
+                  <label className="ovl-co-field">
+                    <span>رقم موبايلك</span>
+                    <input value={phone} onChange={e => setPhone(e.target.value)} inputMode="tel"
+                      placeholder="01xxxxxxxxx" autoComplete="tel" disabled={Boolean(paying)} />
+                  </label>
+
+                  {payError && <div className="ovl-co-err">{payError}</div>}
+
+                  <div className="ovl-co-methods">
+                    <button type="button" className="ovl-co-m" onClick={() => pay('paymob')} disabled={Boolean(paying)}>
+                      <CreditCard size={20} />
+                      <span><b>{paying === 'paymob' ? 'بيحوّلك…' : 'فيزا أو ميزا'}</b><small>بيتفعّل فوراً بعد الدفع</small></span>
+                    </button>
+                    <button type="button" className="ovl-co-m" onClick={() => pay('PayPal')} disabled={Boolean(paying)}>
+                      <span className="ovl-pp">P</span>
+                      <span><b>{paying === 'PayPal' ? 'بيحوّلك…' : 'PayPal'}</b><small>بيتفعّل خلال ساعات بعد ما نتأكد من التحويل</small></span>
+                    </button>
+                  </div>
+
+                  <p className="ovl-co-note"><ShieldCheck size={13} /> استرجاع كامل خلال 7 أيام لو مركّبتش</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         <footer className="ovl-foot">
           <span>Tilago Overlay · مصمّمة لصنّاع البث على تيك توك</span>

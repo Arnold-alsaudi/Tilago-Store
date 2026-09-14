@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { isRequestAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
-import { PLANS, computeEnd, newToken, type PlanKey } from '@/lib/subscription';
+import { type PlanKey } from '@/lib/subscription';
+import { activateSubscription } from '@/lib/subscriptionActivate';
 
 const activateSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -43,37 +44,6 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, plan, priceLocked } = parsed.data;
-  const now = new Date();
-
-  const existing = await prisma.subscription.findUnique({
-    where: { userEmail: email },
-    select: { endsAt: true, token: true, priceLocked: true },
-  });
-
-  const endsAt = computeEnd(plan as PlanKey, existing?.endsAt ?? null, now);
-
-  const sub = await prisma.subscription.upsert({
-    where: { userEmail: email },
-    update: {
-      plan,
-      status: 'active',
-      endsAt,
-      // السعر المقفول مابيتغيّرش في التجديد — ده كان وعد للي اشترك بدري
-      ...(existing?.priceLocked == null && priceLocked != null ? { priceLocked } : {}),
-    },
-    create: {
-      userEmail: email,
-      plan,
-      status: 'active',
-      startsAt: now,
-      endsAt,
-      token: newToken(),
-      priceLocked: priceLocked ?? PLANS[plan as PlanKey].price,
-    },
-  });
-
-  return NextResponse.json({
-    ...sub,
-    renewed: Boolean(existing),
-  }, { status: existing ? 200 : 201 });
+  const { sub, renewed } = await activateSubscription(email, plan as PlanKey, priceLocked);
+  return NextResponse.json({ ...sub, renewed }, { status: renewed ? 200 : 201 });
 }

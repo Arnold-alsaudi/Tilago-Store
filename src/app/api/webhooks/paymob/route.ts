@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { notifyAllChannels } from '@/lib/notify';
+import { PLANS } from '@/lib/subscription';
+import { activateSubscription, planFromProductName } from '@/lib/subscriptionActivate';
 
 // ترتيب الحقول اللي بايموب بيوقّع عليه — بالترتيب ده بالظبط ومن غير أي تغيير.
 // لاحظ المسارات المتداخلة: order.id و source_data.* — مش order ولا source_data_pan.
@@ -91,6 +93,14 @@ export async function POST(req: NextRequest) {
   const customerPhone = String(billing.phone_number ?? '').trim();
   const paidAt = new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' });
 
+  // بايموب بيعيد إرسال نفس الويبهوك. بنشوف الدفعة كانت متسجّلة قبل كده ولا لأ،
+  // عشان الإشعار مايتبعتش مرتين والاشتراك مايتمدّش مرتين.
+  const before = await prisma.payment.findUnique({
+    where: { id: referenceId },
+    select: { status: true, deliveryStatus: true },
+  }).catch(() => null);
+  const firstTime = before?.status !== 'success';
+
   // حفظ في قاعدة البيانات
   await prisma.payment.upsert({
     where: { id: referenceId },
@@ -107,6 +117,35 @@ export async function POST(req: NextRequest) {
       productName,
     },
   });
+
+  // ── اشتراك أوفرلي: التفعيل لوحده ─────────────────────────────
+  // الدفع بالكارت متأكَّد منه بالتوقيع، فمفيش داعي حد يضغط زرار. العلامة
+  // "تم التسليم" على الدفعة هي اللي بتمنع التفعيل يتكرر مع إعادة الإرسال —
+  // ولو التفعيل فشل بنرجّع خطأ عشان بايموب يعيد، والمرة الجاية يتفعّل.
+  const plan = planFromProductName(productName);
+  if (plan && before?.deliveryStatus !== 'delivered') {
+    const paid = amountCents / 100;
+    const validEmail = customerEmail.includes('@') && customerEmail !== 'unknown@tilago.io';
+    if (!validEmail) {
+      console.error(`[Webhook] اشتراك من غير إيميل صالح: ${referenceId}`);
+    } else if (paid + 0.001 < PLANS[plan].price) {
+      // المبلغ اللي اتدفع أقل من سعر الخطة — منفعّلش، وانت تشوفه من الأدمن
+      console.error(`[Webhook] مبلغ الاشتراك ناقص: ${paid} < ${PLANS[plan].price} · ${referenceId}`);
+    } else {
+      try {
+        await activateSubscription(customerEmail, plan, paid);
+        await prisma.payment.update({ where: { id: referenceId }, data: { deliveryStatus: 'delivered' } });
+        console.log(`[Webhook] اشتراك ${plan} اتفعّل لـ ${customerEmail}`);
+      } catch (err) {
+        console.error('[Webhook] فشل تفعيل الاشتراك', err);
+        return NextResponse.json({ error: 'activation failed' }, { status: 500 });
+      }
+    }
+  }
+
+  if (!firstTime) {
+    return NextResponse.json({ received: true, status: 'duplicate' });
+  }
 
   // إرسال الإشعارات لكل القنوات
   await notifyAllChannels({

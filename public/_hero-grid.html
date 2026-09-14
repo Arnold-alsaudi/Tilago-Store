@@ -1,0 +1,56 @@
+<meta charset="utf-8">
+<title>calib</title>
+<style>
+  body{margin:0;background:#111;overflow:hidden}
+  #vp{position:relative;overflow:hidden}
+  #vp img{position:absolute;display:block;image-rendering:auto}
+  .gl{position:absolute;pointer-events:none}
+  .gl i{position:absolute;background:rgba(0,255,130,.55)}
+  .gl i.v{top:0;bottom:0;width:1px}
+  .gl i.h{left:0;right:0;height:1px}
+  .gl b{position:absolute;color:#7fff9f;font:12px/1 monospace;background:#000b;padding:1px 2px}
+  .box{position:absolute;border:2px solid #ff2d95;pointer-events:none}
+  .box em{position:absolute;top:-16px;left:0;color:#ff2d95;font:11px monospace;background:#000b}
+</style>
+<div id="vp"></div>
+<script>
+const IW=1916, IH=821;
+const q=new URLSearchParams(location.search);
+// crop in percent of the image
+const cx=+(q.get('x')??0), cy=+(q.get('y')??0), cw=+(q.get('w')??100), ch=+(q.get('h')??100);
+const MAXW=document.documentElement.clientWidth, MAXH=document.documentElement.clientHeight;
+const scale = Math.min(MAXW/(IW*cw/100), MAXH/(IH*ch/100));
+const VW = Math.round(IW*cw/100*scale);
+const VH = Math.round(IH*ch/100*scale);
+const vp=document.getElementById('vp');
+vp.style.width=VW+'px'; vp.style.height=VH+'px';
+const img=new Image(); img.src='/photo/over-lay.png';
+img.style.width=(IW*scale)+'px';
+img.style.left=(-IW*cx/100*scale)+'px';
+img.style.top=(-IH*cy/100*scale)+'px';
+vp.appendChild(img);
+// grid every 1% of the FULL image, labelled in full-image %
+const gl=document.createElement('div'); gl.className='gl';
+gl.style.cssText='inset:0;position:absolute';
+let s='';
+for(let p=0;p<=100;p++){
+  const px=(IW*p/100 - IW*cx/100)*scale;
+  const py=(IH*p/100 - IH*cy/100)*scale;
+  const major=p%5===0;
+  if(px>-40&&px<VW+40){ s+=`<i class="v" style="left:${px}px;opacity:${major?1:.35}"></i>`; if(major)s+=`<b style="left:${px+2}px;top:2px">${p}</b>`; }
+  if(py>-40&&py<VH+40){ s+=`<i class="h" style="top:${py}px;opacity:${major?1:.35}"></i>`; if(major)s+=`<b style="left:2px;top:${py+2}px">${p}</b>`; }
+}
+gl.innerHTML=s; vp.appendChild(gl);
+// boxes: ?b=name,x,y,w,h;name,x,y,w,h  (full-image %)
+(q.get('b')||'').split(';').filter(Boolean).forEach(spec=>{
+  const [n,x,y,w,h,rot]=spec.split(',');
+  const d=document.createElement('div'); d.className='box';
+  d.style.left=((IW*x/100 - IW*cx/100)*scale)+'px';
+  d.style.top=((IH*y/100 - IH*cy/100)*scale)+'px';
+  d.style.width=(IW*w/100*scale)+'px';
+  d.style.height=(IH*h/100*scale)+'px';
+  if(rot) d.style.transform='rotate('+rot+'deg)';
+  d.innerHTML=`<em>${n}</em>`;
+  vp.appendChild(d);
+});
+</script>

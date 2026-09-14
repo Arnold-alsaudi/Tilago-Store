@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import SubscriptionsClient, { type AdminSub } from './SubscriptionsClient';
+import { planFromProductName } from '@/lib/subscriptionActivate';
 
 export default async function AdminSubscriptionsPage() {
   const session = await getServerSession(authOptions);
@@ -10,18 +11,19 @@ export default async function AdminSubscriptionsPage() {
 
   let items: AdminSub[] = [];
   let pendingPayments: { id: string; userEmail: string; userName: string | null;
-                         amount: number; method: string; createdAt: string }[] = [];
+                         amount: number; method: string; createdAt: string; plan: string | null }[] = [];
 
   try {
     const [subs, pays] = await Promise.all([
       prisma.subscription.findMany({ orderBy: [{ updatedAt: 'desc' }] }),
-      // تحويلات مستنية تأكيد — دي اللي البوت بيقولك عليها
+      // طلبات اشتراك PayPal مستنية تأكيد — طلبات الاليرتات مالهاش مكان هنا،
+      // تفعيل اشتراك على دفعة اليرت كان هيبقى غلطة
       prisma.payment.findMany({
-        where: { status: 'pending' },
+        where: { status: 'pending', productName: { startsWith: '[OVL:' } },
         orderBy: { createdAt: 'desc' },
         take: 20,
         select: { id: true, userEmail: true, userName: true, amount: true,
-                  method: true, createdAt: true },
+                  method: true, createdAt: true, productName: true },
       }),
     ]);
 
@@ -40,6 +42,7 @@ export default async function AdminSubscriptionsPage() {
     pendingPayments = pays.map(p => ({
       id: p.id, userEmail: p.userEmail, userName: p.userName,
       amount: p.amount, method: p.method, createdAt: p.createdAt.toISOString(),
+      plan: planFromProductName(p.productName),
     }));
   } catch {}
 

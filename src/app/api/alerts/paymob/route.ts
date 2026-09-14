@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
   const customerName = session?.user?.name ?? String(name).slice(0, 40);
 
   const secretKey = process.env.PAYMOB_SECRET_KEY!;
-  // كل طرق الدفع والمحافظ المفعّلة على الحساب: كروت / ميزة / فودافون كاش / انستاباي...
+  // طرق الدفع المفعّلة على حساب بايموب: الكروت (فيزا/ماستركارد) والميزة
   // ضع كل الـ Integration IDs مفصولة بفواصل في PAYMOB_INTEGRATION_IDS
   const integrationIds = (process.env.PAYMOB_INTEGRATION_IDS ?? process.env.PAYMOB_INTEGRATION_ID ?? '')
     .split(',')
