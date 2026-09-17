@@ -6,32 +6,14 @@ import {
   Home, Layers, Palette, MonitorPlay, HelpCircle,
   Copy, Check, Play, Gift, Trophy, Target, Frame, Menu, X,
   Sparkles, ShieldCheck, Zap, LogIn, Link2, RefreshCw, Smartphone,
-  Wand2, Clock, Headphones, CreditCard,
+  Wand2, Clock, Headphones, Activity, Crown, BarChart3, Hourglass,
 } from 'lucide-react';
-
-export type OverlayCategory = 'SUPPORTERS' | 'CHALLENGES' | 'GOALS' | 'DECOR';
-
-export interface AppOverlay {
-  id: string; slug: string; title: string; description: string | null;
-  category: OverlayCategory; file: string; poster: string | null;
-  isFree: boolean; featured: boolean; createdAt: string;
-}
-
-export type AppSub = {
-  plan: string; status: string; endsAt: string | null;
-  token: string; theme: Record<string, string> | null;
-} | null;
+import {
+  CheckoutModal, PALETTES, PLANS, PaidBanner, isNew, paletteFromTheme, previewSrc,
+  type AppOverlay, type AppSub, type OverlayCategory, type Plan,
+} from './shared';
 
 /* ── ثوابت ──────────────────────────────────────────────────── */
-
-const PALETTES = [
-  { key: 'violet', name: 'بنفسجي', dot: '#a855f7', vars: { violet: '#a855f7', 'violet-hot': '#e9d5ff' } },
-  { key: 'fire',   name: 'ناري',   dot: '#f43f5e', vars: { violet: '#f43f5e', 'violet-hot': '#ffd7dd' } },
-  { key: 'gold',   name: 'ذهبي',   dot: '#e9b84a', vars: { violet: '#e9b84a', 'violet-hot': '#fff0c4' } },
-  { key: 'ice',    name: 'جليدي',  dot: '#38bdf8', vars: { violet: '#38bdf8', 'violet-hot': '#d8f2ff' } },
-  { key: 'toxic',  name: 'سام',    dot: '#4ade80', vars: { violet: '#4ade80', 'violet-hot': '#dcffe8' } },
-  { key: 'rose',   name: 'وردي',   dot: '#fb7185', vars: { violet: '#fb7185', 'violet-hot': '#ffe0e6' } },
-] as const;
 
 const CATS: { key: OverlayCategory; name: string; Icon: typeof Gift }[] = [
   { key: 'SUPPORTERS', name: 'داعمين', Icon: Gift },
@@ -40,28 +22,20 @@ const CATS: { key: OverlayCategory; name: string; Icon: typeof Gift }[] = [
   { key: 'DECOR',      name: 'تزيين',  Icon: Frame },
 ];
 
-/* الترتيب من اليمين: 3 شهور · شهري · سنوي — السنوي آخر واحد عشان
-   العين بتقف عنده، وهو اللي عليه علامة "الأوفر". */
-const PLANS = [
-  { key: 'm3', name: 'خطة 3 شهور', tag: 'ربع سنوي', price: 749,  unit: '3 شهور', per: 250, note: 'وفّر 16%' },
-  { key: 'm1', name: 'الخطة الشهرية', tag: 'شهري', price: 299, unit: 'شهر', per: 299, note: 'من غير التزام' },
-  { key: 'y',  name: 'الخطة السنوية', tag: 'الأوفر', price: 2399, unit: 'سنة', per: 200, note: 'ادفع 8 شهور وخد سنة', best: true },
-] as const;
-
 const PLAN_NAME: Record<string, string> = { m1: 'شهري', m3: '3 شهور', y: 'سنوي' };
 
 const PERKS = [
   'كل التركيبات في المكتبة',
   'الجديد أول ما ينزل',
   'ألوانك على كل تركيبة',
-  'تغيير اللون وانت لايف',
+  'ألوانك محفوظة على حسابك',
   'دعم لما تحتاجه',
 ];
 
 /* اللي بيميّزنا — مكتوب بلغة العميل مش بلغة الكود */
 const FEATURES = [
-  { Icon: Play,        t: 'جرّب قبل البث',       d: 'زرار واحد يبعت حدث تجريبي، وتشوف التركيبة بترد قبل ما تفتح OBS.' },
-  { Icon: Smartphone,  t: 'غيّر وانت لايف',      d: 'غيّر ألوانك من موبايلك والبث شغّال، والرابط في OBS مابيتغيّرش.' },
+  { Icon: Play,        t: 'معاينة قبل ما تدفع',  d: 'كل تركيبة شغّالة قدامك في الصفحة، تشوفها بعينك قبل الاشتراك.' },
+  { Icon: Smartphone,  t: 'ألوانك على كل حاجة',  d: 'تختار لونك مرة واحدة من حسابك، وبيتطبّق على كل روابطك.' },
   { Icon: Link2,       t: 'رابط واحد وخلاص',     d: 'مفيش برنامج تنزّله ولا تحذير من ويندوز. تنسخ الرابط وتلزقه.' },
   { Icon: Wand2,       t: 'تصميمات حصرية',       d: 'كل تركيبة مصمّمة عندنا من الصفر، مش قوالب متكررة.' },
   { Icon: RefreshCw,   t: 'مكتبة بتكبر',          d: 'تركيبات جديدة كل أسبوع، وبتوصلك من غير أي دفع زيادة.' },
@@ -91,17 +65,52 @@ const fmtDate = (iso: string) =>
 const daysLeft = (iso: string | null) =>
   iso ? Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000) : null;
 
-const isNew = (iso: string) => Date.now() - new Date(iso).getTime() < 14 * 86400000;
+type SectionKey =
+  | 'home' | 'overlays' | 'theme' | 'install' | 'help'
+  | 'events' | 'stats' | 'top' | 'goals' | 'actions';
 
-type SectionKey = 'home' | 'overlays' | 'theme' | 'install' | 'help';
-
-const NAV: { key: SectionKey; name: string; Icon: typeof Layers }[] = [
+const NAV: { key: SectionKey; name: string; Icon: typeof Layers; soon?: boolean }[] = [
   { key: 'home',     name: 'الرئيسية',  Icon: Home },
   { key: 'overlays', name: 'التركيبات', Icon: Layers },
   { key: 'theme',    name: 'الألوان',   Icon: Palette },
+  { key: 'events',   name: 'الأحداث',   Icon: Activity,     soon: true },
+  { key: 'top',      name: 'التوب',     Icon: Crown,        soon: true },
+  { key: 'goals',    name: 'الأهداف',   Icon: Target,       soon: true },
+  { key: 'actions',  name: 'الأوامر',   Icon: Zap,          soon: true },
+  { key: 'stats',    name: 'إحصائيات',  Icon: BarChart3,    soon: true },
   { key: 'install',  name: 'التركيب',   Icon: MonitorPlay },
   { key: 'help',     name: 'مساعدة',    Icon: HelpCircle },
 ];
+
+/* الأقسام اللي مستنية سيرفر أحداث تيك توك. بنعرضها بصراحة إنها لسه
+   بتتجهّز بدل ما نملاها بأرقام وهمية تكدب على العميل. */
+const SOON: Record<string, { title: string; lead: string; points: string[] }> = {
+  events: {
+    title: 'الأحداث',
+    lead: 'كل هدية ومتابع وتعليق بيحصل في بثك، يظهر هنا لحظة بلحظة.',
+    points: ['تشوف مين بعتلك إيه وامتى', 'تراجع البث اللي فات', 'تبني عليه تحديات وأهداف'],
+  },
+  top: {
+    title: 'التوب',
+    lead: 'ترتيب أكتر ناس بتدعمك — على البث وعلى الصفحة.',
+    points: ['أكبر داعم في البث الحالي', 'الترتيب العام على مدار الشهر', 'تركيبة جاهزة تعرضه على الشاشة'],
+  },
+  goals: {
+    title: 'الأهداف',
+    lead: 'حدّد هدف للمتابعين أو الهدايا، والشريط بيتحرك مع كل حدث.',
+    points: ['هدف متابعين أو لايكات أو هدايا', 'الشريط بيتحدّث لوحده', 'تركيبة تحطها في OBS'],
+  },
+  actions: {
+    title: 'الأوامر',
+    lead: 'خلّي حاجة تحصل على الشاشة لما يحصل حدث معيّن في بثك.',
+    points: ['هدية معيّنة تشغّل تركيبة', 'متابع جديد يطلّع تنبيه', 'تتحكم في كل حاجة من حسابك'],
+  },
+  stats: {
+    title: 'إحصائيات',
+    lead: 'أرقام بثك في مكان واحد بدل ما تفتكرها.',
+    points: ['أكتر الأوقات تفاعلاً', 'مقارنة بين البثوث', 'أكتر الداعمين على المدى الطويل'],
+  },
+};
 
 const HANDLE_KEY = 'tilago-tt-handle';
 const HANDLE_RE = /^[A-Za-z0-9._]{2,24}$/;
@@ -143,61 +152,10 @@ export default function OverlayApp({
     setTimeout(() => setHandleNote(null), 4200);
   }
 
-  /* ── الدفع ──────────────────────────────────────────────────
-     الكارت (بايموب) بيفعّل لوحده بعد الدفع. PayPal بيوصلك على البوت
-     وانت بتفعّل من الأدمن بعد ما تتأكد إن الفلوس وصلت. */
-  const [checkout, setCheckout] = useState<(typeof PLANS)[number] | null>(null);
-  const [phone, setPhone] = useState('');
-  const [paying, setPaying] = useState<'paymob' | 'PayPal' | null>(null);
-  const [payError, setPayError] = useState<string | null>(null);
-  const [paidBanner, setPaidBanner] = useState(false);
+  const [checkout, setCheckout] = useState<Plan | null>(null);
+  const openCheckout = (p: Plan) => setCheckout(p);
 
-  useEffect(() => {
-    // الرجوع من صفحة بايموب — الويبهوك ممكن ياخد ثواني يفعّل
-    if (new URLSearchParams(window.location.search).get('payment') === 'success') setPaidBanner(true);
-  }, []);
-
-  function openCheckout(p: (typeof PLANS)[number]) {
-    setCheckout(p); setPayError(null); setPaying(null);
-  }
-
-  async function pay(method: 'paymob' | 'PayPal') {
-    if (!checkout) return;
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length < 8 || digits.length > 15) {
-      setPayError('اكتب رقم موبايل صحيح عشان نقدر نتواصل معاك');
-      return;
-    }
-    setPaying(method); setPayError(null);
-    try {
-      const res = await fetch('/api/overlay/subscribe', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ plan: checkout.key, method, phone: digits }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setPayError(data.error ?? 'حصل خطأ، جرّب تاني'); setPaying(null); return; }
-
-      if (method === 'paymob') { window.location.href = data.url; return; }
-
-      // PayPal مابيدعمش الجنيه — نحوّل بسعر الدولار الحيّ زي سلة المتجر
-      let egpPerUsd = 50;
-      try {
-        const r = await fetch('/api/fx');
-        const d = await r.json();
-        if (d?.egpPerUsd > 0) egpPerUsd = d.egpPerUsd;
-      } catch {}
-      const usd = Math.max(1, checkout.price / egpPerUsd).toFixed(2);
-      const handleName = process.env.NEXT_PUBLIC_PAYPAL_ME || 'tiger098';
-      window.location.href = `https://www.paypal.me/${handleName}/${usd}USD`;
-    } catch {
-      setPayError('مفيش اتصال، جرّب تاني'); setPaying(null);
-    }
-  }
-
-  const initialPalette = useMemo(() => {
-    const v = sub?.theme?.violet;
-    return PALETTES.find(p => p.vars.violet === v)?.key ?? 'violet';
-  }, [sub]);
+  const initialPalette = useMemo(() => paletteFromTheme(sub?.theme), [sub]);
   const [palette, setPalette] = useState<string>(initialPalette);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -319,6 +277,21 @@ export default function OverlayApp({
         .ovl-nav .ovl-badge{position:absolute;top:6px;left:8px;font-family:'Oxanium',sans-serif;
           font-size:.62rem;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
           display:grid;place-items:center;background:var(--grape);color:#fff}
+        .ovl-nav .ovl-soon{position:absolute;top:6px;left:6px;font-size:.58rem;font-weight:700;
+          padding:1px 6px;border-radius:9px;background:rgba(251,191,36,.16);
+          border:1px solid rgba(251,191,36,.4);color:var(--warn)}
+
+        /* قسم لسه بيتجهّز */
+        .ovl-soon-box{max-width:640px}
+        .ovl-soon-box .ovl-panel{padding:1.6rem 1.4rem}
+        .ovl-soon-tag{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;
+          padding:.25rem .75rem;border-radius:999px;background:rgba(251,191,36,.12);
+          border:1px solid rgba(251,191,36,.4);color:var(--warn);margin-bottom:1rem}
+        .ovl-soon-box ul{list-style:none;margin:1.2rem 0 0;padding:0;display:grid;gap:.6rem}
+        .ovl-soon-box li{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:var(--ink-2)}
+        .ovl-soon-box li svg{flex:none;color:var(--accent)}
+        .ovl-soon-note{margin:1.3rem 0 0;padding-top:1.1rem;border-top:1px solid var(--line);
+          font-size:.84rem;line-height:1.8;color:var(--ink-3)}
         .ovl-side-foot{flex:none;padding:.7rem .5rem;border-top:1px solid var(--line);
           display:flex;flex-direction:column;gap:.1rem;text-align:center}
         .ovl-side-foot a{font-size:.72rem;color:var(--ink-3);text-decoration:none;padding:.3rem 0}
@@ -375,6 +348,23 @@ export default function OverlayApp({
         .ovl-panel-h{display:flex;align-items:center;justify-content:space-between;gap:.8rem;
           padding:.85rem 1.1rem;border-bottom:1px solid var(--line)}
         .ovl-panel-h h2{margin:0;font-size:.95rem;font-weight:700;color:var(--ink)}
+
+        /* شاشة المعاينة فوق الرئيسية — أول حاجة الزائر يشوفها */
+        .ovl-stage-wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:1.6rem;
+          align-items:center;margin-bottom:1.6rem}
+        .ovl-hero-h{margin:0 0 .6rem;font-family:'29LtBukra','Cairo',sans-serif;font-weight:700;
+          font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.35;color:var(--ink)}
+        .ovl-hero-h em{font-style:normal;color:var(--accent)}
+        .ovl-hero-p{margin:0 0 1.1rem;font-size:.92rem;line-height:1.85;color:var(--ink-3);max-width:44ch}
+        .ovl-stage{position:relative;border-radius:14px;padding:6px;
+          background:linear-gradient(145deg,rgba(163,107,208,.5),rgba(84,22,181,.12) 45%,rgba(163,107,208,.3))}
+        .ovl-stage .ovl-screen{border-radius:10px;overflow:hidden}
+        .ovl-live{position:absolute;top:16px;right:16px;z-index:3;display:inline-flex;align-items:center;gap:.35rem;
+          padding:.22rem .6rem;border-radius:999px;background:rgba(7,3,15,.72);border:1px solid rgba(255,255,255,.14);
+          font-family:'Oxanium',sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.12em;color:#fff}
+        .ovl-live i{width:6px;height:6px;border-radius:50%;background:var(--bad)}
+        .ovl-stage-cap{display:flex;align-items:center;gap:.35rem;margin:.7rem 0 0;font-size:.8rem;color:var(--ink-3)}
+        .ovl-stage-cap svg{color:var(--accent)}
 
         /* الحساب */
         .ovl-acc{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1.1rem}
@@ -582,7 +572,7 @@ export default function OverlayApp({
           .ovl-burger{display:grid}
           .ovl-scrim.on{display:block;position:fixed;inset:0;z-index:35;background:rgba(6,2,14,.7)}
           .ovl-body{padding:1.3rem 1rem 2.5rem}
-          .ovl-plans,.ovl-grid,.ovl-theme,.ovl-steps{grid-template-columns:1fr}
+          .ovl-plans,.ovl-grid,.ovl-theme,.ovl-steps,.ovl-stage-wrap{grid-template-columns:1fr}
           .ovl-who small{display:none}
           .ovl-bar{padding:0 1rem}
         }
@@ -607,6 +597,7 @@ export default function OverlayApp({
               <n.Icon size={20} />
               {n.name}
               {n.key === 'overlays' && overlays.length > 0 && <span className="ovl-badge">{overlays.length}</span>}
+              {n.soon && <span className="ovl-soon">قريباً</span>}
             </button>
           ))}
         </nav>
@@ -647,6 +638,30 @@ export default function OverlayApp({
           {/* ── الرئيسية: الحساب + الخطط + المميزات ─────── */}
           {section === 'home' && (
             <>
+              <section className="ovl-stage-wrap">
+                <div>
+                  <div className="ovl-stage">
+                    <span className="ovl-live"><i />LIVE</span>
+                    <div className="ovl-screen">
+                      {demo
+                        ? <iframe src={previewSrc(demo.file, active.vars)} title={`معاينة ${demo.title}`} />
+                        : <span className="ovl-empty-screen">المعاينة هتبان أول ما تنزل تركيبة</span>}
+                    </div>
+                  </div>
+                  <p className="ovl-stage-cap"><Sparkles size={14} /> دي التركيبة نفسها وهي شغّالة، مش صورة</p>
+                </div>
+                <div>
+                  <h1 className="ovl-hero-h">شاشتك <em>بترد</em> على جمهورك وانت لايف</h1>
+                  <p className="ovl-hero-p">
+                    تركيبات بث لتيك توك بتصميم عربي حصري. رابط واحد تحطه في OBS، بألوانك،
+                    والمكتبة بتكبر من غير ما تدفع زيادة.
+                  </p>
+                  <button type="button" className="ovl-btn" onClick={() => go('overlays')}>
+                    <Layers size={16} /> شوف المكتبة
+                  </button>
+                </div>
+              </section>
+
               <div className="ovl-panel">
                 <div className="ovl-panel-h"><h2>الحساب</h2></div>
                 <div className="ovl-acc">
@@ -691,8 +706,8 @@ export default function OverlayApp({
                   const best = 'best' in p && p.best;
                   return (
                     <div key={p.key} className={`ovl-plan${best ? ' best' : ''}`}>
-                      <div className="ovl-plan-top"><span className="ovl-pill">{p.tag}</span></div>
-                      <h3>{p.name}</h3>
+                      <div className="ovl-plan-top"><span className="ovl-pill">{best ? 'الأوفر' : p.name}</span></div>
+                      <h3>اشتراك {p.name}</h3>
                       <div className="ovl-price">
                         <b>{p.price.toLocaleString('en-US')}</b>
                         <span>جنيه / {p.unit}</span>
@@ -803,7 +818,7 @@ export default function OverlayApp({
                             // eslint-disable-next-line @next/next/no-img-element
                             ? <img src={o.poster} alt="" loading="lazy" />
                             : <iframe ref={el => { cardFrames.current[o.id] = el; }}
-                                src={`${o.file}?demo=0`} title={o.title} loading="lazy" />}
+                                src={previewSrc(o.file, active.vars)} title={o.title} loading="lazy" />}
                         </div>
 
                         {o.description && <p className="ovl-o-desc">{o.description}</p>}
@@ -849,8 +864,8 @@ export default function OverlayApp({
                   <div className="ovl-panel-h"><h2>المعاينة</h2><span className="ovl-flag">{active.name}</span></div>
                   <div className="ovl-screen">
                     {demo
-                      ? <iframe ref={themeFrame}
-                          src={`${demo.file}?demo=0&label=${encodeURIComponent('أكبر داعم')}&name=${encodeURIComponent(name || 'اسمك هنا')}&value=12500`}
+                      ? <iframe ref={themeFrame} key={active.key}
+                          src={previewSrc(demo.file, active.vars)}
                           title="معاينة ألوانك" loading="lazy" />
                       : <span className="ovl-empty-screen">المعاينة هتبان أول ما تنزل تركيبة</span>}
                   </div>
@@ -877,6 +892,31 @@ export default function OverlayApp({
             </>
           )}
 
+          {/* ── أقسام لسه بتتجهّز ─────────────────────── */}
+          {SOON[section] && (
+            <>
+              <h1 className="ovl-h">{SOON[section].title}</h1>
+              <p className="ovl-p">{SOON[section].lead}</p>
+              <div className="ovl-soon-box">
+                <div className="ovl-panel">
+                  <span className="ovl-soon-tag"><Hourglass size={13} /> بيتجهّز</span>
+                  <ul>
+                    {SOON[section].points.map(p => (
+                      <li key={p}><Check size={15} />{p}</li>
+                    ))}
+                  </ul>
+                  <p className="ovl-soon-note">
+                    القسم ده محتاج ربط ببثك على تيك توك عشان يقرا الأحداث الحيّة، وده اللي بنشتغل
+                    عليه دلوقتي. لحد ما يجهز، تركيبات التزيين شغّالة عادي من غير أي ربط.
+                  </p>
+                  <button type="button" className="ovl-btn ghost" style={{ marginTop: '1.2rem' }} onClick={() => go('overlays')}>
+                    <Layers size={15} /> شوف التركيبات الجاهزة
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
           {/* ── مساعدة ────────────────────────────────── */}
           {section === 'help' && (
             <>
@@ -896,61 +936,8 @@ export default function OverlayApp({
           )}
         </main>
 
-        {paidBanner && (
-          <div className="ovl-paid" role="status">
-            <Check size={16} />
-            {live
-              ? 'الدفع تم واشتراكك شغّال. روابطك في قسم التركيبات.'
-              : 'الدفع وصل. الاشتراك بيتفعّل خلال ثواني، ولو مظهرش حدّث الصفحة.'}
-            <button type="button" onClick={() => setPaidBanner(false)} aria-label="إغلاق"><X size={14} /></button>
-          </div>
-        )}
-
-        {checkout && (
-          <div className="ovl-modal-back" onClick={e => { if (e.target === e.currentTarget && !paying) setCheckout(null); }}>
-            <div className="ovl-modal" role="dialog" aria-modal="true" aria-labelledby="ovl-co-title">
-              <div className="ovl-modal-h">
-                <h2 id="ovl-co-title">{checkout.name}</h2>
-                <button type="button" className="ovl-x" onClick={() => setCheckout(null)} disabled={Boolean(paying)} aria-label="إغلاق"><X size={16} /></button>
-              </div>
-
-              <div className="ovl-co-sum">
-                <span>المبلغ</span>
-                <b>{checkout.price.toLocaleString('en-US')} <small>جنيه</small></b>
-              </div>
-
-              {!email ? (
-                <div className="ovl-co-login">
-                  <p>الاشتراك بيتربط بحسابك، فسجّل دخولك الأول وارجع كمّل.</p>
-                  <Link className="ovl-btn" href="/auth/signin?callbackUrl=/overlay"><LogIn size={16} /> تسجيل الدخول بجوجل</Link>
-                </div>
-              ) : (
-                <>
-                  <label className="ovl-co-field">
-                    <span>رقم موبايلك</span>
-                    <input value={phone} onChange={e => setPhone(e.target.value)} inputMode="tel"
-                      placeholder="01xxxxxxxxx" autoComplete="tel" disabled={Boolean(paying)} />
-                  </label>
-
-                  {payError && <div className="ovl-co-err">{payError}</div>}
-
-                  <div className="ovl-co-methods">
-                    <button type="button" className="ovl-co-m" onClick={() => pay('paymob')} disabled={Boolean(paying)}>
-                      <CreditCard size={20} />
-                      <span><b>{paying === 'paymob' ? 'بيحوّلك…' : 'فيزا أو ميزا'}</b><small>بيتفعّل فوراً بعد الدفع</small></span>
-                    </button>
-                    <button type="button" className="ovl-co-m" onClick={() => pay('PayPal')} disabled={Boolean(paying)}>
-                      <span className="ovl-pp">P</span>
-                      <span><b>{paying === 'PayPal' ? 'بيحوّلك…' : 'PayPal'}</b><small>بيتفعّل خلال ساعات بعد ما نتأكد من التحويل</small></span>
-                    </button>
-                  </div>
-
-                  <p className="ovl-co-note"><ShieldCheck size={13} /> استرجاع كامل خلال 7 أيام لو مركّبتش</p>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+        <PaidBanner live={live} />
+        {checkout && <CheckoutModal plan={checkout} email={email} onClose={() => setCheckout(null)} />}
 
         <footer className="ovl-foot">
           <span>Tilago Overlay · مصمّمة لصنّاع البث على تيك توك</span>

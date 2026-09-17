@@ -2,20 +2,22 @@ import type { Metadata } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import OverlayApp, { type AppOverlay, type AppSub } from './OverlayApp';
+import OverlayApp from './OverlayApp';
+import type { AppOverlay, AppSub } from './shared';
 
 export const metadata: Metadata = {
   title: 'Tilago Overlay',
   description:
-    'تركيبات بث بتتحرك مع كل هدية ومتابع. رابط واحد تحطه في OBS، بألوانك، وتركيبات جديدة كل أسبوع.',
+    'تركيبات بث لتيك توك لايف بتصميم عربي حصري. رابط واحد تحطه في OBS، بألوانك، والمكتبة بتكبر كل أسبوع.',
 };
 
-// اللوحة بتتغيّر حسب حالة اشتراك كل عميل، فمينفعش تتخزّن
+// الصفحة بتتغيّر حسب حالة اشتراك كل عميل، فمينفعش تتخزّن
 export const dynamic = 'force-dynamic';
 
 export default async function OverlayPage() {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email ?? null;
+  const name = session?.user?.name ?? null;
 
   let overlays: AppOverlay[] = [];
   let sub: AppSub = null;
@@ -54,15 +56,10 @@ export default async function OverlayPage() {
       };
     }
   } catch {
-    // الداتابيز مش متاحة: اللوحة بتفتح وبتقول إن المكتبة بتتجهّز
+    // الداتابيز مش متاحة: الصفحة بتفتح وبتقول إن المكتبة بتتجهّز
   }
 
-  return (
-    <OverlayApp
-      name={session?.user?.name ?? null}
-      email={email}
-      sub={sub}
-      overlays={overlays}
-    />
-  );
+  // الكل بيدخل على نفس اللوحة — الزائر بيشوف المعاينة والخطط، والمشترك
+  // بيلاقي روابطه في قسم التركيبات.
+  return <OverlayApp name={name} email={email} sub={sub} overlays={overlays} />;
 }
