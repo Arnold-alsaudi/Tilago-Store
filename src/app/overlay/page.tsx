@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import OverlayApp from './OverlayApp';
 import type { AppOverlay, AppSub } from './shared';
+import { overlayQuery } from '@/lib/overlaySig';
 
 export const metadata: Metadata = {
   title: 'Tilago Overlay',
@@ -40,12 +41,14 @@ export default async function OverlayPage() {
         : null,
     ]);
 
-    overlays = rows.map(r => ({
+    // كل معاينة بتاخد توقيع خاص بيها — من غيره ملف التركيبة مابيتفتحش
+    overlays = await Promise.all(rows.map(async r => ({
       id: r.id, slug: r.slug, title: r.title, description: r.description,
       category: r.category as AppOverlay['category'], file: r.file,
       poster: r.poster, isFree: r.isFree, featured: r.featured,
       createdAt: r.createdAt.toISOString(),
-    }));
+      sig: await overlayQuery(new URL(r.file, 'http://x').pathname),
+    })));
 
     if (s) {
       sub = {

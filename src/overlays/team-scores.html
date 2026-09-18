@@ -1,0 +1,238 @@
+<meta charset="utf-8">
+<title>Team Scores — Tilago</title>
+<style>
+/* ============================================================
+   TEAM SCORES — سكور فريقين
+
+   بتشتغل لوحدها بالكامل: مفيش سيرفر ولا اتصال بأي حاجة. المذيع
+   بيزوّد وينقّص النقط بإيده من لوحة التحكم، والتركيبة بتقرا
+   الأرقام من الرابط.
+
+     ?t1=الأحمر&t2=الأزرق&s1=12&s2=9&c1=%23A855F7&c2=%2322D3EE
+
+   الحركة هنا مقصود إنها هادية: مفيش وميض ولا توهّج تقيل، عشان
+   متأذيش عين المتفرّج ومتضيعش في ضغط الفيديو.
+   ============================================================ */
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-bold.ttf') format('truetype');font-weight:700;font-display:block}
+@font-face{font-family:'Cairo';src:url('/fonts/cairo-black.ttf') format('truetype');font-weight:900;font-display:block}
+@font-face{font-family:'Oxanium';src:url('/fonts/oxanium-extrabold.ttf') format('truetype');font-weight:800;font-display:block}
+
+:root{
+  --violet: #7F3AA1;
+  --grape:  #5416B5;
+  --navy:   #0F083B;
+  --deep:   #0C0516;
+  --ink:    #ffffff;
+
+  /* لون كل فريق — بيتغيّر من الرابط */
+  --c1: #A855F7;
+  --c2: #22D3EE;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:transparent;            /* OBS بيركّب فوق البث */
+  font-family:'Cairo',system-ui,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+#stage{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left}
+
+/* اللوحة بتقعد فوق في النص — أبعد مكان عن وش المذيع وعن
+   تعليقات تيك توك اللي بتطلع من تحت */
+#panel{
+  position:absolute;top:48px;left:50%;transform:translateX(-50%);
+  width:1360px;
+  background:linear-gradient(180deg, rgba(15,8,59,.82), rgba(12,5,22,.88));
+  border:1px solid rgba(127,58,161,.45);
+  border-radius:26px;
+  padding:26px 34px 30px;
+  backdrop-filter:blur(3px);
+}
+
+#title{
+  text-align:center;font-size:30px;font-weight:700;
+  color:rgba(255,255,255,.66);letter-spacing:.02em;
+  margin-bottom:22px;
+}
+#title.off{display:none}
+
+/* ---------- صف الفريقين ---------------------------------- */
+#teams{display:flex;align-items:stretch;gap:26px}
+
+.side{flex:1;display:flex;align-items:center;gap:22px;min-width:0}
+.side.b{flex-direction:row-reverse}
+
+/* شريط رفيع بلون الفريق — أوضح علامة تعريف من بعيد */
+.flag{width:8px;align-self:stretch;border-radius:99px;background:var(--col);flex:none}
+
+.info{min-width:0;flex:1}
+.side.b .info{text-align:left}
+
+.name{
+  font-size:38px;font-weight:900;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  line-height:1.3;
+}
+.pts{font-size:24px;font-weight:700;color:rgba(255,255,255,.62);margin-top:4px}
+
+.score{
+  font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;
+  font-size:104px;font-weight:800;line-height:1;color:var(--col);
+  flex:none;min-width:2.4ch;text-align:center;
+  transition:transform .28s cubic-bezier(.34,1.3,.64,1);
+}
+.score.bump{transform:scale(1.14)}
+
+/* الفاصل في النص */
+#vs{
+  align-self:center;flex:none;
+  font-family:'Oxanium',sans-serif;font-size:30px;font-weight:800;
+  color:rgba(255,255,255,.42);letter-spacing:.14em;
+}
+
+/* ---------- شريط النسبة -------------------------------- */
+/* بيقول مين مكسّب ملمح واحد، من غير ما المتفرّج يقرا رقم */
+#bar{
+  position:relative;height:12px;border-radius:99px;margin-top:24px;
+  background:var(--c2);overflow:hidden;
+}
+#fill{
+  position:absolute;inset:0 auto 0 0;width:50%;
+  background:var(--c1);
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+/* خط رفيع بيفصل اللونين عشان ميتلخبطوش في ضغط الفيديو */
+#edge{
+  position:absolute;top:0;bottom:0;width:3px;margin-left:-1.5px;
+  background:rgba(12,5,22,.9);
+  transition:left .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* علامة النسخة المجانية */
+#mark{
+  position:absolute;right:34px;bottom:28px;
+  font-size:24px;font-weight:700;letter-spacing:.22em;
+  color:rgba(255,255,255,.42);
+}
+
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+
+<div id="stage">
+  <div id="panel">
+    <div id="title">تحدي الفرق</div>
+
+    <div id="teams">
+      <div class="side a" style="--col:var(--c1)">
+        <span class="flag"></span>
+        <div class="info">
+          <div class="name" id="n1">الفريق الأول</div>
+          <div class="pts" id="p1">نقطة</div>
+        </div>
+        <div class="score" id="v1">0</div>
+      </div>
+
+      <div id="vs">VS</div>
+
+      <div class="side b" style="--col:var(--c2)">
+        <span class="flag"></span>
+        <div class="info">
+          <div class="name" id="n2">الفريق الثاني</div>
+          <div class="pts" id="p2">نقطة</div>
+        </div>
+        <div class="score" id="v2">0</div>
+      </div>
+    </div>
+
+    <div id="bar"><div id="fill"></div><div id="edge"></div></div>
+  </div>
+
+  <div id="mark" hidden>TILAGO</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STAGE_W = 1920, STAGE_H = 1080;
+  var stage  = document.getElementById("stage");
+  var params = new URLSearchParams(location.search);
+
+  /* المسرح بيتقاس على المقاس اللي OBS بيديهوله، فالشكل بيطلع
+     مظبوط سواء المصدر 800 أو 1920 */
+  function fit() {
+    var s = Math.min(innerWidth / STAGE_W, innerHeight / STAGE_H);
+    stage.style.transform =
+      "translate(" + ((innerWidth  - STAGE_W * s) / 2) + "px," +
+                     ((innerHeight - STAGE_H * s) / 2) + "px) scale(" + s + ")";
+  }
+  addEventListener("resize", fit);
+  fit();
+
+  /* ---------- الإعدادات من الرابط ---------- */
+  var root = document.documentElement;
+  ["violet","grape","navy","deep","ink","c1","c2"].forEach(function (k) {
+    var v = params.get(k);
+    if (v) root.style.setProperty("--" + k, v);
+  });
+
+  var titleEl = document.getElementById("title");
+  var title = params.get("title");
+  if (title !== null) {
+    if (title === "") titleEl.classList.add("off");
+    else titleEl.textContent = title;
+  }
+
+  var n1 = params.get("t1"); if (n1) document.getElementById("n1").textContent = n1;
+  var n2 = params.get("t2"); if (n2) document.getElementById("n2").textContent = n2;
+
+  var unit = params.get("unit");
+  if (unit !== null) {
+    document.getElementById("p1").textContent = unit;
+    document.getElementById("p2").textContent = unit;
+  }
+
+  if (params.get("mark") === "1") document.getElementById("mark").hidden = false;
+
+  /* ---------- الأرقام ---------- */
+  var v1 = document.getElementById("v1");
+  var v2 = document.getElementById("v2");
+  var fill = document.getElementById("fill");
+  var edge = document.getElementById("edge");
+  var cur = [null, null];
+
+  function bump(el) {
+    el.classList.remove("bump");
+    void el.offsetWidth;          /* إعادة تشغيل الحركة */
+    el.classList.add("bump");
+    setTimeout(function () { el.classList.remove("bump"); }, 300);
+  }
+
+  function render(a, b) {
+    a = Math.max(0, a | 0); b = Math.max(0, b | 0);
+    if (cur[0] !== a) { v1.textContent = a; if (cur[0] !== null) bump(v1); cur[0] = a; }
+    if (cur[1] !== b) { v2.textContent = b; if (cur[1] !== null) bump(v2); cur[1] = b; }
+
+    /* الاتنين بصفر = الشريط في النص، مش قسمة على صفر */
+    var pct = (a + b) === 0 ? 50 : (a / (a + b)) * 100;
+    fill.style.width = pct + "%";
+    edge.style.left  = pct + "%";
+  }
+
+  render(parseInt(params.get("s1") || "0", 10), parseInt(params.get("s2") || "0", 10));
+
+  /* ---------- وضع العرض ----------
+     في صفحة الموقع بس. بيلعب لوحده عشان الزبون يشوفها حيّة،
+     ومقفول في رابط العميل عشان ماتتحركش أرقام وهمية على بثه. */
+  if (params.get("demo") === "1") {
+    var a = 3, b = 2;
+    setInterval(function () {
+      if (Math.random() < .5) a += 1 + (Math.random() * 3 | 0);
+      else                    b += 1 + (Math.random() * 3 | 0);
+      if (a + b > 90) { a = 3; b = 2; }
+      render(a, b);
+    }, 1400);
+  }
+})();
+</script>

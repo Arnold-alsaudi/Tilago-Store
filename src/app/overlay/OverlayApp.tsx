@@ -639,7 +639,7 @@ export default function OverlayApp({
                     <span className="ovl-live"><i />LIVE</span>
                     <div className="ovl-screen">
                       {demo
-                        ? <iframe src={previewSrc(demo.file, active.vars)} title={`معاينة ${demo.title}`} />
+                        ? <iframe src={previewSrc(demo, active.vars)} title={`معاينة ${demo.title}`} />
                         : <span className="ovl-empty-screen">المعاينة هتبان أول ما تنزل تركيبة</span>}
                     </div>
                   </div>
@@ -822,7 +822,7 @@ export default function OverlayApp({
                             // eslint-disable-next-line @next/next/no-img-element
                             ? <img src={o.poster} alt="" loading="lazy" />
                             : <iframe ref={el => { cardFrames.current[o.id] = el; }}
-                                src={previewSrc(o.file, active.vars)} title={o.title} loading="lazy" />}
+                                src={previewSrc(o, active.vars)} title={o.title} loading="lazy" />}
                         </div>
 
                         {o.description && <p className="ovl-o-desc">{o.description}</p>}
@@ -869,7 +869,7 @@ export default function OverlayApp({
                   <div className="ovl-screen">
                     {demo
                       ? <iframe ref={themeFrame} key={active.key}
-                          src={previewSrc(demo.file, active.vars)}
+                          src={previewSrc(demo, active.vars)}
                           title="معاينة ألوانك" loading="lazy" />
                       : <span className="ovl-empty-screen">المعاينة هتبان أول ما تنزل تركيبة</span>}
                   </div>

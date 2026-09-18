@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { signOverlayPath } from '@/lib/overlaySig';
 
 /**
  * الرابط اللي العميل بيحطه في OBS: /o/<token>/<slug>
@@ -65,7 +66,7 @@ export async function GET(
 
     if (expired) return quietNotice('انتهى الاشتراك — جدّد من حسابك على tilago');
 
-    return NextResponse.redirect(themedUrl(_req, overlay.file, sub.theme), 307);
+    return NextResponse.redirect(await themedUrl(_req, overlay.file, sub.theme), 307);
   }
 
   // المجانية: نفس الملف، وبعلامة Tilago
@@ -74,16 +75,16 @@ export async function GET(
     select: { theme: true },
   }).catch(() => null);
 
-  return NextResponse.redirect(themedUrl(_req, overlay.file, sub?.theme ?? null, true), 307);
+  return NextResponse.redirect(await themedUrl(_req, overlay.file, sub?.theme ?? null, true), 307);
 }
 
 /** بنحوّل ألوان العميل المحفوظة لباراميترات الرابط اللي التركيبة بتقراها */
-function themedUrl(
+async function themedUrl(
   req: NextRequest,
   file: string,
   theme: unknown,
   watermark = false,
-): URL {
+): Promise<URL> {
   const url = new URL(file, req.nextUrl.origin);
 
   if (theme && typeof theme === 'object') {
@@ -95,6 +96,11 @@ function themedUrl(
   // على بثه قدام جمهوره
   url.searchParams.set('demo', '0');
   if (watermark) url.searchParams.set('mark', '1');
+
+  // من غير التوقيع ده الملف بيرجع 404 — الميدلوير بيتأكد منه
+  const { exp, sig } = await signOverlayPath(url.pathname);
+  url.searchParams.set('exp', exp);
+  url.searchParams.set('sig', sig);
 
   return url;
 }

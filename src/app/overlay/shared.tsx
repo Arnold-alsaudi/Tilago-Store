@@ -10,6 +10,8 @@ export interface AppOverlay {
   id: string; slug: string; title: string; description: string | null;
   category: OverlayCategory; file: string; poster: string | null;
   isFree: boolean; featured: boolean; createdAt: string;
+  /** توقيع مؤقت بيخلّي المعاينة تفتح — من غيره الملف بيرجع 404 */
+  sig: string;
 }
 
 export type AppSub = {
@@ -52,9 +54,9 @@ export const isNew = (iso: string) => Date.now() - new Date(iso).getTime() < 14 
 export const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
 
-export function previewSrc(file: string, vars?: Record<string, string>) {
+export function previewSrc(o: Pick<AppOverlay, 'file' | 'sig'>, vars?: Record<string, string>) {
   const q = new URLSearchParams({ demo: '1', ...(vars ?? {}) });
-  return `${file}?${q.toString()}`;
+  return `${o.file}?${q.toString()}${o.sig ? '&' + o.sig : ''}`;
 }
 
 /* ── نافذة الدفع ─────────────────────────────────────────────
