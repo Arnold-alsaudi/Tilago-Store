@@ -37,6 +37,27 @@ export async function fingerprint(token: string): Promise<string> {
     .join('');
 }
 
+/**
+ * نفس البصمة بتلات صور مختلفة.
+ *
+ * السبب: لو البصمة مكتوبة بنفس الشكل في كل مكان، اللي بياخد نسخة بيدوّر
+ * عليها مرة واحدة ويمسح كل النتايج. لما كل نسخة تبقى بشكل تاني، البحث
+ * عن الأولى مابيلاقيش الباقي.
+ */
+function fingerprintForms(fp: string) {
+  return {
+    hex: fp,
+    rev: fp.split('').reverse().join(''),
+    b36: BigInt('0x' + fp).toString(36),
+  };
+}
+
+/** الصور التلاتة كلها — التتبّع بيقارن بيهم عشان أي واحدة تكفي */
+export async function fingerprintAll(token: string): Promise<string[]> {
+  const f = fingerprintForms(await fingerprint(token));
+  return [f.hex, f.rev, f.b36];
+}
+
 /** بنقبل المسار الكامل اللي متخزّن في الداتابيز أو اسم الملف لوحده */
 function basename(file: string): string {
   return file.split('/').pop() ?? file;
@@ -56,11 +77,25 @@ export function renderOverlay(
   const html = OVERLAY_HTML[basename(file)];
   if (!html) return null;
 
+  // البصمة بتتحط في أربع أماكن بأشكال مختلفة: تعليق، وإعداد جوه
+  // الصفحة، ومتغيّر لون، ورقم نسخة. اللي هيمسح واحدة منهم هيسيب
+  // التلاتة التانيين، لأن مفيش اتنين مكتوبين بنفس الشكل.
+  const cfg: OverlayConfig = { ...config };
+  let stamp = '';
+
+  if (mark) {
+    const f = fingerprintForms(mark);
+    cfg.k = f.hex;
+    stamp =
+      `<!--t:${f.hex}-->` +
+      `<meta name="v" content="2026.9.${f.rev}">` +
+      `<style>:root{--tk:${f.b36}}</style>`;
+  }
+
   // JSON.stringify بيهرب علامات الاقتباس، وبنقفل </script> عشان أي نص
   // جاي من العميل (اسم فريق مثلاً) مايقدرش يخرج بره الوسم
-  const json = JSON.stringify(config).replace(/<\//g, '<\\/');
+  const json = JSON.stringify(cfg).replace(/<\//g, '<\\/');
   const inject = `<script>window.__T=${json}</script>`;
-  const stamp = mark ? `<!--t:${mark}-->` : '';
 
   return html.replace('</title>', '</title>' + stamp + inject);
 }

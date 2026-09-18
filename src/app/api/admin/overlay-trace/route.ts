@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { fingerprint } from '@/lib/overlayServe';
+import { fingerprintAll } from '@/lib/overlayServe';
 
 /**
  * تتبّع نسخة مسرّبة: /api/admin/overlay-trace?id=<البصمة>
@@ -18,9 +18,12 @@ import { fingerprint } from '@/lib/overlayServe';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const id = (req.nextUrl.searchParams.get('id') ?? '').trim().toLowerCase();
-  if (!/^[0-9a-f]{10}$/.test(id)) {
-    return NextResponse.json({ error: 'البصمة لازم تكون 10 حروف hex' }, { status: 400 });
+  // بنقبل أي صورة من صور البصمة التلاتة — التعليق، أو رقم النسخة،
+  // أو متغيّر اللون. وبنشيل اللي حواليها لو حد نسخ السطر كله.
+  const raw = (req.nextUrl.searchParams.get('id') ?? '').trim().toLowerCase();
+  const id = (raw.match(/[0-9a-z]{7,12}/) ?? [''])[0];
+  if (!id) {
+    return NextResponse.json({ error: 'ابعت البصمة' }, { status: 400 });
   }
 
   const subs = await prisma.subscription.findMany({
@@ -28,7 +31,7 @@ export async function GET(req: NextRequest) {
   });
 
   for (const s of subs) {
-    if (await fingerprint(s.token) === id) {
+    if ((await fingerprintAll(s.token)).includes(id)) {
       return NextResponse.json({
         found: true,
         subscriptionId: s.id,
