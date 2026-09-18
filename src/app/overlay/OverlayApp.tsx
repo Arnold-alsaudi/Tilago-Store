@@ -7,6 +7,7 @@ import {
   Copy, Check, Play, Gift, Trophy, Target, Frame, Menu, X,
   Sparkles, ShieldCheck, Zap, LogIn, Link2, RefreshCw, Smartphone,
   Wand2, Clock, Headphones, Activity, Crown, BarChart3, Hourglass,
+  ExternalLink, ShoppingCart,
 } from 'lucide-react';
 import {
   CheckoutModal, PALETTES, PLANS, PaidBanner, isNew, paletteFromTheme, previewSrc,
@@ -24,18 +25,20 @@ const CATS: { key: OverlayCategory; name: string; Icon: typeof Gift }[] = [
 
 const PLAN_NAME: Record<string, string> = { m1: 'شهري', m3: '3 شهور', y: 'سنوي' };
 
-const PERKS = [
-  'كل التركيبات في المكتبة',
-  'الجديد أول ما ينزل',
-  'ألوانك على كل تركيبة',
-  'ألوانك محفوظة على حسابك',
-  'دعم لما تحتاجه',
+/* `theme: true` معناها إن السطر ده بيتكلم عن اختيار الألوان، فبيختفي
+   طول ما قسم الألوان نفسه مخفي (شوف SHOW_THEME_MIN تحت). */
+const PERKS: { t: string; theme?: boolean }[] = [
+  { t: 'كل التركيبات في المكتبة' },
+  { t: 'الجديد أول ما ينزل' },
+  { t: 'ألوانك على كل تركيبة', theme: true },
+  { t: 'ألوانك محفوظة على حسابك', theme: true },
+  { t: 'دعم لما تحتاجه' },
 ];
 
 /* اللي بيميّزنا — مكتوب بلغة العميل مش بلغة الكود */
-const FEATURES = [
+const FEATURES: { Icon: typeof Play; t: string; d: string; theme?: boolean }[] = [
   { Icon: Play,        t: 'معاينة قبل ما تدفع',  d: 'كل تركيبة شغّالة قدامك في الصفحة، تشوفها بعينك قبل الاشتراك.' },
-  { Icon: Smartphone,  t: 'ألوانك على كل حاجة',  d: 'تختار لونك مرة واحدة من حسابك، وبيتطبّق على كل روابطك.' },
+  { Icon: Smartphone,  t: 'ألوانك على كل حاجة',  d: 'تختار لونك مرة واحدة من حسابك، وبيتطبّق على كل روابطك.', theme: true },
   { Icon: Link2,       t: 'رابط واحد وخلاص',     d: 'مفيش برنامج تنزّله ولا تحذير من ويندوز. تنسخ الرابط وتلزقه.' },
   { Icon: Wand2,       t: 'تصميمات حصرية',       d: 'كل تركيبة مصمّمة عندنا من الصفر، مش قوالب متكررة.' },
   { Icon: RefreshCw,   t: 'مكتبة بتكبر',          d: 'تركيبات جديدة كل أسبوع، وبتوصلك من غير أي دفع زيادة.' },
@@ -49,8 +52,9 @@ const FAQ = [
     a: 'بتنسخ الرابط من قسم التركيبات، وتضيف Browser Source جديد في OBS، وتلزقه. العملية بتاخد أقل من دقيقة، ومفيش أي تنصيب.' },
   { q: 'محتاج أنزّل برنامج؟',
     a: 'لا. التركيبة بتشتغل من الرابط مباشرة جوه OBS. مفيش ملف تنزّله ولا تحذير من ويندوز.' },
-  { q: 'أقدر أغيّر الألوان بعد التركيب؟',
-    a: 'أيوه، والرابط مابيتغيّرش. غيّر اللون من قسم الألوان حتى من موبايلك وانت لايف، والتركيبة بتتحدّث على البث.' },
+  { theme: true,
+    q: 'أقدر أغيّر الألوان بعد التركيب؟',
+    a: 'أيوه، والرابط مابيتغيّرش. غيّر اللون من قسم الألوان واحفظه، وبعدها حدّث المصدر في OBS مرة واحدة عشان اللون الجديد يبان.' },
   { q: 'التركيبات الجديدة بتوصلني إزاي؟',
     a: 'بتلاقيها في قسم التركيبات أول ما تنزل. الاشتراك بياخد كل المكتبة، القديم والجديد.' },
   { q: 'لو الاشتراك خلص وأنا بابث؟',
@@ -112,6 +116,11 @@ const SOON: Record<string, { title: string; lead: string; points: string[] }> = 
   },
 };
 
+/* قسم الألوان بيشتغل فعلاً، بس قيمته بتبان لما يبقى فيه مكتبة — بتركيبة
+   واحدة العميل بيغيّر لون حاجة واحدة. فبيفضل مخفي (هو وأي كلام عنه) لحد
+   ما يبقى فيه العدد ده من التركيبات، وساعتها بيظهر لوحده. */
+const SHOW_THEME_MIN = 3;
+
 const HANDLE_KEY = 'tilago-tt-handle';
 const HANDLE_RE = /^[A-Za-z0-9._]{2,24}$/;
 
@@ -124,6 +133,7 @@ export default function OverlayApp({
 }) {
   const left = daysLeft(sub?.endsAt ?? null);
   const live = sub?.status === 'active' && (left === null || left > 0);
+  const showTheme = overlays.length >= SHOW_THEME_MIN;
 
   const [section, setSection] = useState<SectionKey>(live ? 'overlays' : 'home');
   const [menu, setMenu] = useState(false);
@@ -221,7 +231,7 @@ export default function OverlayApp({
 
   const steps = [
     { done: Boolean(sub),        label: 'فعّلت اشتراكك' },
-    { done: Boolean(sub?.theme), label: 'اخترت ألوانك' },
+    ...(showTheme ? [{ done: Boolean(sub?.theme), label: 'اخترت ألوانك' }] : []),
     { done: overlays.length > 0, label: 'في تركيبات جاهزة' },
   ];
   const doneCount = steps.filter(s => s.done).length;
@@ -273,7 +283,14 @@ export default function OverlayApp({
         .ovl-nav button:hover{background:rgba(127,58,161,.12);color:var(--ink)}
         .ovl-nav button:hover svg{color:var(--accent)}
         .ovl-nav button[aria-current="true"]{background:rgba(127,58,161,.2);border-color:var(--line-2);color:var(--ink)}
-        .ovl-nav button[aria-current="true"] svg{color:var(--accent)}
+        .ovl-nav button[aria-current="true"] svg{color:var(--accent);
+          filter:drop-shadow(0 0 8px rgba(163,107,208,.75))}
+        /* هالة حوالين أيقونة القسم المفتوح */
+        .ovl-nav button[aria-current="true"]::before{content:'';position:absolute;top:10px;left:50%;
+          width:44px;height:44px;margin-left:-22px;border-radius:50%;pointer-events:none;
+          background:radial-gradient(circle,rgba(163,107,208,.38) 0%,transparent 68%);
+          animation:ovlHalo 2.4s ease-in-out infinite}
+        @keyframes ovlHalo{0%,100%{opacity:.7;transform:scale(.94)}50%{opacity:1;transform:scale(1.08)}}
         .ovl-nav .ovl-badge{position:absolute;top:6px;left:8px;font-family:'Oxanium',sans-serif;
           font-size:.62rem;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
           display:grid;place-items:center;background:var(--grape);color:#fff}
@@ -400,8 +417,11 @@ export default function OverlayApp({
         .ovl-save-tag em{font-style:normal;color:var(--accent)}
         .ovl-plan ul{list-style:none;margin:0 0 1.2rem;padding:1rem 0 0;border-top:1px solid var(--line);
           display:grid;gap:.55rem;flex:1}
-        .ovl-plan li{display:flex;gap:.5rem;align-items:center;font-size:.84rem;color:var(--ink-2)}
-        .ovl-plan li svg{flex:none;color:var(--accent)}
+        .ovl-plan li{display:flex;gap:.55rem;align-items:center;font-size:.84rem;color:var(--ink-2)}
+        /* علامة صح في دايرة — أوضح من علامة سايبة جنب النص */
+        .ovl-plan li i{flex:none;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;
+          background:rgba(127,58,161,.24);border:1px solid var(--line-2);color:var(--accent)}
+        .ovl-plan li svg{flex:none}
         .ovl-plan .ovl-btn{width:100%}
         .ovl-trust{display:flex;justify-content:center;gap:1.4rem;flex-wrap:wrap;
           margin-top:1.1rem;font-size:.8rem;color:var(--ink-3)}
@@ -462,6 +482,15 @@ export default function OverlayApp({
           font-family:'Oxanium',monospace;font-size:.72rem;direction:ltr;text-align:left}
         .ovl-o-ctl .ovl-btn{flex:none}
         .ovl-o-ctl .ovl-btn.full{flex:1}
+        /* زرار مربّع بأيقونة بس — نفس ترتيب صف التحكم في كل كارت */
+        .ovl-sq{flex:none;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;
+          border-radius:8px;background:rgba(127,58,161,.16);border:1px solid var(--line-2);
+          color:var(--accent);transition:background .2s,box-shadow .2s,color .2s}
+        .ovl-sq:hover{background:rgba(127,58,161,.3);box-shadow:0 0 16px rgba(163,107,208,.35);color:var(--ink)}
+        .ovl-sq.test{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.45);color:var(--warn)}
+        .ovl-sq.test:hover{background:rgba(251,191,36,.26);box-shadow:0 0 16px rgba(251,191,36,.3)}
+        .ovl-sq.done{background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.45);color:var(--ok)}
+        .ovl-sq:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         .ovl-prev{position:relative;aspect-ratio:16/9;background:#000}
         .ovl-prev iframe,.ovl-prev img{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
         .ovl-prev img{object-fit:cover}
@@ -510,56 +539,19 @@ export default function OverlayApp({
         .ovl-none p{margin:0 auto;max-width:44ch;font-size:.86rem;line-height:1.8;color:var(--ink-3)}
         .ovl-none .ovl-btn{margin-top:1.1rem}
 
-        .ovl-foot{border-top:1px solid var(--line);padding:1.3rem 1.5rem;display:flex;
-          justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.78rem;color:var(--ink-3)}
-        .ovl-foot nav{display:flex;gap:1.1rem;flex-wrap:wrap}
-        .ovl-foot a{color:var(--ink-3);text-decoration:none}
-        .ovl-foot a:hover{color:var(--ink-2)}
+        .ovl-foot{border-top:1px solid var(--line);padding:2rem 1.5rem 1.3rem;font-size:.78rem;color:var(--ink-3)}
+        .ovl-foot-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.6rem;
+          max-width:1180px;margin:0 auto 1.6rem}
+        .ovl-foot-cols h3{margin:0 0 .7rem;font-family:'Oxanium',sans-serif;font-size:.72rem;font-weight:800;
+          letter-spacing:.12em;color:var(--ink-2)}
+        .ovl-foot nav{display:flex;flex-direction:column;align-items:flex-start;gap:.5rem}
+        .ovl-foot a,.ovl-foot nav button{color:var(--ink-3);text-decoration:none;background:none;border:0;
+          padding:0;font:inherit;cursor:pointer;text-align:right}
+        .ovl-foot a:hover,.ovl-foot nav button:hover{color:var(--ink)}
+        .ovl-foot-end{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+          max-width:1180px;margin:0 auto;padding-top:1.1rem;border-top:1px solid var(--line)}
+        @media(max-width:640px){.ovl-foot-cols{grid-template-columns:1fr 1fr;gap:1.2rem}}
 
-        /* نافذة الدفع */
-        .ovl-modal-back{position:fixed;inset:0;z-index:80;background:rgba(6,2,14,.8);backdrop-filter:blur(6px);
-          display:grid;place-items:center;padding:1rem;overflow-y:auto}
-        .ovl-modal{width:min(100%,460px);background:var(--panel);border:1px solid var(--line-2);border-radius:16px;overflow:hidden}
-        .ovl-modal-h{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--line)}
-        .ovl-modal-h h2{margin:0;font-size:1.02rem;font-weight:700;color:var(--ink)}
-        .ovl-x{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;cursor:pointer;
-          background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2)}
-        .ovl-x:hover{color:var(--ink);border-color:var(--line-2)}
-        .ovl-co-sum{display:flex;align-items:baseline;justify-content:space-between;padding:1rem 1.2rem;
-          background:var(--well);border-bottom:1px solid var(--line)}
-        .ovl-co-sum span{font-size:.84rem;color:var(--ink-3)}
-        .ovl-co-sum b{font-family:'Oxanium',sans-serif;font-size:1.6rem;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
-        .ovl-co-sum small{font-family:'Cairo',sans-serif;font-size:.8rem;font-weight:400;color:var(--ink-3)}
-        .ovl-co-login{padding:1.2rem;text-align:center}
-        .ovl-co-login p{margin:0 0 1rem;font-size:.87rem;line-height:1.8;color:var(--ink-2)}
-        .ovl-co-field{display:block;padding:1.1rem 1.2rem .4rem}
-        .ovl-co-field span{display:block;font-size:.8rem;color:var(--ink-2);margin-bottom:.4rem}
-        .ovl-co-field input{width:100%;height:42px;padding:0 .8rem;border-radius:10px;background:var(--well);
-          border:1px solid var(--line);color:var(--ink);font-family:'Oxanium',sans-serif;font-size:.95rem;direction:ltr;text-align:left;outline:0}
-        .ovl-co-field input:focus{border-color:var(--line-2)}
-        .ovl-co-err{margin:.5rem 1.2rem 0;padding:.55rem .8rem;border-radius:9px;font-size:.82rem;
-          background:rgba(240,98,119,.1);border:1px solid rgba(240,98,119,.4);color:#ffd4db}
-        .ovl-co-methods{display:grid;gap:.6rem;padding:.9rem 1.2rem}
-        .ovl-co-m{display:flex;align-items:center;gap:.8rem;width:100%;text-align:right;cursor:pointer;
-          padding:.85rem .95rem;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
-          transition:border-color .2s,background .2s}
-        .ovl-co-m:hover:not(:disabled){border-color:var(--line-2);background:rgba(127,58,161,.16)}
-        .ovl-co-m:disabled{opacity:.6;cursor:wait}
-        .ovl-co-m svg{flex:none;color:var(--accent)}
-        .ovl-co-m b{display:block;font-size:.92rem}
-        .ovl-co-m small{display:block;font-size:.76rem;color:var(--ink-3);margin-top:.1rem}
-        .ovl-pp{flex:none;width:20px;height:20px;border-radius:5px;display:grid;place-items:center;
-          font-family:'Oxanium',sans-serif;font-weight:800;font-size:.8rem;background:var(--grape);color:#fff}
-        .ovl-co-m:focus-visible,.ovl-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-        .ovl-co-note{display:flex;align-items:center;justify-content:center;gap:.35rem;margin:0;
-          padding:.2rem 1.2rem 1.1rem;font-size:.78rem;color:var(--ink-3)}
-        .ovl-co-note svg{color:var(--accent)}
-        .ovl-paid{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:70;
-          display:flex;align-items:center;gap:.6rem;max-width:calc(100% - 2rem);
-          background:var(--panel-2);border:1px solid rgba(74,222,128,.45);color:var(--ink);
-          padding:.65rem .8rem .65rem 1rem;border-radius:12px;font-size:.86rem}
-        .ovl-paid > svg{color:var(--ok);flex:none}
-        .ovl-paid button{background:none;border:0;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
 
         .ovl-scrim{display:none}
         @media(max-width:1100px){
@@ -592,7 +584,7 @@ export default function OverlayApp({
           <b>TILAGO</b>
         </div>
         <nav className="ovl-nav" aria-label="أقسام اللوحة">
-          {NAV.map(n => (
+          {NAV.filter(n => n.key !== 'theme' || showTheme).map(n => (
             <button key={n.key} type="button" aria-current={section === n.key} onClick={() => go(n.key)}>
               <n.Icon size={20} />
               {n.name}
@@ -624,6 +616,9 @@ export default function OverlayApp({
           </div>
 
           <div className="ovl-who">
+            <Link className="ovl-sq" href="/cart" title="سلة المتجر" aria-label="سلة المتجر">
+              <ShoppingCart size={16} />
+            </Link>
             {email
               ? <small>{email}</small>
               : <Link className="ovl-btn sm" href="/auth/signin?callbackUrl=/overlay"><LogIn size={14} /> دخول</Link>}
@@ -653,7 +648,7 @@ export default function OverlayApp({
                 <div>
                   <h1 className="ovl-hero-h">شاشتك <em>بترد</em> على جمهورك وانت لايف</h1>
                   <p className="ovl-hero-p">
-                    تركيبات بث لتيك توك بتصميم عربي حصري. رابط واحد تحطه في OBS، بألوانك،
+                    تركيبات بث لتيك توك بتصميم عربي حصري. رابط واحد تحطه في OBS،
                     والمكتبة بتكبر من غير ما تدفع زيادة.
                   </p>
                   <button type="button" className="ovl-btn" onClick={() => go('overlays')}>
@@ -713,7 +708,11 @@ export default function OverlayApp({
                         <span>جنيه / {p.unit}</span>
                       </div>
                       <span className="ovl-save-tag">الشهر بـ <em>{p.per} جنيه</em> · {p.note}</span>
-                      <ul>{PERKS.map(x => <li key={x}><Check size={14} />{x}</li>)}</ul>
+                      <ul>
+                        {PERKS.filter(x => !x.theme || showTheme).map(x => (
+                          <li key={x.t}><i><Check size={11} strokeWidth={3} /></i>{x.t}</li>
+                        ))}
+                      </ul>
                       <button type="button" className={`ovl-btn${best ? '' : ' ghost'}`} onClick={() => openCheckout(p)}>
                         {sub ? 'جدّد الآن' : 'اشترك الآن'}
                       </button>
@@ -732,7 +731,7 @@ export default function OverlayApp({
                 <p>الحاجات اللي بتفرق فعلاً وانت لايف.</p>
               </div>
               <div className="ovl-feats">
-                {FEATURES.map(f => (
+                {FEATURES.filter(f => !f.theme || showTheme).map(f => (
                   <div className="ovl-feat" key={f.t}>
                     <span className="ovl-hex"><f.Icon size={20} /></span>
                     <b>{f.t}</b>
@@ -802,9 +801,14 @@ export default function OverlayApp({
                                 {copied === o.id ? 'اتنسخ' : 'نسخ'}
                               </button>
                               <input readOnly value={url} onFocus={e => e.currentTarget.select()} aria-label={`رابط ${o.title}`} />
-                              <button type="button" className={`ovl-btn sm ghost${tested === o.id ? ' done' : ''}`} onClick={() => test(o)}>
-                                <Play size={13} /> {tested === o.id ? 'ردّت' : 'جرّب'}
+                              <button type="button" className={`ovl-sq test${tested === o.id ? ' done' : ''}`}
+                                onClick={() => test(o)} title="جرّب التركيبة" aria-label={`جرّب ${o.title}`}>
+                                {tested === o.id ? <Check size={15} /> : <Play size={15} />}
                               </button>
+                              <a className="ovl-sq" href={url} target="_blank" rel="noreferrer"
+                                title="افتح الرابط في تبويب جديد" aria-label={`افتح ${o.title}`}>
+                                <ExternalLink size={15} />
+                              </a>
                             </>
                           ) : (
                             <button type="button" className="ovl-btn sm full" onClick={() => go('home')}>
@@ -831,11 +835,11 @@ export default function OverlayApp({
           )}
 
           {/* ── الألوان ───────────────────────────────── */}
-          {section === 'theme' && (
+          {section === 'theme' && showTheme && (
             <>
               <h1 className="ovl-h">الألوان</h1>
               <p className="ovl-p">
-                اختار اللون واحفظه. الرابط اللي في OBS مابيتغيّرش، والتركيبة بتتحدّث على بثك في نفس اللحظة.
+                اختار اللون واحفظه. الرابط اللي في OBS مابيتغيّرش — بس حدّث المصدر مرة واحدة عشان اللون الجديد يبان.
               </p>
               <div className="ovl-theme">
                 <div className="ovl-panel">
@@ -881,7 +885,7 @@ export default function OverlayApp({
               <p className="ovl-p">مفيش تنصيب ولا تحذير من ويندوز. العملية بتاخد أقل من دقيقة.</p>
               <div className="ovl-steps">
                 <div className="ovl-panel ovl-stp"><div><b>انسخ الرابط</b>
-                  <p>من قسم التركيبات، كل واحدة ليها رابط خاص بيك وبألوانك. ضغطة واحدة وهو في الحافظة.</p></div></div>
+                  <p>من قسم التركيبات، كل واحدة ليها رابط خاص بيك. ضغطة واحدة وهو في الحافظة.</p></div></div>
                 <div className="ovl-panel ovl-stp"><div><b>ضيف Browser Source</b>
                   <p>في OBS اختار <code>Sources</code> ثم <code>+</code> ثم <code>Browser</code>، والزق الرابط في <code>URL</code>.</p></div></div>
                 <div className="ovl-panel ovl-stp"><div><b>حط المقاس</b>
@@ -923,7 +927,7 @@ export default function OverlayApp({
               <h1 className="ovl-h">مساعدة</h1>
               <p className="ovl-p">لو سؤالك مش هنا، ابعتلنا وهنرد عليك.</p>
               <div className="ovl-faq">
-                {FAQ.map((f, i) => (
+                {FAQ.filter(f => !('theme' in f) || showTheme).map((f, i) => (
                   <div className={`ovl-qa${openFaq === i ? ' open' : ''}`} key={f.q}>
                     <button type="button" className="ovl-q" aria-expanded={openFaq === i} onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                       {f.q}<i>▾</i>
@@ -940,12 +944,30 @@ export default function OverlayApp({
         {checkout && <CheckoutModal plan={checkout} email={email} onClose={() => setCheckout(null)} />}
 
         <footer className="ovl-foot">
-          <span>Tilago Overlay · مصمّمة لصنّاع البث على تيك توك</span>
-          <nav>
-            <button type="button" onClick={() => go('help')} style={{ background: 'none', border: 0, color: 'inherit', cursor: 'pointer', padding: 0, font: 'inherit' }}>الأسئلة الشائعة</button>
-            <Link href="/contact">تواصل معنا</Link>
-            <Link href="/">المتجر</Link>
-          </nav>
+          <div className="ovl-foot-cols">
+            <nav aria-label="Tilago Overlay">
+              <h3>الأوفرلي</h3>
+              <button type="button" onClick={() => go('home')}>الأسعار</button>
+              <button type="button" onClick={() => go('overlays')}>المكتبة</button>
+              <button type="button" onClick={() => go('install')}>التركيب في OBS</button>
+            </nav>
+            <nav aria-label="المتجر">
+              <h3>المتجر</h3>
+              <Link href="/">الرئيسية</Link>
+              <Link href="/alerts">الاليرتات</Link>
+              <Link href="/stream">باكدجات البث</Link>
+            </nav>
+            <nav aria-label="مساعدة">
+              <h3>مساعدة</h3>
+              <button type="button" onClick={() => go('help')}>الأسئلة الشائعة</button>
+              <Link href="/contact">تواصل معنا</Link>
+              <Link href="/orders">طلباتي</Link>
+            </nav>
+          </div>
+          <div className="ovl-foot-end">
+            <span>Tilago Overlay · مصمّمة لصنّاع البث على تيك توك</span>
+            <span>© {new Date().getFullYear()} Tilago</span>
+          </div>
         </footer>
       </div>
     </div>
