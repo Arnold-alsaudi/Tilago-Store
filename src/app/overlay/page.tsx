@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import OverlayApp from './OverlayApp';
 import type { AppOverlay, AppSub } from './shared';
 import { overlayQuery } from '@/lib/overlaySig';
+import { SHOTS } from '@/generated/shots';
 
 export const metadata: Metadata = {
   title: 'Tilago Overlay',
@@ -45,7 +46,9 @@ export default async function OverlayPage() {
     overlays = await Promise.all(rows.map(async r => ({
       id: r.id, slug: r.slug, title: r.title, description: r.description,
       category: r.category as AppOverlay['category'], file: r.file,
-      poster: r.poster, isFree: r.isFree, featured: r.featured,
+      // لو الأدمن ماحطّش صورة، بنستخدم لقطة التركيبة المولّدة
+      poster: r.poster ?? (SHOTS.includes(r.slug) ? `/shots/${r.slug}.png` : null),
+      isFree: r.isFree, featured: r.featured,
       createdAt: r.createdAt.toISOString(),
       sig: await overlayQuery(`/pv/${r.slug}`),
     })));

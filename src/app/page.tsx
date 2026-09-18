@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { DEFAULT_HOME_CONTENT, type HomeContent, type HomeFeature } from '@/lib/homeContent';
 
+interface LiveOverlay { slug: string; name: string; tag: string; featured: boolean; src: string }
+
 /* ─── Feature Showcase (3 كروت + خلفية فيديو متحركة) ─── */
 function FeatureShowcase({ features, title, subtitle }: { features: HomeFeature[]; title: string; subtitle: string }) {
   return (
@@ -90,6 +92,8 @@ export default function HomePage() {
   const [formOk, setFormOk] = useState(true);
   const [sending, setSending] = useState(false);
   const [content, setContent] = useState<HomeContent>(DEFAULT_HOME_CONTENT);
+  // التركيبات الحيّة اللي بتتعرض في «أكثر من مجرد تصميم»
+  const [live, setLive] = useState<{ items: LiveOverlay[]; total: number }>({ items: [], total: 0 });
 
   useEffect(() => {
     setMounted(true);
@@ -97,6 +101,8 @@ export default function HomePage() {
 
     // محتوى الصفحة الرئيسية القابل للتعديل من الأدمن
     fetch('/api/settings/home').then(r => r.json()).then(setContent).catch(() => {});
+    // التركيبات وهي شغّالة — لو مفيش، القسم بيرجع للصور الثابتة
+    fetch('/api/overlay/showcase').then(r => r.json()).then(setLive).catch(() => {});
 
     return () => clearTimeout(t);
   }, []);
@@ -206,37 +212,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Quick Nav Buttons */}
+      {/* Quick Nav Buttons — كل خانة بأيقونتها، والأوفرلي أول واحدة
+          لأنه المنتج اللي بيتباع بالاشتراك */}
       <section className="quick-nav-section">
         <div className="quick-nav-grid">
-          <Link href="/3d" className="quick-nav-btn" data-reveal="up" data-delay="1">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            3D
-          </Link>
-          <Link href="/videos" className="quick-nav-btn" data-reveal="up" data-delay="2">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            Video
-          </Link>
-          <Link href="/stream" className="quick-nav-btn" data-reveal="up" data-delay="3">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            Stream
-          </Link>
-          <Link href="/alerts" className="quick-nav-btn" data-reveal="up" data-delay="4">
-            <div className="quick-nav-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images.png" alt="Tilago" style={{width:36,height:36,objectFit:'contain',mixBlendMode:'screen'}}/>
-            </div>
-            Alerts
-          </Link>
+          {[
+            { href: '/overlay', icon: 'fa-tower-broadcast', label: 'Overlay', hot: true },
+            { href: '/alerts',  icon: 'fa-bell',            label: 'Alerts' },
+            { href: '/stream',  icon: 'fa-layer-group',     label: 'Stream' },
+            { href: '/3d',      icon: 'fa-cube',            label: '3D' },
+          ].map((q, i) => (
+            <Link
+              key={q.href}
+              href={q.href}
+              className={`quick-nav-btn${q.hot ? ' quick-nav-btn--hot' : ''}`}
+              data-reveal="up"
+              data-delay={i + 1}
+            >
+              <div className="quick-nav-icon"><i className={`fas ${q.icon}`} /></div>
+              {q.label}
+              {q.hot && <span className="qn-tag">اشتراك</span>}
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -319,9 +316,31 @@ export default function HomePage() {
           .wt-card img{width:100%;height:100%;object-fit:cover;object-position:center top;transition:transform .65s cubic-bezier(.25,.8,.25,1);image-rendering:-webkit-optimize-contrast}
           .wt-card:hover img{transform:scale(1.07)}
           .wt-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,1,12,.92) 0%,transparent 55%);z-index:1}
+
+          /* ── الكروت الحيّة: التركيبة نفسها شغّالة جوه الكارت ──
+             الإطار بيتعرض بعرض 1920 وبيتصغّر بالتحويل، عشان التركيبة
+             تحسب مقاسها صح وتطلع زي ما هي على البث بالظبط. */
+          .wt-grid.is-live{grid-template-rows:repeat(2,185px)}
+          .wt-card--live{display:block;background:linear-gradient(160deg,#150a2e,#0a0418)}
+          .wt-card--live iframe{position:absolute;top:50%;left:50%;width:1920px;height:1080px;
+            border:0;transform-origin:center;transform:translate(-50%,-50%) scale(.164);pointer-events:none}
+          .wt-card--live .wt-card-overlay{background:linear-gradient(to top,rgba(4,1,12,.94) 0%,rgba(4,1,12,.2) 48%,transparent 70%)}
+          .wt-live-badge{position:absolute;top:11px;right:12px;z-index:3;display:inline-flex;align-items:center;gap:6px;
+            padding:3px 9px;border-radius:999px;background:rgba(6,2,14,.72);border:1px solid rgba(155,89,208,.4);
+            font-family:'Cairo',sans-serif;font-size:.6rem;font-weight:800;color:#e8ddff;letter-spacing:.5px}
+          .wt-live-badge i{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:wtPulse 2s ease-in-out infinite}
+          @keyframes wtPulse{50%{opacity:.35}}
+          @media(prefers-reduced-motion:reduce){.wt-live-badge i{animation:none}}
           .wt-card-label{position:absolute;bottom:12px;right:14px;left:14px;z-index:2}
           .wt-card-tag{font-family:'Cairo','29LtBukra','Montserrat';font-size:.52rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(155,89,208,.7);margin-bottom:3px}
           .wt-card-name{font-family:'Cairo','29LtBukra','Montserrat';font-size:.88rem;font-weight:900;color:#f0ecff;text-shadow:0 2px 8px rgba(0,0,0,.9)}
+          .wt-cta{display:inline-flex;align-items:center;gap:10px;margin-top:22px;padding:13px 24px;border-radius:14px;
+            background:linear-gradient(135deg,#5416B5,#9B59D0);color:#fff;text-decoration:none;
+            font-family:'Cairo',sans-serif;font-size:.92rem;font-weight:800;
+            box-shadow:0 14px 32px rgba(84,22,181,.32);transition:transform .25s,box-shadow .25s}
+          .wt-cta:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(84,22,181,.45)}
+          .wt-cta-arrow{transition:transform .25s}
+          .wt-cta:hover .wt-cta-arrow{transform:translateX(-4px)}
           @media(max-width:1024px){.wt-inner{grid-template-columns:1fr}.wt-left{flex-direction:row;flex-wrap:wrap}.wt-left h2,.wt-left p{width:100%}.wt-stat-row{flex-direction:row;flex-wrap:wrap}.wt-stat{flex:1 1 140px}}
           @media(max-width:700px){.wt-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:auto}.wt-card[style]{grid-column:span 2!important;grid-row:auto!important;height:210px}.wt-sec{padding:52px 16px}}
           @media(max-width:480px){.wt-grid{grid-template-columns:1fr}.wt-card[style]{grid-column:1!important}}
@@ -360,19 +379,42 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            {/* التركيبات اللي جنب دي شغّالة فعلاً — الزرار بيوصّل للمكتبة */}
+            <Link href="/overlay" className="wt-cta">
+              شوف مكتبة التركيبات
+              <i className="fas fa-arrow-left wt-cta-arrow" />
+            </Link>
           </div>
-          <div className="wt-grid" data-reveal="left">
-            {content.gallery.map((c,i)=>(
-              <div key={i} className="wt-card" style={c.featured?{gridColumn:'2',gridRow:'1/3'}:{}}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.img} alt={c.name}/>
-                <div className="wt-card-overlay"/>
+          {/* التركيبات الحيّة الأول، والباقي صور لحد ما المكتبة تكبر.
+              الشبكة خمس خانات، والكارت الكبير في النص. */}
+          <div className={`wt-grid${live.items.length ? ' is-live' : ''}`} data-reveal="left">
+            {live.items.slice(0, 5).map(o => (
+              <Link key={o.slug} href="/overlay" className="wt-card wt-card--live">
+                <span className="wt-live-badge"><i />مباشر</span>
+                {/* الإطار مقفول من التفاعل — الزائر يتفرّج بس */}
+                <iframe src={o.src} title={o.name} loading="lazy" tabIndex={-1} scrolling="no" />
+                <div className="wt-card-overlay" />
                 <div className="wt-card-label">
-                  <div className="wt-card-tag">{c.tag}</div>
-                  <div className="wt-card-name">{c.name}</div>
+                  <div className="wt-card-tag">{o.tag}</div>
+                  <div className="wt-card-name">{o.name}</div>
                 </div>
-              </div>
+              </Link>
             ))}
+            {content.gallery.slice(0, Math.max(0, 5 - live.items.length)).map((c, i) => {
+              // الكارت الكبير أول صورة دايماً — المعاينات الحيّة بتقعد في
+              // الخانات العريضة لأن مقاس شاشة البث 16:9
+              return (
+                <div key={`g${i}`} className="wt-card" style={i === 0 ? { gridColumn: '2', gridRow: '1/3' } : {}}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.img} alt={c.name}/>
+                  <div className="wt-card-overlay"/>
+                  <div className="wt-card-label">
+                    <div className="wt-card-tag">{c.tag}</div>
+                    <div className="wt-card-name">{c.name}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1046,6 +1088,25 @@ export default function HomePage() {
           border-color: rgba(155,89,208,0.45);
           color: #9B59D0;
           transform: scale(1.08);
+        }
+        /* خانة الأوفرلي مميّزة — دي المنتج اللي بالاشتراك */
+        .quick-nav-btn--hot {
+          background: rgba(84,22,181,0.1);
+          border-color: rgba(155,89,208,0.3);
+          color: #e2dcff;
+        }
+        .quick-nav-btn--hot .quick-nav-icon {
+          background: rgba(84,22,181,0.26);
+          border-color: rgba(155,89,208,0.5);
+          color: #c084f5;
+        }
+        .qn-tag {
+          position: absolute; top: 10px; inset-inline-end: 10px;
+          padding: 2px 8px; border-radius: 999px;
+          background: rgba(155,89,208,0.18);
+          border: 1px solid rgba(155,89,208,0.38);
+          font-family: 'Cairo', sans-serif; font-size: .58rem; font-weight: 800;
+          color: #d9c6ff; letter-spacing: .3px;
         }
         @media (max-width: 768px) {
           .quick-nav-section { padding: 24px 16px 36px; }

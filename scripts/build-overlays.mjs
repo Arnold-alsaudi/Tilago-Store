@@ -80,6 +80,22 @@ async function main() {
 
   await writeFile(OUT, ts, 'utf8');
 
+  // صور التركيبات المتاحة — بتتولد بـ shoot-overlays وبتتخزّن في الريبو.
+  // بنقرا الموجود فعلاً عشان الموقع مايحطش صورة مش موجودة.
+  const shots = await readdir(join(ROOT, 'public', 'shots'))
+    .then(list => list.filter(f => f.endsWith('.png')).map(f => f.replace(/\.png$/, '')).sort())
+    .catch(() => []);
+  await writeFile(
+    join(OUT_DIR, 'shots.ts'),
+    [
+      '// ⚠️ ملف مولّد — بيتقرا من public/shots',
+      '',
+      `export const SHOTS: string[] = ${JSON.stringify(shots)};`,
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+
   const saved = Math.round((1 - after / before) * 100);
   console.log(`تم بناء ${files.length} تركيبة — أصغر بـ${saved}% → src/generated/overlays.ts`);
 }
