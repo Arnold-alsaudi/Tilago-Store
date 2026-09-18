@@ -136,6 +136,11 @@ html,body{
   var stage  = document.getElementById("stage");
   var params = new URLSearchParams(location.search);
 
+  /* الإعدادات بتيجي محقونة من السيرفر في رابط العميل، ومن الرابط في
+     المعاينة. التركيبة مش فارق معاها الاتنين. */
+  var CFG = window.__T || {};
+  function P(k) { return CFG[k] != null ? String(CFG[k]) : params.get(k); }
+
   /* المسرح بيتقاس على المقاس اللي OBS بيديهوله، فالشاشة بتطلع مظبوطة
      سواء المصدر 800 أو 1920 */
   function fit() {
@@ -148,21 +153,21 @@ html,body{
   fit();
 
   /* النصوص والألوان من الرابط — نفس الملف بيخدم كل العملاء */
-  var t = params.get("title"); if (t) document.getElementById("title").textContent = t;
-  var n = params.get("note");  if (n) document.getElementById("note").textContent  = n;
-  if (params.get("logo") === "0") document.getElementById("logo").style.display = "none";
-  var customLogo = params.get("logoUrl");
+  var t = P("title"); if (t) document.getElementById("title").textContent = t;
+  var n = P("note");  if (n) document.getElementById("note").textContent  = n;
+  if (P("logo") === "0") document.getElementById("logo").style.display = "none";
+  var customLogo = P("logoUrl");
   if (customLogo) document.getElementById("logo").src = customLogo;
 
   ["violet","grape","navy","deep","ink"].forEach(function (k) {
-    var v = params.get(k);
+    var v = P(k);
     if (v) document.documentElement.style.setProperty("--" + k, v);
   });
 
-  if (params.get("mark") === "1") document.getElementById("mark").hidden = false;
+  if (P("mark") === "1") document.getElementById("mark").hidden = false;
 
   /* عدّاد لوقت محدد — لو مفيش until، بيفضل مخفي */
-  var until = params.get("until");
+  var until = P("until");
   if (until) {
     var target = new Date(until).getTime();
     if (!isNaN(target)) {

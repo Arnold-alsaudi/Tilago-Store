@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { signOverlayPath } from '@/lib/overlaySig';
+import { fingerprint, renderOverlay, OVERLAY_HEADERS, type OverlayConfig } from '@/lib/overlayServe';
 
 /**
  * الرابط اللي العميل بيحطه في OBS: /o/<token>/<slug>
  *
  * التوكن هو المفتاح — عشوائي ومربوط بالاشتراك، وبيتجدد لو اتسرّب فكل روابط
  * العميل تتغيّر مرة واحدة. الـslug بيحدد التركيبة.
+ *
+ * الصفحة بتتسلّم من هنا مباشرة — مش تحويل لملف ساكن. يعني:
+ *   • ملفات التركيبات مالهاش عنوان على الموقع حد يفتحه.
+ *   • ألوان العميل ونصوصه بتتحقن في الصفحة بدل ما تبان في الرابط.
+ *   • كل نسخة عليها بصمة بتدلّنا على صاحبها لو اتسرّبت.
  *
  * لما الاشتراك يخلص، مابنرجّعش خطأ. لو رجّعنا 404 هيظهر مربع أبيض مكسور على
  * بث العميل قدام جمهوره. بنرجّع تركيبة شفافة فيها سطر صغير ليه هو بس.
@@ -29,13 +34,7 @@ function quietNotice(message: string) {
 </style>
 <div class="n"><i></i>${message}</div>`;
 
-  return new NextResponse(html, {
-    status: 200,
-    headers: {
-      'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'no-store',
-    },
-  });
+  return new NextResponse(html, { status: 200, headers: OVERLAY_HEADERS });
 }
 
 export async function GET(
@@ -51,13 +50,13 @@ export async function GET(
 
   if (!overlay) return quietNotice('التركيبة دي مش متاحة');
 
+  const sub = await prisma.subscription.findUnique({
+    where: { token },
+    select: { status: true, endsAt: true, theme: true },
+  }).catch(() => null);
+
   // التركيبة المجانية بتشتغل من غير اشتراك أصلاً
   if (!overlay.isFree) {
-    const sub = await prisma.subscription.findUnique({
-      where: { token },
-      select: { status: true, endsAt: true, theme: true },
-    }).catch(() => null);
-
     if (!sub) return quietNotice('الرابط ده مش مفعّل — راجع حسابك على tilago');
 
     const expired =
@@ -65,42 +64,33 @@ export async function GET(
       (sub.endsAt !== null && sub.endsAt.getTime() < Date.now());
 
     if (expired) return quietNotice('انتهى الاشتراك — جدّد من حسابك على tilago');
-
-    return NextResponse.redirect(await themedUrl(_req, overlay.file, sub.theme), 307);
   }
 
-  // المجانية: نفس الملف، وبعلامة Tilago
-  const sub = await prisma.subscription.findUnique({
-    where: { token },
-    select: { theme: true },
-  }).catch(() => null);
+  const page = renderOverlay(
+    overlay.file,
+    buildConfig(sub?.theme ?? null, overlay.isFree),
+    await fingerprint(token),
+  );
 
-  return NextResponse.redirect(await themedUrl(_req, overlay.file, sub?.theme ?? null, true), 307);
+  if (!page) return quietNotice('التركيبة دي بتتجهّز');
+
+  return new NextResponse(page, { status: 200, headers: OVERLAY_HEADERS });
 }
 
-/** بنحوّل ألوان العميل المحفوظة لباراميترات الرابط اللي التركيبة بتقراها */
-async function themedUrl(
-  req: NextRequest,
-  file: string,
-  theme: unknown,
-  watermark = false,
-): Promise<URL> {
-  const url = new URL(file, req.nextUrl.origin);
+/** ألوان العميل المحفوظة بتتحوّل لإعدادات التركيبة */
+function buildConfig(theme: unknown, watermark: boolean): OverlayConfig {
+  const cfg: OverlayConfig = {};
 
   if (theme && typeof theme === 'object') {
     for (const [k, v] of Object.entries(theme as Record<string, unknown>)) {
-      if (typeof v === 'string' && v) url.searchParams.set(k, v);
+      if (typeof v === 'string' && v) cfg[k] = v;
     }
   }
+
   // وضع العرض مقفول دايماً في رابط العميل — غير كده هتظهر أسامي وهمية
-  // على بثه قدام جمهوره
-  url.searchParams.set('demo', '0');
-  if (watermark) url.searchParams.set('mark', '1');
+  // وأرقام بتتحرك لوحدها على بثه قدام جمهوره
+  cfg.demo = '0';
+  if (watermark) cfg.mark = '1';
 
-  // من غير التوقيع ده الملف بيرجع 404 — الميدلوير بيتأكد منه
-  const { exp, sig } = await signOverlayPath(url.pathname);
-  url.searchParams.set('exp', exp);
-  url.searchParams.set('sig', sig);
-
-  return url;
+  return cfg;
 }

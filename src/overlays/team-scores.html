@@ -159,6 +159,11 @@ html,body{
   var stage  = document.getElementById("stage");
   var params = new URLSearchParams(location.search);
 
+  /* الإعدادات بتيجي محقونة من السيرفر في رابط العميل، ومن الرابط في
+     المعاينة. التركيبة مش فارق معاها الاتنين. */
+  var CFG = window.__T || {};
+  function P(k) { return CFG[k] != null ? String(CFG[k]) : params.get(k); }
+
   /* المسرح بيتقاس على المقاس اللي OBS بيديهوله، فالشكل بيطلع
      مظبوط سواء المصدر 800 أو 1920 */
   function fit() {
@@ -173,27 +178,27 @@ html,body{
   /* ---------- الإعدادات من الرابط ---------- */
   var root = document.documentElement;
   ["violet","grape","navy","deep","ink","c1","c2"].forEach(function (k) {
-    var v = params.get(k);
+    var v = P(k);
     if (v) root.style.setProperty("--" + k, v);
   });
 
   var titleEl = document.getElementById("title");
-  var title = params.get("title");
+  var title = P("title");
   if (title !== null) {
     if (title === "") titleEl.classList.add("off");
     else titleEl.textContent = title;
   }
 
-  var n1 = params.get("t1"); if (n1) document.getElementById("n1").textContent = n1;
-  var n2 = params.get("t2"); if (n2) document.getElementById("n2").textContent = n2;
+  var n1 = P("t1"); if (n1) document.getElementById("n1").textContent = n1;
+  var n2 = P("t2"); if (n2) document.getElementById("n2").textContent = n2;
 
-  var unit = params.get("unit");
+  var unit = P("unit");
   if (unit !== null) {
     document.getElementById("p1").textContent = unit;
     document.getElementById("p2").textContent = unit;
   }
 
-  if (params.get("mark") === "1") document.getElementById("mark").hidden = false;
+  if (P("mark") === "1") document.getElementById("mark").hidden = false;
 
   /* ---------- الأرقام ---------- */
   var v1 = document.getElementById("v1");
@@ -220,12 +225,12 @@ html,body{
     edge.style.left  = pct + "%";
   }
 
-  render(parseInt(params.get("s1") || "0", 10), parseInt(params.get("s2") || "0", 10));
+  render(parseInt(P("s1") || "0", 10), parseInt(P("s2") || "0", 10));
 
   /* ---------- وضع العرض ----------
      في صفحة الموقع بس. بيلعب لوحده عشان الزبون يشوفها حيّة،
      ومقفول في رابط العميل عشان ماتتحركش أرقام وهمية على بثه. */
-  if (params.get("demo") === "1") {
+  if (P("demo") === "1") {
     var a = 3, b = 2;
     setInterval(function () {
       if (Math.random() < .5) a += 1 + (Math.random() * 3 | 0);

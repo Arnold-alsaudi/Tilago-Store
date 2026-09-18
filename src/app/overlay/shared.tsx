@@ -54,9 +54,9 @@ export const isNew = (iso: string) => Date.now() - new Date(iso).getTime() < 14 
 export const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
 
-export function previewSrc(o: Pick<AppOverlay, 'file' | 'sig'>, vars?: Record<string, string>) {
-  const q = new URLSearchParams({ demo: '1', ...(vars ?? {}) });
-  return `${o.file}?${q.toString()}${o.sig ? '&' + o.sig : ''}`;
+export function previewSrc(o: Pick<AppOverlay, 'slug' | 'sig'>, vars?: Record<string, string>) {
+  const q = new URLSearchParams(vars ?? {});
+  return `/pv/${o.slug}?${q.toString()}${o.sig ? '&' + o.sig : ''}`;
 }
 
 /* ── نافذة الدفع ─────────────────────────────────────────────

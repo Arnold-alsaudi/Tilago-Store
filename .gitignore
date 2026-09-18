@@ -49,4 +49,4 @@ prisma/migrations/
 .env*
 
 # التركيبات المضغوطة — بتتبني من src/overlays وقت البناء
-/public/overlays/
+/src/generated/

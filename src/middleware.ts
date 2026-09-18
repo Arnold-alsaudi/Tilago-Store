@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { isAdminAuthorized } from '@/lib/adminAuth';
-import { verifyOverlaySig } from '@/lib/overlaySig';
 
 const ADMIN_ROUTES = ['/api/admin'];
 
@@ -51,18 +50,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ملفات التركيبات مش مفتوحة للناس — بتتسلّم بتوقيع بنعمله احنا، سواء
-  // من رابط العميل (/o/...) أو من معاينة الصفحة. من غير توقيع صالح، الملف
-  // كأنه مش موجود.
-  if (pathname.startsWith('/overlays/')) {
-    const ok = await verifyOverlaySig(
-      pathname,
-      req.nextUrl.searchParams.get('exp'),
-      req.nextUrl.searchParams.get('sig'),
-    );
-    if (!ok) return new NextResponse(null, { status: 404 });
-  }
-
   // نبعت الـ request headers صح عشان FormData و multipart يشتغلوا في الـ route handlers
   const res = NextResponse.next({ request: { headers: new Headers(req.headers) } });
 
@@ -70,7 +57,7 @@ export async function middleware(req: NextRequest) {
   // ملفات التركيبات بتتعرض في إطار جوه صفحة الأوفرلي (المعاينة الحيّة)،
   // فمينفعش نمنع تأطيرها زي باقي الموقع. بنسمح من نفس الموقع بس — أي دومين
   // تاني لسه ممنوع يحطها عنده. باقي الصفحات فاضلة DENY زي ما هي.
-  const framableAsset = pathname.startsWith('/overlays/');
+  const framableAsset = pathname.startsWith('/pv/');
 
   // ws:// و wss:// للسيرفر اللي بيغذّي التركيبات بالأحداث الحيّة.
   // فاضي دلوقتي لحد ما نقرر الاستضافة — وساعتها متغيّر بيئة وبس.

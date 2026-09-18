@@ -47,7 +47,7 @@ export default async function OverlayPage() {
       category: r.category as AppOverlay['category'], file: r.file,
       poster: r.poster, isFree: r.isFree, featured: r.featured,
       createdAt: r.createdAt.toISOString(),
-      sig: await overlayQuery(new URL(r.file, 'http://x').pathname),
+      sig: await overlayQuery(`/pv/${r.slug}`),
     })));
 
     if (s) {
