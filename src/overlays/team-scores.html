@@ -9,15 +9,12 @@
      ?t1=الأحمر&t2=الأزرق&s1=12&s2=9&c1=%23A855F7&c2=%2322D3EE
      &title=تحدي الهدايا&unit=نقطة&until=2026-09-19T22:00
 
-   قرارات التصميم — كلها لصالح الوضوح على بث مضغوط:
+   فكرة التصميم: الشريط نفسه هو النتيجة — عرض كل لون نصيب فريقه،
+   فالمتفرج يعرف مين كاسب من نظرة قبل ما يقرا رقم.
 
-   • الألوان مش مشبعة لآخرها، وفوقها تدرّج غامق. اللون الصريح
-     بيتكسّر لبقع في ضغط تيك توك.
-   • مفيش خطوط رفيعة ولا نقوش مائلة — دي بتعمل نمنمة مع الضغط.
-   • الرقم هو البطل: خط عريض وكبير، وعرض الأرقام ثابت فمابترقصش.
-   • الفاصل بيتحرك مع النتيجة، فالمتفرج يعرف مين كاسب من نظرة
-     من غير ما يقرا رقم.
-   • الحركة قصيرة وهادية: مفيش وميض ولا توهّج نابض ياكل العين.
+   الحركة مستمرة بس هادية: موجة ضوء بتعدّي جوه اللون كل 7 ثواني.
+   مقصود إنها موجة عريضة مش خطوط رفيعة — الخطوط الرفيعة بتعمل
+   نمنمة وتشويش لما الفيديو يتضغط على تيك توك.
    ============================================================ */
 @font-face{font-family:'Cairo';src:url('/fonts/cairo-bold.ttf') format('truetype');font-weight:700;font-display:block}
 @font-face{font-family:'Cairo';src:url('/fonts/cairo-black.ttf') format('truetype');font-weight:900;font-display:block}
@@ -26,9 +23,10 @@
 :root{
   --violet:#7F3AA1; --grape:#5416B5; --navy:#0F083B; --deep:#0C0516;
   --ink:#ffffff;
-  --c1:#A855F7;   /* الفريق الأول */
-  --c2:#22D3EE;   /* الفريق التاني */
-  --h:150px;      /* ارتفاع الشريط */
+  --c1:#A855F7;
+  --c2:#22D3EE;
+  --h:132px;      /* ارتفاع الشريط */
+  --cut:30px;     /* ميل الأطراف */
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -39,23 +37,123 @@ html,body{
   -webkit-font-smoothing:antialiased;
 }
 #stage{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left}
+#wrap{position:absolute;top:40px;left:50%;transform:translateX(-50%);width:1560px}
 
-#wrap{position:absolute;top:44px;left:50%;transform:translateX(-50%);width:1520px}
-
-/* ---------- السطر العلوي: العنوان والوقت ---------------- */
-#top{
-  display:flex;align-items:center;justify-content:center;gap:18px;
-  margin-bottom:16px;height:46px;
+/* ---------- الصفيحتين فوق ------------------------------- */
+/* الأرقام فوق الفاصل مباشرة — أول حاجة العين تروح لها */
+/* الصفيحتين بتتحركوا مع الفاصل — الشكل كله بيفضل قطعة واحدة */
+#wings{position:relative;height:96px;z-index:3}
+.wing{
+  position:absolute;bottom:0;width:250px;height:88px;
+  display:flex;align-items:center;justify-content:center;
+  transition:left .6s cubic-bezier(.22,1,.3,1),
+             transform .3s cubic-bezier(.34,1.5,.64,1);
 }
+.wing.a{left:calc(var(--pct,50%) - 248px);clip-path:polygon(38px 0,100% 0,100% 100%,0 100%)}
+.wing.b{left:calc(var(--pct,50%) - 2px);clip-path:polygon(0 0,calc(100% - 38px) 0,100% 100%,0 100%)}
+.wing::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(0,0,0,.3)),var(--col);
+}
+.wing::after{  /* خط لمعة علوي — بيدّي حس معدن */
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);
+}
+.sc{
+  position:relative;z-index:2;
+  font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;
+  font-size:74px;font-weight:800;line-height:1;color:#fff;
+  text-shadow:0 3px 10px rgba(0,0,0,.55);
+  transition:transform .3s cubic-bezier(.34,1.6,.64,1);
+}
+.sc.bump{transform:scale(1.2)}
+.wing.win{transform:translateY(-8px)}
+
+/* ---------- الشريط ------------------------------------- */
+#bar{
+  position:relative;height:var(--h);overflow:hidden;
+  clip-path:polygon(var(--cut) 0,100% 0,calc(100% - var(--cut)) 100%,0 100%);
+  background:#0a0418;
+  filter:drop-shadow(0 16px 30px rgba(0,0,0,.55));
+}
+.half{position:absolute;top:0;bottom:0;overflow:hidden}
+.half::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.34)),var(--col);
+}
+/* موجة الضوء — عريضة وبطيئة، بتدّي حياة من غير ما تشد العين */
+.half::after{
+  content:'';position:absolute;top:-40%;bottom:-40%;left:-60%;width:46%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.17) 45%,transparent);
+  transform:skewX(-16deg);
+  animation:sweep 7s linear infinite;
+}
+.half.b::after{animation-delay:3.5s}
+@keyframes sweep{0%{left:-60%}100%{left:170%}}
+
+#hA{left:0;width:50%;transition:width .6s cubic-bezier(.22,1,.3,1)}
+#hB{right:0;left:auto;width:50%}
+
+/* الفاصل — شفرة مايلة بنفس ميل الأطراف */
+#blade{
+  position:absolute;top:-14px;bottom:-14px;left:50%;width:30px;
+  transform:translateX(-50%) skewX(-13deg);
+  background:linear-gradient(180deg,#241442,#06030f);
+  box-shadow:0 0 0 3px rgba(255,255,255,.16);
+  transition:left .6s cubic-bezier(.22,1,.3,1);z-index:4;
+}
+#blade i{  /* شرارة رفيعة في نص الشفرة */
+  position:absolute;top:14%;bottom:14%;left:50%;width:3px;transform:translateX(-50%);
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.85),transparent);
+}
+/* ومضة واحدة قصيرة عند التسجيل — مش نبض مستمر */
+#spark{
+  position:absolute;top:0;bottom:0;left:50%;width:220px;
+  transform:translateX(-50%);opacity:0;pointer-events:none;z-index:3;
+  background:radial-gradient(ellipse 50% 70% at 50% 50%,rgba(255,255,255,.55),transparent 72%);
+  transition:left .6s cubic-bezier(.22,1,.3,1);
+}
+#spark.go{animation:flash .45s ease-out}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+
+/* ---------- الأسامي ------------------------------------- */
+.nm{
+  position:absolute;top:0;bottom:0;display:flex;align-items:center;gap:16px;
+  z-index:2;font-size:46px;font-weight:900;color:#fff;
+  text-shadow:0 3px 12px rgba(0,0,0,.6);white-space:nowrap;
+  max-width:44%;overflow:hidden;
+}
+.nm.a{left:54px}
+.nm.b{right:54px;flex-direction:row-reverse}
+.crown{width:40px;height:40px;opacity:0;transform:translateY(5px);transition:opacity .3s,transform .3s;flex:none}
+.nm.win .crown{opacity:1;transform:none}
+
+/* ---------- السطر التحت ---------------------------------- */
+#under{
+  position:relative;height:52px;margin-top:14px;
+}
+#gap{
+  position:absolute;left:50%;top:0;transform:translateX(-50%);
+  display:none;align-items:center;gap:9px;direction:rtl;
+  padding:8px 22px;border-radius:999px;
+  background:rgba(8,4,16,.82);border:1px solid rgba(255,255,255,.18);
+  font-size:24px;font-weight:700;color:rgba(255,255,255,.92);white-space:nowrap;
+  transition:left .6s cubic-bezier(.22,1,.3,1);
+}
+#gap.on{display:inline-flex}
+#gap b{font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;font-size:27px}
+
+/* ---------- العنوان والوقت ------------------------------- */
+#top{display:flex;align-items:center;justify-content:center;gap:14px;height:46px;margin-bottom:14px}
 #title{
-  font-size:30px;font-weight:900;color:rgba(255,255,255,.92);
-  letter-spacing:.01em;
+  padding:7px 22px;border-radius:12px;
+  background:rgba(8,4,16,.78);border:1px solid rgba(255,255,255,.16);
+  font-size:29px;font-weight:900;color:#fff;
 }
 #title.off{display:none}
 #clock{
-  display:none;align-items:center;gap:9px;
-  padding:7px 18px;border-radius:12px;
-  background:rgba(8,4,16,.72);border:1px solid rgba(255,255,255,.14);
+  display:none;align-items:center;gap:9px;padding:6px 18px;border-radius:12px;
+  background:rgba(8,4,16,.78);border:1px solid rgba(255,255,255,.16);
   font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;
   font-size:27px;font-weight:800;color:#fff;
 }
@@ -63,80 +161,9 @@ html,body{
 #clock s{width:9px;height:9px;border-radius:50%;background:#ff5a6e;text-decoration:none}
 #clock.over s{background:rgba(255,255,255,.3)}
 
-/* ---------- الشريط ------------------------------------- */
-#bar{
-  position:relative;height:var(--h);border-radius:26px;overflow:hidden;
-  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(0,0,0,.26)),var(--c2);
-  box-shadow:0 18px 44px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.1);
-}
-/* نص الفريق الأول — عرضه هو النتيجة نفسها */
-#fill{
-  position:absolute;top:0;bottom:0;left:0;width:50%;
-  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(0,0,0,.26)),var(--c1);
-  transition:width .62s cubic-bezier(.22,1,.3,1);
-}
-/* الفاصل — شفرة مائلة بتتحرك مع النتيجة */
-#blade{
-  position:absolute;top:-10px;bottom:-10px;left:50%;width:22px;
-  transform:translateX(-50%) skewX(-9deg);
-  background:linear-gradient(180deg,#1a1030,#05020c);
-  box-shadow:0 0 0 2px rgba(255,255,255,.14);
-  transition:left .62s cubic-bezier(.22,1,.3,1);
-}
-/* ومضة واحدة قصيرة عند التسجيل — مش نبض مستمر */
-#spark{
-  position:absolute;top:0;bottom:0;left:50%;width:150px;
-  transform:translateX(-50%);opacity:0;pointer-events:none;
-  background:radial-gradient(ellipse 50% 70% at 50% 50%,rgba(255,255,255,.5),transparent 70%);
-  transition:left .62s cubic-bezier(.22,1,.3,1);
-}
-#spark.go{animation:flash .42s ease-out}
-@keyframes flash{0%{opacity:.9}100%{opacity:0}}
-
-/* ---------- محتوى الجانبين ------------------------------ */
-.side{
-  position:absolute;top:0;bottom:0;display:flex;align-items:center;gap:30px;
-  padding:0 40px;z-index:2;
-}
-.side.a{left:0}
-.side.b{right:0;flex-direction:row-reverse}
-
-.nm{
-  font-size:44px;font-weight:900;color:#fff;line-height:1.2;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;
-  text-shadow:0 3px 12px rgba(0,0,0,.55);
-}
-.sc{
-  font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;
-  font-size:104px;font-weight:800;line-height:.9;color:#fff;
-  text-shadow:0 4px 16px rgba(0,0,0,.6);
-  transition:transform .3s cubic-bezier(.34,1.5,.64,1);
-}
-.sc.bump{transform:scale(1.16)}
-
-/* تاج الكاسب — علامة صامتة بدل ما نكتب كلام */
-.crown{
-  width:40px;height:40px;opacity:0;transform:translateY(4px);
-  transition:opacity .3s,transform .3s;flex:none;
-}
-.side.win .crown{opacity:1;transform:none}
-
-/* ---------- الفارق -------------------------------------- */
-#gap{
-  position:absolute;left:50%;top:calc(100% + 14px);transform:translateX(-50%);
-  display:none;align-items:center;gap:8px;direction:rtl;
-  padding:7px 20px;border-radius:999px;
-  background:rgba(8,4,16,.8);border:1px solid rgba(255,255,255,.16);
-  font-size:23px;font-weight:700;color:rgba(255,255,255,.9);white-space:nowrap;
-  transition:left .62s cubic-bezier(.22,1,.3,1);
-}
-#gap.on{display:inline-flex}
-#gap b{font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;font-size:26px}
-
 #mark{
   position:absolute;right:34px;bottom:28px;
-  font-size:24px;font-weight:700;letter-spacing:.22em;
-  color:rgba(255,255,255,.42);
+  font-size:24px;font-weight:700;letter-spacing:.22em;color:rgba(255,255,255,.42);
 }
 
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
@@ -149,25 +176,30 @@ html,body{
       <div id="title">تحدي الفرق</div>
     </div>
 
+    <div id="wings">
+      <div class="wing a" id="wa" style="--col:var(--c1)"><span class="sc" id="v1">0</span></div>
+      <div class="wing b" id="wb" style="--col:var(--c2)"><span class="sc" id="v2">0</span></div>
+    </div>
+
     <div id="bar">
-      <div id="fill"></div>
+      <div class="half a" id="hA" style="--col:var(--c1)"></div>
+      <div class="half b" id="hB" style="--col:var(--c2)"></div>
       <div id="spark"></div>
-      <div id="blade"></div>
+      <div id="blade"><i></i></div>
 
-      <div class="side a" id="sa">
-        <div class="nm" id="n1">الفريق الأول</div>
+      <div class="nm a" id="na">
+        <span id="n1">الفريق الأول</span>
         <svg class="crown" viewBox="0 0 24 24" fill="#ffd76a" aria-hidden="true"><path d="M3 18h18l-1.6-9-4.4 3.4L12 6l-3 6.4L4.6 9 3 18z"/></svg>
-        <div class="sc" id="v1">0</div>
       </div>
-
-      <div class="side b" id="sb">
-        <div class="nm" id="n2">الفريق الثاني</div>
+      <div class="nm b" id="nb">
+        <span id="n2">الفريق الثاني</span>
         <svg class="crown" viewBox="0 0 24 24" fill="#ffd76a" aria-hidden="true"><path d="M3 18h18l-1.6-9-4.4 3.4L12 6l-3 6.4L4.6 9 3 18z"/></svg>
-        <div class="sc" id="v2">0</div>
       </div>
     </div>
 
-    <div id="gap">فارق <b id="gv">0</b> <span id="gu">نقطة</span></div>
+    <div id="under">
+      <div id="gap">فارق <b id="gv">0</b> <span id="gu">نقطة</span></div>
+    </div>
   </div>
 
   <div id="mark" hidden>TILAGO</div>
@@ -186,7 +218,6 @@ html,body{
   var CFG = window.__T || {};
   function P(k) { return CFG[k] != null ? String(CFG[k]) : params.get(k); }
 
-  /* المسرح بيتقاس على المقاس اللي OBS بيديهوله */
   function fit() {
     var s = Math.min(innerWidth / STAGE_W, innerHeight / STAGE_H);
     stage.style.transform =
@@ -220,10 +251,11 @@ html,body{
 
   /* ---------- النتيجة ---------- */
   var v1 = document.getElementById("v1"), v2 = document.getElementById("v2");
-  var sa = document.getElementById("sa"), sb = document.getElementById("sb");
-  var fill = document.getElementById("fill"), blade = document.getElementById("blade");
-  var spark = document.getElementById("spark"), gapEl = document.getElementById("gap");
-  var gv = document.getElementById("gv");
+  var wa = document.getElementById("wa"), wb = document.getElementById("wb");
+  var na = document.getElementById("na"), nb = document.getElementById("nb");
+  var hA = document.getElementById("hA"), hB = document.getElementById("hB");
+  var blade = document.getElementById("blade"), spark = document.getElementById("spark");
+  var gapEl = document.getElementById("gap"), gv = document.getElementById("gv");
   var cur = [null, null];
 
   function bump(el) {
@@ -241,25 +273,28 @@ html,body{
 
   function render(a, b) {
     a = Math.max(0, a | 0); b = Math.max(0, b | 0);
-    var first = cur[0] === null;
-    var moved = false;
+    var first = cur[0] === null, moved = false;
 
     if (cur[0] !== a) { v1.textContent = a; if (!first) { bump(v1); moved = true; } cur[0] = a; }
     if (cur[1] !== b) { v2.textContent = b; if (!first) { bump(v2); moved = true; } cur[1] = b; }
     if (moved) flash();
 
-    /* الاتنين بصفر = الفاصل في النص. وبنسيب 12% لكل جنب على الأقل
-       عشان الاسم والرقم مايتقصّوش لو حد كاسح. */
+    /* الاتنين بصفر = الفاصل في النص. وبنسيب 14% لكل جنب على الأقل
+       عشان الاسم مايتقصّش لو حد كاسح. */
     var pct = (a + b) === 0 ? 50 : (a / (a + b)) * 100;
-    pct = Math.min(88, Math.max(12, pct));
+    pct = Math.min(86, Math.max(14, pct));
 
-    fill.style.width = pct + "%";
+    document.getElementById("wrap").style.setProperty("--pct", pct + "%");
+    hA.style.width = pct + "%";
+    hB.style.width = (100 - pct) + "%";
     blade.style.left = pct + "%";
     spark.style.left = pct + "%";
     gapEl.style.left = pct + "%";
 
-    sa.classList.toggle("win", a > b);
-    sb.classList.toggle("win", b > a);
+    wa.classList.toggle("win", a > b);
+    wb.classList.toggle("win", b > a);
+    na.classList.toggle("win", a > b);
+    nb.classList.toggle("win", b > a);
 
     var d = Math.abs(a - b);
     gapEl.classList.toggle("on", d > 0);
@@ -280,8 +315,8 @@ html,body{
       (function tick() {
         var ms = target - Date.now();
         if (ms <= 0) {
-          /* خلص الوقت: بنسيب العدّاد على صفر وبنطفّي النقطة الحمرا،
-             عشان المذيع يعرف إن التحدي انتهى من غير ما الشاشة تفضى */
+          /* خلص الوقت: العدّاد بيقف على صفر والنقطة بتطفي، عشان
+             المذيع يعرف إن التحدي انتهى من غير ما الشاشة تفضى */
           clock.classList.add("over");
           out.textContent = "00:00";
           return;
