@@ -50,3 +50,6 @@ prisma/migrations/
 
 # التركيبات المضغوطة — بتتبني من src/overlays وقت البناء
 /src/generated/
+
+# نسخ تجربة محلية — مينفعش تتنشر، دي التركيبات من غير حماية
+/public/try-*.html
