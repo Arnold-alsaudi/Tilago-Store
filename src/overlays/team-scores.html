@@ -2,150 +2,172 @@
 <title>Team Scores — Tilago</title>
 <style>
 /* ============================================================
-   TEAM SCORES — سكور فريقين
+   TEAM SCORES — تحدي فريقين
 
-   بتشتغل لوحدها بالكامل: مفيش سيرفر ولا اتصال بأي حاجة. المذيع
-   بيزوّد وينقّص النقط بإيده من لوحة التحكم، والتركيبة بتقرا
-   الأرقام من الرابط.
+   بتشتغل لوحدها بالكامل: مفيش سيرفر ولا اتصال بأي حاجة.
 
      ?t1=الأحمر&t2=الأزرق&s1=12&s2=9&c1=%23A855F7&c2=%2322D3EE
+     &title=تحدي الهدايا&unit=نقطة&until=2026-09-19T22:00
 
-   الحركة هنا مقصود إنها هادية: مفيش وميض ولا توهّج تقيل، عشان
-   متأذيش عين المتفرّج ومتضيعش في ضغط الفيديو.
+   قرارات التصميم — كلها لصالح الوضوح على بث مضغوط:
+
+   • الألوان مش مشبعة لآخرها، وفوقها تدرّج غامق. اللون الصريح
+     بيتكسّر لبقع في ضغط تيك توك.
+   • مفيش خطوط رفيعة ولا نقوش مائلة — دي بتعمل نمنمة مع الضغط.
+   • الرقم هو البطل: خط عريض وكبير، وعرض الأرقام ثابت فمابترقصش.
+   • الفاصل بيتحرك مع النتيجة، فالمتفرج يعرف مين كاسب من نظرة
+     من غير ما يقرا رقم.
+   • الحركة قصيرة وهادية: مفيش وميض ولا توهّج نابض ياكل العين.
    ============================================================ */
 @font-face{font-family:'Cairo';src:url('/fonts/cairo-bold.ttf') format('truetype');font-weight:700;font-display:block}
 @font-face{font-family:'Cairo';src:url('/fonts/cairo-black.ttf') format('truetype');font-weight:900;font-display:block}
 @font-face{font-family:'Oxanium';src:url('/fonts/oxanium-extrabold.ttf') format('truetype');font-weight:800;font-display:block}
 
 :root{
-  --violet: #7F3AA1;
-  --grape:  #5416B5;
-  --navy:   #0F083B;
-  --deep:   #0C0516;
-  --ink:    #ffffff;
-
-  /* لون كل فريق — بيتغيّر من الرابط */
-  --c1: #A855F7;
-  --c2: #22D3EE;
+  --violet:#7F3AA1; --grape:#5416B5; --navy:#0F083B; --deep:#0C0516;
+  --ink:#ffffff;
+  --c1:#A855F7;   /* الفريق الأول */
+  --c2:#22D3EE;   /* الفريق التاني */
+  --h:150px;      /* ارتفاع الشريط */
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
   width:100%;height:100%;overflow:hidden;
-  background:transparent;            /* OBS بيركّب فوق البث */
+  background:transparent;          /* OBS بيركّب فوق البث */
   font-family:'Cairo',system-ui,'Segoe UI',sans-serif;
   -webkit-font-smoothing:antialiased;
 }
 #stage{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left}
 
-/* اللوحة بتقعد فوق في النص — أبعد مكان عن وش المذيع وعن
-   تعليقات تيك توك اللي بتطلع من تحت */
-#panel{
-  position:absolute;top:48px;left:50%;transform:translateX(-50%);
-  width:1360px;
-  background:linear-gradient(180deg, rgba(15,8,59,.82), rgba(12,5,22,.88));
-  border:1px solid rgba(127,58,161,.45);
-  border-radius:26px;
-  padding:26px 34px 30px;
-  backdrop-filter:blur(3px);
-}
+#wrap{position:absolute;top:44px;left:50%;transform:translateX(-50%);width:1520px}
 
+/* ---------- السطر العلوي: العنوان والوقت ---------------- */
+#top{
+  display:flex;align-items:center;justify-content:center;gap:18px;
+  margin-bottom:16px;height:46px;
+}
 #title{
-  text-align:center;font-size:30px;font-weight:700;
-  color:rgba(255,255,255,.66);letter-spacing:.02em;
-  margin-bottom:22px;
+  font-size:30px;font-weight:900;color:rgba(255,255,255,.92);
+  letter-spacing:.01em;
 }
 #title.off{display:none}
-
-/* ---------- صف الفريقين ---------------------------------- */
-#teams{display:flex;align-items:stretch;gap:26px}
-
-.side{flex:1;display:flex;align-items:center;gap:22px;min-width:0}
-.side.b{flex-direction:row-reverse}
-
-/* شريط رفيع بلون الفريق — أوضح علامة تعريف من بعيد */
-.flag{width:8px;align-self:stretch;border-radius:99px;background:var(--col);flex:none}
-
-.info{min-width:0;flex:1}
-.side.b .info{text-align:left}
-
-.name{
-  font-size:38px;font-weight:900;color:var(--ink);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  line-height:1.3;
-}
-.pts{font-size:24px;font-weight:700;color:rgba(255,255,255,.62);margin-top:4px}
-
-.score{
+#clock{
+  display:none;align-items:center;gap:9px;
+  padding:7px 18px;border-radius:12px;
+  background:rgba(8,4,16,.72);border:1px solid rgba(255,255,255,.14);
   font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;
-  font-size:104px;font-weight:800;line-height:1;color:var(--col);
-  flex:none;min-width:2.4ch;text-align:center;
-  transition:transform .28s cubic-bezier(.34,1.3,.64,1);
+  font-size:27px;font-weight:800;color:#fff;
 }
-.score.bump{transform:scale(1.14)}
+#clock.on{display:inline-flex}
+#clock s{width:9px;height:9px;border-radius:50%;background:#ff5a6e;text-decoration:none}
+#clock.over s{background:rgba(255,255,255,.3)}
 
-/* الفاصل في النص */
-#vs{
-  align-self:center;flex:none;
-  font-family:'Oxanium',sans-serif;font-size:30px;font-weight:800;
-  color:rgba(255,255,255,.42);letter-spacing:.14em;
-}
-
-/* ---------- شريط النسبة -------------------------------- */
-/* بيقول مين مكسّب ملمح واحد، من غير ما المتفرّج يقرا رقم */
+/* ---------- الشريط ------------------------------------- */
 #bar{
-  position:relative;height:12px;border-radius:99px;margin-top:24px;
-  background:var(--c2);overflow:hidden;
+  position:relative;height:var(--h);border-radius:26px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(0,0,0,.26)),var(--c2);
+  box-shadow:0 18px 44px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.1);
 }
+/* نص الفريق الأول — عرضه هو النتيجة نفسها */
 #fill{
-  position:absolute;inset:0 auto 0 0;width:50%;
-  background:var(--c1);
-  transition:width .5s cubic-bezier(.4,0,.2,1);
+  position:absolute;top:0;bottom:0;left:0;width:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(0,0,0,.26)),var(--c1);
+  transition:width .62s cubic-bezier(.22,1,.3,1);
 }
-/* خط رفيع بيفصل اللونين عشان ميتلخبطوش في ضغط الفيديو */
-#edge{
-  position:absolute;top:0;bottom:0;width:3px;margin-left:-1.5px;
-  background:rgba(12,5,22,.9);
-  transition:left .5s cubic-bezier(.4,0,.2,1);
+/* الفاصل — شفرة مائلة بتتحرك مع النتيجة */
+#blade{
+  position:absolute;top:-10px;bottom:-10px;left:50%;width:22px;
+  transform:translateX(-50%) skewX(-9deg);
+  background:linear-gradient(180deg,#1a1030,#05020c);
+  box-shadow:0 0 0 2px rgba(255,255,255,.14);
+  transition:left .62s cubic-bezier(.22,1,.3,1);
 }
+/* ومضة واحدة قصيرة عند التسجيل — مش نبض مستمر */
+#spark{
+  position:absolute;top:0;bottom:0;left:50%;width:150px;
+  transform:translateX(-50%);opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse 50% 70% at 50% 50%,rgba(255,255,255,.5),transparent 70%);
+  transition:left .62s cubic-bezier(.22,1,.3,1);
+}
+#spark.go{animation:flash .42s ease-out}
+@keyframes flash{0%{opacity:.9}100%{opacity:0}}
 
-/* علامة النسخة المجانية */
+/* ---------- محتوى الجانبين ------------------------------ */
+.side{
+  position:absolute;top:0;bottom:0;display:flex;align-items:center;gap:30px;
+  padding:0 40px;z-index:2;
+}
+.side.a{left:0}
+.side.b{right:0;flex-direction:row-reverse}
+
+.nm{
+  font-size:44px;font-weight:900;color:#fff;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;
+  text-shadow:0 3px 12px rgba(0,0,0,.55);
+}
+.sc{
+  font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;
+  font-size:104px;font-weight:800;line-height:.9;color:#fff;
+  text-shadow:0 4px 16px rgba(0,0,0,.6);
+  transition:transform .3s cubic-bezier(.34,1.5,.64,1);
+}
+.sc.bump{transform:scale(1.16)}
+
+/* تاج الكاسب — علامة صامتة بدل ما نكتب كلام */
+.crown{
+  width:40px;height:40px;opacity:0;transform:translateY(4px);
+  transition:opacity .3s,transform .3s;flex:none;
+}
+.side.win .crown{opacity:1;transform:none}
+
+/* ---------- الفارق -------------------------------------- */
+#gap{
+  position:absolute;left:50%;top:calc(100% + 14px);transform:translateX(-50%);
+  display:none;align-items:center;gap:8px;direction:rtl;
+  padding:7px 20px;border-radius:999px;
+  background:rgba(8,4,16,.8);border:1px solid rgba(255,255,255,.16);
+  font-size:23px;font-weight:700;color:rgba(255,255,255,.9);white-space:nowrap;
+  transition:left .62s cubic-bezier(.22,1,.3,1);
+}
+#gap.on{display:inline-flex}
+#gap b{font-family:'Oxanium',sans-serif;font-variant-numeric:tabular-nums;font-size:26px}
+
 #mark{
   position:absolute;right:34px;bottom:28px;
   font-size:24px;font-weight:700;letter-spacing:.22em;
   color:rgba(255,255,255,.42);
 }
 
-@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
 
 <div id="stage">
-  <div id="panel">
-    <div id="title">تحدي الفرق</div>
+  <div id="wrap">
+    <div id="top">
+      <div id="clock"><s></s><span id="cv">00:00</span></div>
+      <div id="title">تحدي الفرق</div>
+    </div>
 
-    <div id="teams">
-      <div class="side a" style="--col:var(--c1)">
-        <span class="flag"></span>
-        <div class="info">
-          <div class="name" id="n1">الفريق الأول</div>
-          <div class="pts" id="p1">نقطة</div>
-        </div>
-        <div class="score" id="v1">0</div>
+    <div id="bar">
+      <div id="fill"></div>
+      <div id="spark"></div>
+      <div id="blade"></div>
+
+      <div class="side a" id="sa">
+        <div class="nm" id="n1">الفريق الأول</div>
+        <svg class="crown" viewBox="0 0 24 24" fill="#ffd76a" aria-hidden="true"><path d="M3 18h18l-1.6-9-4.4 3.4L12 6l-3 6.4L4.6 9 3 18z"/></svg>
+        <div class="sc" id="v1">0</div>
       </div>
 
-      <div id="vs">VS</div>
-
-      <div class="side b" style="--col:var(--c2)">
-        <span class="flag"></span>
-        <div class="info">
-          <div class="name" id="n2">الفريق الثاني</div>
-          <div class="pts" id="p2">نقطة</div>
-        </div>
-        <div class="score" id="v2">0</div>
+      <div class="side b" id="sb">
+        <div class="nm" id="n2">الفريق الثاني</div>
+        <svg class="crown" viewBox="0 0 24 24" fill="#ffd76a" aria-hidden="true"><path d="M3 18h18l-1.6-9-4.4 3.4L12 6l-3 6.4L4.6 9 3 18z"/></svg>
+        <div class="sc" id="v2">0</div>
       </div>
     </div>
 
-    <div id="bar"><div id="fill"></div><div id="edge"></div></div>
+    <div id="gap">فارق <b id="gv">0</b> <span id="gu">نقطة</span></div>
   </div>
 
   <div id="mark" hidden>TILAGO</div>
@@ -164,8 +186,7 @@ html,body{
   var CFG = window.__T || {};
   function P(k) { return CFG[k] != null ? String(CFG[k]) : params.get(k); }
 
-  /* المسرح بيتقاس على المقاس اللي OBS بيديهوله، فالشكل بيطلع
-     مظبوط سواء المصدر 800 أو 1920 */
+  /* المسرح بيتقاس على المقاس اللي OBS بيديهوله */
   function fit() {
     var s = Math.min(innerWidth / STAGE_W, innerHeight / STAGE_H);
     stage.style.transform =
@@ -175,7 +196,7 @@ html,body{
   addEventListener("resize", fit);
   fit();
 
-  /* ---------- الإعدادات من الرابط ---------- */
+  /* ---------- الإعدادات ---------- */
   var root = document.documentElement;
   ["violet","grape","navy","deep","ink","c1","c2"].forEach(function (k) {
     var v = P(k);
@@ -193,43 +214,90 @@ html,body{
   var n2 = P("t2"); if (n2) document.getElementById("n2").textContent = n2;
 
   var unit = P("unit");
-  if (unit !== null) {
-    document.getElementById("p1").textContent = unit;
-    document.getElementById("p2").textContent = unit;
-  }
+  if (unit !== null) document.getElementById("gu").textContent = unit;
 
   if (P("mark") === "1") document.getElementById("mark").hidden = false;
 
-  /* ---------- الأرقام ---------- */
-  var v1 = document.getElementById("v1");
-  var v2 = document.getElementById("v2");
-  var fill = document.getElementById("fill");
-  var edge = document.getElementById("edge");
+  /* ---------- النتيجة ---------- */
+  var v1 = document.getElementById("v1"), v2 = document.getElementById("v2");
+  var sa = document.getElementById("sa"), sb = document.getElementById("sb");
+  var fill = document.getElementById("fill"), blade = document.getElementById("blade");
+  var spark = document.getElementById("spark"), gapEl = document.getElementById("gap");
+  var gv = document.getElementById("gv");
   var cur = [null, null];
 
   function bump(el) {
     el.classList.remove("bump");
-    void el.offsetWidth;          /* إعادة تشغيل الحركة */
+    void el.offsetWidth;                 /* إعادة تشغيل الحركة */
     el.classList.add("bump");
-    setTimeout(function () { el.classList.remove("bump"); }, 300);
+    setTimeout(function () { el.classList.remove("bump"); }, 320);
+  }
+
+  function flash() {
+    spark.classList.remove("go");
+    void spark.offsetWidth;
+    spark.classList.add("go");
   }
 
   function render(a, b) {
     a = Math.max(0, a | 0); b = Math.max(0, b | 0);
-    if (cur[0] !== a) { v1.textContent = a; if (cur[0] !== null) bump(v1); cur[0] = a; }
-    if (cur[1] !== b) { v2.textContent = b; if (cur[1] !== null) bump(v2); cur[1] = b; }
+    var first = cur[0] === null;
+    var moved = false;
 
-    /* الاتنين بصفر = الشريط في النص، مش قسمة على صفر */
+    if (cur[0] !== a) { v1.textContent = a; if (!first) { bump(v1); moved = true; } cur[0] = a; }
+    if (cur[1] !== b) { v2.textContent = b; if (!first) { bump(v2); moved = true; } cur[1] = b; }
+    if (moved) flash();
+
+    /* الاتنين بصفر = الفاصل في النص. وبنسيب 12% لكل جنب على الأقل
+       عشان الاسم والرقم مايتقصّوش لو حد كاسح. */
     var pct = (a + b) === 0 ? 50 : (a / (a + b)) * 100;
+    pct = Math.min(88, Math.max(12, pct));
+
     fill.style.width = pct + "%";
-    edge.style.left  = pct + "%";
+    blade.style.left = pct + "%";
+    spark.style.left = pct + "%";
+    gapEl.style.left = pct + "%";
+
+    sa.classList.toggle("win", a > b);
+    sb.classList.toggle("win", b > a);
+
+    var d = Math.abs(a - b);
+    gapEl.classList.toggle("on", d > 0);
+    gv.textContent = d;
   }
 
   render(parseInt(P("s1") || "0", 10), parseInt(P("s2") || "0", 10));
 
+  /* ---------- عدّاد التحدي ---------- */
+  var until = P("until");
+  if (until) {
+    var target = new Date(until).getTime();
+    if (!isNaN(target)) {
+      var clock = document.getElementById("clock");
+      var out = document.getElementById("cv");
+      clock.classList.add("on");
+
+      (function tick() {
+        var ms = target - Date.now();
+        if (ms <= 0) {
+          /* خلص الوقت: بنسيب العدّاد على صفر وبنطفّي النقطة الحمرا،
+             عشان المذيع يعرف إن التحدي انتهى من غير ما الشاشة تفضى */
+          clock.classList.add("over");
+          out.textContent = "00:00";
+          return;
+        }
+        var s = Math.floor(ms / 1000);
+        var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+        var p = function (x) { return String(x).padStart(2, "0"); };
+        out.textContent = h > 0 ? p(h) + ":" + p(m) + ":" + p(ss) : p(m) + ":" + p(ss);
+        setTimeout(tick, 500);
+      })();
+    }
+  }
+
   /* ---------- وضع العرض ----------
-     في صفحة الموقع بس. بيلعب لوحده عشان الزبون يشوفها حيّة،
-     ومقفول في رابط العميل عشان ماتتحركش أرقام وهمية على بثه. */
+     في صفحة الموقع بس. مقفول في رابط العميل عشان ماتتحركش أرقام
+     وهمية على بثه. */
   if (P("demo") === "1") {
     var a = 3, b = 2;
     setInterval(function () {
@@ -237,7 +305,7 @@ html,body{
       else                    b += 1 + (Math.random() * 3 | 0);
       if (a + b > 90) { a = 3; b = 2; }
       render(a, b);
-    }, 1400);
+    }, 1500);
   }
 })();
 </script>

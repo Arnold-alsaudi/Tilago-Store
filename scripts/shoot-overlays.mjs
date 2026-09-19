@@ -33,11 +33,37 @@ const PALETTES = {
 /** إعدادات العرض لكل تركيبة — نصوص واقعية بدل الافتراضي */
 const PRESETS = {
   'starting-soon.html': { title: 'البث هيبدأ قريب', note: 'جهّز نفسك، هنبدأ خلال دقائق' },
-  'team-scores.html': { title: 'تحدي الهدايا', t1: 'الصقور', t2: 'الأسود', s1: '14', s2: '9' },
+  'team-scores.html': { title: 'تحدي الهدايا', t1: 'الصقور', t2: 'الأسود', s1: '14', s2: '9', unit: 'هدية' },
 };
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.ttf': 'font/ttf', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// خلفية البث الوهمية — بتتحقن ورا التركيبة وقت التصوير بس
+const BACKDROP = process.env.NO_BACKDROP !== '1';
+const BACKDROP_JS = `(() => {
+  const d = document.createElement('div');
+  d.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:-1', 'pointer-events:none',
+    'background:' + [
+      'radial-gradient(60% 55% at 22% 18%, rgba(168,85,247,.20), transparent 62%)',
+      'radial-gradient(45% 45% at 84% 76%, rgba(34,211,238,.13), transparent 60%)',
+      'radial-gradient(120% 90% at 50% 120%, rgba(84,22,181,.18), transparent 55%)',
+      'linear-gradient(155deg, #140a2c 0%, #0a0518 55%, #070310 100%)',
+    ].join(','),
+  ].join(';');
+
+  // حبيبات خفيفة — الخلفية الملساء بتبان صناعية
+  const g = document.createElement('div');
+  g.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:-1', 'pointer-events:none', 'opacity:.05',
+    'background-image:radial-gradient(#fff 1px, transparent 1px)',
+    'background-size:3px 3px',
+  ].join(';');
+
+  document.body.append(d, g);
+  return 1;
+})()`;
 
 async function main() {
   const { OVERLAY_HTML } = await import(pathToUrl(join(ROOT, 'src', 'generated', 'overlays.ts')))
@@ -98,11 +124,15 @@ async function main() {
       await cdp.send('Page.navigate', { url });
       await sleep(2600);
 
+      // خلفية بث وهمية ورا التركيبة — إضاءة غرفة وعمق، عشان الصورة
+      // تبان زي لقطة من بث حقيقي مش مربع طاير على خلفية غامقة
+      if (BACKDROP) await cdp.send('Runtime.evaluate', { expression: BACKDROP_JS });
+
       // بنقص على المحتوى نفسه بنسبة 16:9 — من غير كده الصورة بتطلع
       // فيها فراغ كبير لأن مسرح التركيبة أطول من محتواها
       const box = await cdp.send('Runtime.evaluate', {
         expression: `(() => {
-          const els = [...document.querySelectorAll('#panel, #box')];
+          const els = [...document.querySelectorAll('#wrap, #panel, #box')];
           if (!els.length) return null;
           const r = els.map(e => e.getBoundingClientRect());
           const x1 = Math.min(...r.map(b => b.left)), y1 = Math.min(...r.map(b => b.top));
@@ -118,13 +148,15 @@ async function main() {
         const b = JSON.parse(raw);
         // قص لازق على المحتوى. مابنفرضش نسبة — الكارت في الموقع
         // بيقص بنفسه، وفرض النسبة هنا كان بيسيب فراغ تحت
-        const pad = 52;
-        const x = Math.max(0, b.x1 - pad);
-        const y = Math.max(0, b.y1 - pad);
+        // هامش أوسع على الجنب من فوق وتحت: بيوري الخلفية من غير ما
+        // يسيب فراغ كبير، والتركيبة تفضل هي البطل في الصورة
+        const padX = 130, padY = 62;
+        const x = Math.max(0, b.x1 - padX);
+        const y = Math.max(0, b.y1 - padY);
         clip = {
           x, y,
-          width: Math.min((b.x2 - b.x1) + pad * 2, 1600 - x),
-          height: Math.min((b.y2 - b.y1) + pad * 2, 900 - y),
+          width: Math.min((b.x2 - b.x1) + padX * 2, 1600 - x),
+          height: Math.min((b.y2 - b.y1) + padY * 2, 900 - y),
           scale: 1,
         };
       }
